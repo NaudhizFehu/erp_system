@@ -44,22 +44,22 @@
 
 ### 1. 프로젝트 클론
 
-\`\`\`bash
+```bash
 git clone <repository-url>
 cd cursor-erp-system
-\`\`\`
+```
 
 ### 2. 데이터베이스 설정
 
 Docker Compose를 사용하여 PostgreSQL 데이터베이스를 실행합니다:
 
-\`\`\`bash
+```bash
 docker-compose up -d postgres
-\`\`\`
+```
 
 데이터베이스 초기화 스크립트 실행:
 
-\`\`\`bash
+```bash
 # PostgreSQL 컨테이너에 접속
 docker exec -it erp-postgres psql -U cursor_erp_system -d cursor_erp_system
 
@@ -72,14 +72,14 @@ docker exec -it erp-postgres psql -U cursor_erp_system -d cursor_erp_system
 
 # 샘플 데이터 삽입
 \i /docker-entrypoint-initdb.d/06_sample_data.sql
-\`\`\`
+```
 
 ### 3. 백엔드 실행
 
-\`\`\`bash
+```bash
 cd backend
 ./mvnw spring-boot:run
-\`\`\`
+```
 
 백엔드 서버는 http://localhost:8080 에서 실행됩니다.
 
@@ -87,17 +87,17 @@ cd backend
 
 새 터미널에서:
 
-\`\`\`bash
+```bash
 cd frontend
 npm install
 npm run dev
-\`\`\`
+```
 
 프론트엔드 서버는 http://localhost:3000 에서 실행됩니다.
 
 ## 📁 프로젝트 구조
 
-\`\`\`
+```
 cursor-erp-system/
 ├── backend/                    # Spring Boot 백엔드
 │   ├── src/main/java/com/erp/
@@ -124,7 +124,7 @@ cursor-erp-system/
 │   └── seed/                  # 샘플 데이터
 ├── docker-compose.yml
 └── README.md
-\`\`\`
+```
 
 ## 🔗 주요 엔드포인트
 
@@ -162,7 +162,7 @@ cursor-erp-system/
 ## 🧪 테스트
 
 ### 백엔드 테스트
-\`\`\`bash
+```bash
 cd backend
 
 # 단위 테스트 실행
@@ -173,10 +173,10 @@ cd backend
 
 # 테스트 커버리지 포함 실행
 ./mvnw clean test jacoco:report
-\`\`\`
+```
 
 ### 프론트엔드 테스트
-\`\`\`bash
+```bash
 cd frontend
 
 # 단위 테스트 실행
@@ -196,7 +196,7 @@ npm run lint
 
 # 코드 포맷팅
 npm run format
-\`\`\`
+```
 
 ## 📝 개발 가이드
 
@@ -215,7 +215,7 @@ npm run format
 - Tailwind CSS를 통한 스타일링
 
 ### Git 커밋 메시지 규칙
-\`\`\`
+```
 feat: 새로운 기능 추가
 fix: 버그 수정
 docs: 문서 수정
@@ -223,32 +223,32 @@ style: 코드 포맷팅, 세미콜론 누락 등
 refactor: 코드 리팩토링
 test: 테스트 코드 추가
 chore: 빌드 프로세스 또는 보조 도구 수정
-\`\`\`
+```
 
 ## 🚀 배포
 
 ### 프로덕션 빌드
 
 #### 백엔드
-\`\`\`bash
+```bash
 cd backend
 ./mvnw clean package -Pprod
-\`\`\`
+```
 
 #### 프론트엔드
-\`\`\`bash
+```bash
 cd frontend
 npm run build
-\`\`\`
+```
 
 ### Docker 이미지 빌드
-\`\`\`bash
+```bash
 # 백엔드 이미지 빌드
 docker build -t erp-backend ./backend
 
 # 프론트엔드 이미지 빌드
 docker build -t erp-frontend ./frontend
-\`\`\`
+```
 
 ## 🤝 기여하기
 
