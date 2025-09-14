@@ -1,0 +1,79 @@
+package com.erp.common.dto;
+
+import com.erp.common.entity.Company;
+import jakarta.validation.constraints.*;
+import java.time.LocalDate;
+import java.math.BigDecimal;
+
+/**
+ * 회사 수정 DTO
+ * 기존 회사 정보 수정 시 사용됩니다
+ */
+public record CompanyUpdateDto(
+        @Size(max = 200, message = "회사명은 200자 이하여야 합니다")
+        String name,
+        
+        @Size(max = 200, message = "영문 회사명은 200자 이하여야 합니다")
+        String nameEn,
+        
+        @Pattern(regexp = "^\\d{3}-\\d{2}-\\d{5}$", message = "올바른 사업자등록번호 형식이어야 합니다 (000-00-00000)")
+        String businessNumber,
+        
+        @Pattern(regexp = "^\\d{6}-\\d{7}$", message = "올바른 법인등록번호 형식이어야 합니다 (000000-0000000)")
+        String corporationNumber,
+        
+        @Size(max = 50, message = "대표자명은 50자 이하여야 합니다")
+        String ceoName,
+        
+        @Size(max = 100, message = "업종은 100자 이하여야 합니다")
+        String businessType,
+        
+        @Size(max = 100, message = "업태는 100자 이하여야 합니다")
+        String businessItem,
+        
+        @Size(max = 500, message = "주소는 500자 이하여야 합니다")
+        String address,
+        
+        @Size(max = 200, message = "상세 주소는 200자 이하여야 합니다")
+        String addressDetail,
+        
+        @Pattern(regexp = "^\\d{5}$", message = "올바른 우편번호 형식이어야 합니다 (00000)")
+        String postalCode,
+        
+        @Pattern(regexp = "^\\d{2,3}-\\d{3,4}-\\d{4}$", message = "올바른 전화번호 형식이어야 합니다")
+        String phone,
+        
+        @Pattern(regexp = "^\\d{2,3}-\\d{3,4}-\\d{4}$", message = "올바른 팩스번호 형식이어야 합니다")
+        String fax,
+        
+        @Email(message = "올바른 이메일 형식이어야 합니다")
+        @Size(max = 100, message = "이메일은 100자 이하여야 합니다")
+        String email,
+        
+        @Size(max = 200, message = "홈페이지 URL은 200자 이하여야 합니다")
+        String website,
+        
+        LocalDate establishedDate,
+        Company.CompanyStatus status,
+        Company.CompanyType companyType,
+        
+        @Min(value = 0, message = "직원 수는 0 이상이어야 합니다")
+        Integer employeeCount,
+        
+        @Min(value = 0, message = "자본금은 0 이상이어야 합니다")
+        BigDecimal capitalAmount,
+        
+        String description,
+        
+        @Size(max = 500, message = "로고 이미지 URL은 500자 이하여야 합니다")
+        String logoUrl
+) {
+    public CompanyUpdateDto {
+        // 수정 DTO는 모든 필드가 선택사항이므로 별도 검증 없음
+        // null 값은 해당 필드를 수정하지 않음을 의미
+    }
+}
+
+
+
+

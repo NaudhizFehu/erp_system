@@ -1,0 +1,77 @@
+# ERP 시스템 Docker Compose 설정
+# 개발 환경에서 PostgreSQL 데이터베이스를 실행하기 위한 설정입니다
+
+version: '3.8'
+
+services:
+  # PostgreSQL 데이터베이스
+  postgres:
+    image: postgres:15-alpine
+    container_name: erp-postgres
+    environment:
+      POSTGRES_DB: cursor_erp_system
+      POSTGRES_USER: cursor_erp_system
+      POSTGRES_PASSWORD: cursor_erp_system
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - erp-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cursor_erp_system -d cursor_erp_system"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # pgAdmin (데이터베이스 관리 도구)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: erp-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@erp-system.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "8081:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - erp-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Redis (캐시 및 세션 저장용)
+  redis:
+    image: redis:7-alpine
+    container_name: erp-redis
+    command: redis-server --appendonly yes --requirepass redis_password
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - erp-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  postgres_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  erp-network:
+    driver: bridge

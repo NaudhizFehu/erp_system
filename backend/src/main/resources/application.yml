@@ -1,0 +1,197 @@
+# ERP 시스템 Spring Boot 설정
+spring:
+  application:
+    name: erp-cursor_erp_system
+  
+  # 프로파일 설정
+  profiles:
+    active: dev
+  
+  # 데이터베이스 설정 (PostgreSQL)
+  datasource:
+    url: jdbc:postgresql://fehu.kr:5432/cursor_erp_system
+    username: cursor_erp_system
+    password: cursor_erp_system
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 20000
+      validation-timeout: 5000
+      # 연결 유지 설정
+      keep-alive-time: 30000
+      max-lifetime: 1800000
+      leak-detection-threshold: 60000
+  
+  # JPA 설정
+  jpa:
+    hibernate:
+      ddl-auto: none  # DDL 자동 생성 비활성화
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+    show-sql: true
+    defer-datasource-initialization: false
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+  
+  # 웹 설정
+  web:
+    locale: ko_KR
+    locale-resolver: fixed
+  
+  # JSON 설정
+  jackson:
+    time-zone: Asia/Seoul
+    date-format: yyyy-MM-dd HH:mm:ss
+    serialization:
+      write-dates-as-timestamps: false
+  
+  # Security 설정
+  security:
+    # JWT 설정은 app.jwt로 이동
+  
+  # 파일 업로드 설정
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 100MB
+  
+  # SQL 초기화 설정 (프로파일별로 설정)
+  sql:
+    init:
+      mode: never
+  
+  # 로깅 설정
+logging:
+  level:
+    com.erp: DEBUG
+    org.springframework.web: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/erp-system.log
+
+# 서버 설정
+server:
+  port: 8080
+  servlet:
+    context-path: /
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+  error:
+    include-stacktrace: never
+    include-message: always
+
+# 관리 엔드포인트 설정
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when_authorized
+
+# API 문서 설정
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    display-request-duration: true
+    tags-sorter: alpha
+    operations-sorter: method
+
+# 커스텀 설정
+erp:
+  cors:
+    allowed-origins: 
+      - http://localhost:3000
+      - http://localhost:5173
+    allowed-methods:
+      - GET
+      - POST
+      - PUT
+      - DELETE
+      - PATCH
+      - OPTIONS
+    allowed-headers: "*"
+    allow-credentials: true
+  
+  file:
+    upload-path: ./uploads
+    max-size: 10MB
+  
+  pagination:
+    default-size: 20
+    max-size: 100
+
+---
+# 개발 환경 설정
+spring:
+  config:
+    activate:
+      on-profile: dev
+  
+  # 개발용 데이터베이스
+  datasource:
+    url: jdbc:postgresql://fehu.kr:5432/cursor_erp_system
+    username: cursor_erp_system
+    password: cursor_erp_system
+  
+  jpa:
+    hibernate:
+      ddl-auto: none  # DDL 자동 생성 비활성화
+    show-sql: true
+    defer-datasource-initialization: false
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+
+---
+# 운영 환경 설정
+spring:
+  config:
+    activate:
+      on-profile: prod
+  
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+  
+# 애플리케이션 설정
+app:
+  name: ERP 시스템
+  version: 1.0.0
+  description: 통합 전사적 자원 관리 시스템
+  
+  # JWT 설정
+  jwt:
+    # JWT 비밀키 (운영환경에서는 환경변수로 설정)
+    secret: ${JWT_SECRET:ErpSystemJwtSecretKeyThatShouldBeAtLeast256BitsLongForSecurityPurposes2024!@#$}
+    # 액세스 토큰 만료시간 (밀리초) - 24시간
+    expiration-ms: ${JWT_EXPIRATION:86400000}
+    # 리프레시 토큰 만료시간 (밀리초) - 7일
+    refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION:604800000}
+
+
