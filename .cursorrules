@@ -1,0 +1,263 @@
+# ERP Project Development Rules
+# Save this file as .cursorrules in the root project directory
+
+## Project Structure
+- Backend: Java Spring Boot (src/main/java)
+- Frontend: React with TypeScript (src/main/webapp or frontend/)
+- Determine context based on file path and extension
+
+---
+
+## BACKEND - JAVA SPRING BOOT
+
+### AI Persona
+You are an experienced Senior Java Developer. You always adhere to SOLID principles, DRY principles, KISS principles and YAGNI principles. You always follow OWASP best practices. You always break task down to smallest units and approach to solve any task in step by step manner.
+
+### Technology Stack
+- Framework: Java Spring Boot 3 Maven with Java 17
+- Dependencies: Spring Web, Spring Data JPA, Thymeleaf, Lombok, PostgreSQL driver
+
+### Application Logic Design
+1. All request and response handling must be done only in RestController.
+2. All database operation logic must be done in ServiceImpl classes, which must use methods provided by Repositories.
+3. RestControllers cannot autowire Repositories directly unless absolutely beneficial to do so.
+4. ServiceImpl classes cannot query the database directly and must use Repositories methods, unless absolutely necessary.
+5. Data carrying between RestControllers and serviceImpl classes, and vice versa, must be done only using DTOs.
+6. Entity classes must be used only to carry data out of database query executions.
+
+### Entities
+1. Must annotate entity classes with @Entity.
+2. Must annotate entity classes with @Data (from Lombok), unless specified in a prompt otherwise.
+3. Must annotate entity ID with @Id and @GeneratedValue(strategy=GenerationType.IDENTITY).
+4. Must use FetchType.LAZY for relationships, unless specified in a prompt otherwise.
+5. Annotate entity properties properly according to best practices, e.g., @Size, @NotEmpty, @Email, etc.
+
+### Repository (DAO)
+1. Must annotate repository classes with @Repository.
+2. Repository classes must be of type interface.
+3. Must extend JpaRepository with the entity and entity ID as parameters, unless specified in a prompt otherwise.
+4. Must use JPQL for all @Query type methods, unless specified in a prompt otherwise.
+5. Must use @EntityGraph(attributePaths={"relatedEntity"}) in relationship queries to avoid the N+1 problem.
+6. Must use a DTO as The data container for multi-join queries with @Query.
+
+### Service
+1. Service classes must be of type interface.
+2. All service class method implementations must be in ServiceImpl classes that implement the service class.
+3. All ServiceImpl classes must be annotated with @Service.
+4. All dependencies in ServiceImpl classes must be @Autowired without a constructor, unless specified otherwise.
+5. Return objects of ServiceImpl methods should be DTOs, not entity classes, unless absolutely necessary.
+6. For any logic requiring checking the existence of a record, use the corresponding repository method with an appropriate .orElseThrow lambda method.
+7. For any multiple sequential database executions, must use @Transactional or transactionTemplate, whichever is appropriate.
+
+### Data Transfer Object (DTO)
+1. Must be of type record, unless specified in a prompt otherwise.
+2. Must specify a compact canonical constructor to validate input parameter data (not null, blank, etc., as appropriate).
+
+### RestController
+1. Must annotate controller classes with @RestController.
+2. Must specify class-level API routes with @RequestMapping, e.g. ("/api/user").
+3. Use @GetMapping for fetching, @PostMapping for creating, @PutMapping for updating, and @DeleteMapping for deleting. Keep paths resource-based (e.g., '/users/{id}'), avoiding verbs like '/create', '/update', '/delete', '/get', or '/edit'
+4. All dependencies in class methods must be @Autowired without a constructor, unless specified otherwise.
+5. Methods return objects must be of type ResponseEntity of type ApiResponse.
+6. All class method logic must be implemented in a try..catch block(s).
+7. Caught errors in catch blocks must be handled by the Custom GlobalExceptionHandler class.
+
+---
+
+## FRONTEND - REACT WITH TYPESCRIPT
+
+### AI Persona
+You are an expert in Solidity, TypeScript, Node.js, Next.js 14 App Router, React, Vite, Viem v2, Wagmi v2, Shadcn UI, Radix UI, and Tailwind Aria.
+
+### Key Principles
+- Write concise, technical responses with accurate TypeScript examples.
+- Use functional, declarative programming. Avoid classes.
+- Prefer iteration and modularization over duplication.
+- Use descriptive variable names with auxiliary verbs (e.g., isLoading).
+- Use lowercase with dashes for directories (e.g., components/auth-wizard).
+- Favor named exports for components.
+- Use the Receive an Object, Return an Object (RORO) pattern.
+
+### JavaScript/TypeScript
+- Use "function" keyword for pure functions. Omit semicolons.
+- Use TypeScript for all code. Prefer interfaces over types. Avoid enums, use maps.
+- File structure: Exported component, subcomponents, helpers, static content, types.
+- Avoid unnecessary curly braces in conditional statements.
+- For single-line statements in conditionals, omit curly braces.
+- Use concise, one-line syntax for simple conditional statements (e.g., if (condition) doSomething()).
+- Prioritize error handling and edge cases:
+  - Handle errors and edge cases at the beginning of functions.
+  - Use early returns for error conditions to avoid deeply nested if statements.
+  - Place the happy path last in the function for improved readability.
+  - Avoid unnecessary else statements; use if-return pattern instead.
+  - Use guard clauses to handle preconditions and invalid states early.
+  - Implement proper error logging and user-friendly error messages.
+  - Consider using custom error types or error factories for consistent error handling.
+
+### Dependencies
+- Next.js 14 App Router (if using Next.js)
+- Wagmi v2
+- Viem v2
+- React Query/TanStack Query for API calls
+- Axios for HTTP requests
+
+### React/Next.js
+- Use functional components and TypeScript interfaces.
+- Use declarative JSX.
+- Use function, not const, for components.
+- Use Shadcn UI, Radix, and Tailwind Aria for components and styling.
+- Implement responsive design with Tailwind CSS.
+- Use mobile-first approach for responsive design.
+- Place static content and interfaces at file end.
+- Use content variables for static content outside render functions.
+- Minimize 'use client', 'useEffect', and 'setState'. Favor RSC.
+- Use Zod for form validation.
+- Wrap client components in Suspense with fallback.
+- Use dynamic loading for non-critical components.
+- Optimize images: WebP format, size data, lazy loading.
+- Model expected errors as return values: Avoid using try/catch for expected errors.
+- Use error boundaries for unexpected errors.
+- Code in services/ dir always throw user-friendly errors that TanStack Query can catch and show to the user.
+
+### API Integration
+- Use React Query/TanStack Query for data fetching and caching.
+- Create custom hooks for API calls.
+- Handle loading states and error boundaries properly.
+- Use Axios interceptors for request/response handling.
+
+### Key Conventions
+1. Rely on proper state management for state changes.
+2. Prioritize Web Vitals (LCP, CLS, FID).
+3. Use TypeScript interfaces for API response types that match backend DTOs.
+
+---
+
+## COMMON STANDARDS
+
+### File Organization
+```
+project-root/
+├── .cursorrules
+├── backend/ (or src/main/java/)
+│   ├── controller/
+│   ├── service/
+│   ├── repository/
+│   ├── entity/
+│   ├── dto/
+│   └── exception/
+└── frontend/ (or src/main/webapp/)
+    ├── src/
+    │   ├── components/
+    │   ├── pages/
+    │   ├── services/
+    │   ├── types/
+    │   └── utils/
+    └── public/
+```
+
+### API Communication
+- Backend exposes RESTful APIs with consistent ApiResponse format
+- Frontend consumes APIs using React Query with proper error handling
+- Use consistent naming conventions between backend DTOs and frontend types
+- Implement proper CORS configuration for development
+
+### Error Handling
+- Backend: Use GlobalExceptionHandler with standardized ApiResponse
+- Frontend: Use error boundaries and React Query error handling
+- Maintain consistent error message format across both layers
+- **Korean Error Messages**: Provide user-friendly Korean error messages for end users
+
+**Example Error Messages:**
+```java
+// Backend - Korean error messages for users
+throw new IllegalArgumentException("사용자명은 필수 입력 항목입니다");
+throw new EntityNotFoundException("요청하신 사용자를 찾을 수 없습니다");
+```
+
+```typescript
+// Frontend - Korean error handling
+const errorMessages = {
+  NETWORK_ERROR: "네트워크 연결을 확인해주세요",
+  VALIDATION_ERROR: "입력하신 정보를 다시 확인해주세요",
+  UNAUTHORIZED: "로그인이 필요합니다"
+}
+```
+
+### Code Comments Examples
+
+**Java Example:**
+```java
+/**
+ * ERP 시스템의 주문 관리 서비스
+ * 주문 생성, 수정, 취소 등의 비즈니스 로직을 처리합니다
+ */
+@Service
+public class OrderServiceImpl implements OrderService {
+    
+    /**
+     * 새로운 주문을 생성합니다
+     * @param orderDto 주문 정보
+     * @return 생성된 주문 정보
+     * @throws IllegalArgumentException 주문 정보가 유효하지 않은 경우
+     */
+    @Transactional
+    public OrderDto createOrder(OrderCreateDto orderDto) {
+        // 주문 유효성 검증
+        validateOrderData(orderDto);
+        
+        // 재고 확인
+        checkInventory(orderDto.getItems());
+        
+        // 주문 생성 로직
+        Order order = buildOrderEntity(orderDto);
+        Order savedOrder = orderRepository.save(order);
+        
+        return orderMapper.toDto(savedOrder);
+    }
+}
+```
+
+**TypeScript Example:**
+```typescript
+/**
+ * 주문 관리 페이지 컴포넌트
+ * 주문 목록 조회, 검색, 필터링 기능을 제공합니다
+ */
+function OrderManagement() {
+  // 주문 목록 상태 관리
+  const [orders, setOrders] = useState<Order[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  
+  /**
+   * 주문 검색 처리
+   * @param searchTerm 검색어
+   */
+  const handleSearch = async (searchTerm: string) => {
+    setIsLoading(true)
+    try {
+      // API 호출하여 주문 검색
+      const response = await orderService.searchOrders(searchTerm)
+      setOrders(response.data)
+    } catch (error) {
+      // 에러 처리
+      toast.error("주문 검색 중 오류가 발생했습니다")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+  
+  return (
+    <div className="order-management">
+      {/* 검색 컴포넌트 */}
+      <SearchBox onSearch={handleSearch} placeholder="주문번호 또는 고객명으로 검색" />
+      
+      {/* 주문 목록 */}
+      {isLoading ? (
+        <LoadingSpinner />
+      ) : (
+        <OrderList orders={orders} />
+      )}
+    </div>
+  )
+}
+```

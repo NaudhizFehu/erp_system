@@ -1,93 +1,277 @@
-# cursor-erp-system
+# ERP 시스템
 
+통합 기업 자원 관리 시스템 (Enterprise Resource Planning System)
 
+## 📋 프로젝트 개요
 
-## Getting started
+이 ERP 시스템은 중소기업을 위한 통합 관리 솔루션으로, 인사관리, 회계관리, 재고관리, 영업관리 모듈을 포함합니다.
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+### 주요 기능
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+- **인사관리**: 직원 정보, 부서 관리, 급여 관리
+- **회계관리**: 계정과목, 전표 처리, 재무제표
+- **재고관리**: 제품 관리, 재고 추적, 입출고 관리
+- **영업관리**: 고객 관리, 주문 처리, 견적 관리
 
-## Add your files
+## 🏗️ 기술 스택
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+### 백엔드
+- **Java 17** - 프로그래밍 언어
+- **Spring Boot 3** - 애플리케이션 프레임워크
+- **Spring Data JPA** - 데이터 액세스
+- **PostgreSQL** - 메인 데이터베이스
+- **Maven** - 빌드 도구
 
-```
-cd existing_repo
-git remote add origin http://fehu-gitlab/naudhizfehu1/cursor-erp-system.git
-git branch -M master
-git push -uf origin master
-```
+### 프론트엔드
+- **React 18** - UI 라이브러리
+- **TypeScript** - 타입 안전성
+- **Vite** - 빌드 도구
+- **Tailwind CSS** - 스타일링
+- **React Query** - 상태 관리 및 데이터 페칭
 
-## Integrate with your tools
+### 개발 도구
+- **Docker Compose** - 로컬 개발 환경
+- **Swagger/OpenAPI** - API 문서화
 
-- [ ] [Set up project integrations](http://fehu-gitlab/naudhizfehu1/cursor-erp-system/-/settings/integrations)
+## 🚀 시작하기
 
-## Collaborate with your team
+### 필수 요구사항
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+- Java 17 이상
+- Node.js 18 이상
+- Docker & Docker Compose
+- Git
 
-## Test and Deploy
+### 1. 프로젝트 클론
 
-Use the built-in continuous integration in GitLab.
+\`\`\`bash
+git clone <repository-url>
+cd cursor-erp-system
+\`\`\`
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+### 2. 데이터베이스 설정
 
-***
+Docker Compose를 사용하여 PostgreSQL 데이터베이스를 실행합니다:
 
-# Editing this README
+\`\`\`bash
+docker-compose up -d postgres
+\`\`\`
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+데이터베이스 초기화 스크립트 실행:
 
-## Suggestions for a good README
+\`\`\`bash
+# PostgreSQL 컨테이너에 접속
+docker exec -it erp-postgres psql -U cursor_erp_system -d cursor_erp_system
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+# 스키마 생성
+\i /docker-entrypoint-initdb.d/01_create_database.sql
+\i /docker-entrypoint-initdb.d/02_hr_tables.sql
+\i /docker-entrypoint-initdb.d/03_inventory_tables.sql
+\i /docker-entrypoint-initdb.d/04_sales_tables.sql
+\i /docker-entrypoint-initdb.d/05_accounting_tables.sql
 
-## Name
-Choose a self-explaining name for your project.
+# 샘플 데이터 삽입
+\i /docker-entrypoint-initdb.d/06_sample_data.sql
+\`\`\`
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+### 3. 백엔드 실행
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+\`\`\`bash
+cd backend
+./mvnw spring-boot:run
+\`\`\`
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+백엔드 서버는 http://localhost:8080 에서 실행됩니다.
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+### 4. 프론트엔드 실행
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+새 터미널에서:
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+\`\`\`bash
+cd frontend
+npm install
+npm run dev
+\`\`\`
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+프론트엔드 서버는 http://localhost:3000 에서 실행됩니다.
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+## 📁 프로젝트 구조
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+\`\`\`
+cursor-erp-system/
+├── backend/                    # Spring Boot 백엔드
+│   ├── src/main/java/com/erp/
+│   │   ├── common/            # 공통 유틸리티
+│   │   ├── hr/                # 인사관리 모듈
+│   │   ├── accounting/        # 회계관리 모듈
+│   │   ├── inventory/         # 재고관리 모듈
+│   │   ├── sales/             # 영업관리 모듈
+│   │   └── config/            # 설정 클래스
+│   ├── src/main/resources/
+│   └── pom.xml
+├── frontend/                   # React 프론트엔드
+│   ├── src/
+│   │   ├── components/        # 재사용 가능한 컴포넌트
+│   │   ├── pages/             # 페이지 컴포넌트
+│   │   ├── services/          # API 서비스
+│   │   ├── types/             # TypeScript 타입 정의
+│   │   └── lib/               # 유틸리티 함수
+│   ├── package.json
+│   └── vite.config.ts
+├── database/                   # 데이터베이스 스크립트
+│   ├── init/                  # 초기화 스크립트
+│   ├── tables/                # 테이블 생성 스크립트
+│   └── seed/                  # 샘플 데이터
+├── docker-compose.yml
+└── README.md
+\`\`\`
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+## 🔗 주요 엔드포인트
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+### API 문서
+- Swagger UI: http://localhost:8080/swagger-ui.html
+- OpenAPI Spec: http://localhost:8080/api-docs
 
-## License
-For open source projects, say how it is licensed.
+### 데이터베이스 관리
+- pgAdmin: http://localhost:8081
+  - 이메일: admin@erp-system.com
+  - 비밀번호: admin123
+  - 데이터베이스: cursor_erp_system
+  - 사용자명: cursor_erp_system
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+### 주요 API 엔드포인트
+
+#### 인사관리
+- `GET /api/hr/employees` - 직원 목록 조회
+- `POST /api/hr/employees` - 직원 등록
+- `PUT /api/hr/employees/{id}` - 직원 정보 수정
+- `DELETE /api/hr/employees/{id}` - 직원 삭제
+
+#### 재고관리
+- `GET /api/inventory/products` - 제품 목록 조회
+- `POST /api/inventory/products` - 제품 등록
+
+#### 영업관리
+- `GET /api/sales/customers` - 고객 목록 조회
+- `POST /api/sales/orders` - 주문 생성
+
+#### 회계관리
+- `GET /api/accounting/accounts` - 계정과목 조회
+- `POST /api/accounting/vouchers` - 전표 생성
+
+## 🧪 테스트
+
+### 백엔드 테스트
+\`\`\`bash
+cd backend
+
+# 단위 테스트 실행
+./mvnw test
+
+# 통합 테스트 실행
+./mvnw verify
+
+# 테스트 커버리지 포함 실행
+./mvnw clean test jacoco:report
+\`\`\`
+
+### 프론트엔드 테스트
+\`\`\`bash
+cd frontend
+
+# 단위 테스트 실행
+npm run test
+
+# 테스트 UI 실행
+npm run test:ui
+
+# 커버리지 포함 테스트
+npm run test:coverage
+
+# 타입 체크
+npm run type-check
+
+# 린팅 검사
+npm run lint
+
+# 코드 포맷팅
+npm run format
+\`\`\`
+
+## 📝 개발 가이드
+
+### 코딩 규칙
+
+#### 백엔드 (Java)
+- SOLID 원칙 준수
+- 모든 클래스와 메서드에 한국어 주석 작성
+- Entity는 @Data 사용, DTO는 record 사용
+- 예외 처리는 GlobalExceptionHandler에서 통합 관리
+
+#### 프론트엔드 (TypeScript)
+- 함수형 컴포넌트 사용
+- React Hook Form + Zod를 통한 폼 검증
+- React Query를 통한 서버 상태 관리
+- Tailwind CSS를 통한 스타일링
+
+### Git 커밋 메시지 규칙
+\`\`\`
+feat: 새로운 기능 추가
+fix: 버그 수정
+docs: 문서 수정
+style: 코드 포맷팅, 세미콜론 누락 등
+refactor: 코드 리팩토링
+test: 테스트 코드 추가
+chore: 빌드 프로세스 또는 보조 도구 수정
+\`\`\`
+
+## 🚀 배포
+
+### 프로덕션 빌드
+
+#### 백엔드
+\`\`\`bash
+cd backend
+./mvnw clean package -Pprod
+\`\`\`
+
+#### 프론트엔드
+\`\`\`bash
+cd frontend
+npm run build
+\`\`\`
+
+### Docker 이미지 빌드
+\`\`\`bash
+# 백엔드 이미지 빌드
+docker build -t erp-backend ./backend
+
+# 프론트엔드 이미지 빌드
+docker build -t erp-frontend ./frontend
+\`\`\`
+
+## 🤝 기여하기
+
+1. Fork the Project
+2. Create your Feature Branch (\`git checkout -b feature/AmazingFeature\`)
+3. Commit your Changes (\`git commit -m 'Add some AmazingFeature'\`)
+4. Push to the Branch (\`git push origin feature/AmazingFeature\`)
+5. Open a Pull Request
+
+## 📄 라이선스
+
+이 프로젝트는 MIT 라이선스 하에 배포됩니다. 자세한 내용은 \`LICENSE\` 파일을 참조하세요.
+
+## 📞 문의
+
+프로젝트에 대한 문의사항이 있으시면 다음으로 연락해 주세요:
+
+- 이메일: dev@erp-system.com
+- 이슈 트래커: [GitHub Issues](https://github.com/your-repo/issues)
+
+## 📚 추가 자료
+
+- [Spring Boot 문서](https://spring.io/projects/spring-boot)
+- [React 문서](https://reactjs.org/docs)
+- [PostgreSQL 문서](https://www.postgresql.org/docs/)
+- [Tailwind CSS 문서](https://tailwindcss.com/docs)
