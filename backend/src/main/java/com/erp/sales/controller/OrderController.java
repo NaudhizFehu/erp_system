@@ -217,24 +217,6 @@ public class OrderController {
         }
     }
 
-    /**
-     * 견적으로부터 주문 생성
-     */
-    @PostMapping("/from-quote/{quoteId}")
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
-    @Operation(summary = "견적으로부터 주문 생성", description = "견적으로부터 주문을 생성합니다")
-    public ResponseEntity<ApiResponse<OrderDto.OrderResponseDto>> createOrderFromQuote(
-            @Parameter(description = "견적 ID") @PathVariable Long quoteId) {
-        try {
-            log.info("견적으로부터 주문 생성 API 호출: quoteId={}", quoteId);
-            OrderDto.OrderResponseDto response = orderService.createOrderFromQuote(quoteId);
-            return ResponseEntity.ok(ApiResponse.success("견적으로부터 주문 생성 성공", response));
-        } catch (Exception e) {
-            log.error("견적으로부터 주문 생성 실패: quoteId={}, {}", quoteId, e.getMessage(), e);
-            return ResponseEntity.badRequest()
-                    .body(ApiResponse.error("견적으로부터 주문 생성에 실패했습니다: " + e.getMessage()));
-        }
-    }
 
     /**
      * 주문 확정
