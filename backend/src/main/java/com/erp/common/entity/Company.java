@@ -139,8 +139,6 @@ public class Company extends BaseEntity {
     @Column(name = "website", length = 200)
     private String website;
 
-    // established_date 필드는 실제 DB 스키마에 없으므로 제거됨
-
     /**
      * 회사 상태
      */
@@ -148,9 +146,6 @@ public class Company extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     private CompanyStatus status = CompanyStatus.ACTIVE;
-
-    // company_type, employee_count, capital_amount, description, logo_url 필드들은 
-    // 실제 DB 스키마에 없으므로 제거됨
 
     /**
      * 회사 소속 부서들
@@ -189,8 +184,6 @@ public class Company extends BaseEntity {
             return description;
         }
     }
-
-    // CompanyType enum은 실제 DB 스키마에 company_type 컬럼이 없으므로 제거됨
 
     /**
      * 회사가 활성 상태인지 확인
