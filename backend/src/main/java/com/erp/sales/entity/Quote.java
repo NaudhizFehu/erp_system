@@ -209,8 +209,6 @@ public class Quote extends BaseEntity {
     @OneToMany(mappedBy = "quote", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private List<QuoteItem> quoteItems = new ArrayList<>();
 
-    @OneToOne(mappedBy = "quote", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Order order;
 
     // 비즈니스 메서드
     /**
