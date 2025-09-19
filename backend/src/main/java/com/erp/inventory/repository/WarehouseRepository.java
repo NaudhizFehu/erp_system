@@ -130,14 +130,14 @@ public interface WarehouseRepository extends JpaRepository<Warehouse, Long> {
     @Query("SELECT new com.erp.inventory.dto.WarehouseDto$WarehouseStatsDto(" +
            "w.id, w.warehouseName, " +
            "COUNT(i), " +
-           "COALESCE(SUM(i.currentStock), 0.0), " +
+           "COALESCE(SUM(i.quantity), 0), " +
            "COUNT(CASE WHEN i.product.isActive = true THEN 1 END), " +
            "COUNT(CASE WHEN i.product.isActive = false THEN 1 END), " +
-           "COUNT(CASE WHEN i.isLowStock = true THEN 1 END), " +
-           "COUNT(CASE WHEN i.isOutOfStock = true THEN 1 END), " +
-           "COUNT(CASE WHEN i.isOverStock = true THEN 1 END), " +
-           "COUNT(CASE WHEN i.expiryDate IS NOT NULL AND i.expiryDate BETWEEN :now AND :futureDate THEN 1 END), " +
-           "COUNT(CASE WHEN i.expiryDate IS NOT NULL AND i.expiryDate < :now THEN 1 END), " +
+           "COUNT(CASE WHEN i.quantity <= 0 THEN 1 END), " +
+           "COUNT(CASE WHEN i.quantity = 0 THEN 1 END), " +
+           "COUNT(CASE WHEN i.quantity > i.maxStock THEN 1 END), " +
+           "0, " +
+           "0, " +
            "CASE WHEN w.maxCapacity > 0 THEN (w.currentUsage / w.maxCapacity * 100) ELSE 0 END, " +
            "0.0, " +
            ":now" +
@@ -147,8 +147,7 @@ public interface WarehouseRepository extends JpaRepository<Warehouse, Long> {
            "GROUP BY w.id, w.warehouseName, w.maxCapacity, w.currentUsage")
     List<com.erp.inventory.dto.WarehouseDto.WarehouseStatsDto> getWarehouseStats(
             @Param("companyId") Long companyId,
-            @Param("now") java.time.LocalDateTime now,
-            @Param("futureDate") java.time.LocalDateTime futureDate);
+            @Param("now") java.time.LocalDateTime now);
 
     /**
      * 창고 용량 분석
@@ -214,7 +213,7 @@ public interface WarehouseRepository extends JpaRepository<Warehouse, Long> {
      */
     @Modifying
     @Query("UPDATE Warehouse w SET w.currentUsage = " +
-           "(SELECT COALESCE(SUM(i.currentStock), 0.0) FROM Inventory i WHERE i.warehouse.id = w.id) " +
+           "(SELECT COALESCE(SUM(i.quantity), 0) FROM Inventory i WHERE i.warehouse.id = w.id) " +
            "WHERE w.id = :warehouseId")
     void updateCurrentUsage(@Param("warehouseId") Long warehouseId);
 
@@ -223,7 +222,7 @@ public interface WarehouseRepository extends JpaRepository<Warehouse, Long> {
      */
     @Modifying
     @Query("UPDATE Warehouse w SET w.currentUsage = " +
-           "(SELECT COALESCE(SUM(i.currentStock), 0.0) FROM Inventory i WHERE i.warehouse.id = w.id) " +
+           "(SELECT COALESCE(SUM(i.quantity), 0) FROM Inventory i WHERE i.warehouse.id = w.id) " +
            "WHERE w.company.id = :companyId")
     void updateAllCurrentUsage(@Param("companyId") Long companyId);
 
@@ -253,14 +252,14 @@ public interface WarehouseRepository extends JpaRepository<Warehouse, Long> {
      * 창고별 재고 품목 수 조회
      */
     @Query("SELECT w.id, COUNT(DISTINCT i.product.id) FROM Warehouse w LEFT JOIN w.inventories i " +
-           "WHERE w.company.id = :companyId AND (i.currentStock IS NULL OR i.currentStock > 0) " +
+           "WHERE w.company.id = :companyId AND (i.quantity IS NULL OR i.quantity > 0) " +
            "GROUP BY w.id")
     List<Object[]> countProductsByWarehouse(@Param("companyId") Long companyId);
 
     /**
      * 창고별 재고 가치 조회
      */
-    @Query("SELECT w.id, COALESCE(SUM(i.totalStockValue), 0) FROM Warehouse w LEFT JOIN w.inventories i " +
+    @Query("SELECT w.id, 0.0 FROM Warehouse w LEFT JOIN w.inventories i " +
            "WHERE w.company.id = :companyId " +
            "GROUP BY w.id")
     List<Object[]> getTotalStockValueByWarehouse(@Param("companyId") Long companyId);

@@ -73,8 +73,8 @@ public record AccountDto(
         return new AccountDto(
             account.getId(),
             account.getAccountCode(),
-            account.getAccountName(),
-            account.getAccountNameEn(),
+            account.getName(),
+            account.getNameEn(),
             account.getDescription(),
             account.getCompany() != null ? CompanyDto.from(account.getCompany()) : null,
             account.getAccountType(),
@@ -93,7 +93,7 @@ public record AccountDto(
             account.getControlField2(),
             account.getFullPath(),
             account.getFullCodePath(),
-            account.isLeafAccount(),
+            account.getIsLeafAccount(),
             account.getCreatedAt(),
             account.getUpdatedAt()
         );

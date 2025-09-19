@@ -1,6 +1,7 @@
 package com.erp.sales.service;
 
 import com.erp.sales.dto.CustomerDto;
+import com.erp.sales.entity.Customer;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -57,7 +58,7 @@ public interface CustomerService {
     /**
      * 영업담당자별 고객 조회
      */
-    Page<CustomerDto.CustomerSummaryDto> getCustomersBySalesManager(Long salesManagerId, Pageable pageable);
+    Page<CustomerDto.CustomerSummaryDto> getCustomersBySalesManager(Long companyId, Long salesManagerId, Pageable pageable);
 
     /**
      * 고객 유형별 조회
@@ -67,12 +68,13 @@ public interface CustomerService {
     /**
      * 고객 상태별 조회
      */
-    Page<CustomerDto.CustomerSummaryDto> getCustomersByStatus(Long companyId, String customerStatus, Pageable pageable);
+    Page<CustomerDto.CustomerSummaryDto> getCustomersByStatus(Long companyId, Customer.CustomerStatus status, Pageable pageable);
 
     /**
      * 고객 등급별 조회
      */
-    Page<CustomerDto.CustomerSummaryDto> getCustomersByGrade(Long companyId, String customerGrade, Pageable pageable);
+    Page<CustomerDto.CustomerSummaryDto> getCustomersByGrade(Long companyId, Customer.CustomerGrade grade, Pageable pageable);
+
 
     /**
      * VIP 고객 조회
@@ -92,7 +94,7 @@ public interface CustomerService {
     /**
      * 신용한도 초과 고객 조회
      */
-    Page<CustomerDto.CustomerSummaryDto> getCustomersOverCreditLimit(Long companyId, Pageable pageable);
+    List<CustomerDto.CustomerSummaryDto> getCustomersOverCreditLimit(Long companyId);
 
     /**
      * 상위 고객 조회 (주문금액 기준)
@@ -130,19 +132,20 @@ public interface CustomerService {
     CustomerDto.CustomerResponseDto updateCustomerAddress(Long customerId, CustomerDto.CustomerAddressUpdateDto addressDto);
 
     /**
-     * 고객 거래조건 업데이트
+     * 고객 거래조건 업데이트 (PaymentTerm 관련 필드들은 Customer 엔티티에 없음)
      */
     CustomerDto.CustomerResponseDto updateCustomerTerms(Long customerId, CustomerDto.CustomerTermsUpdateDto termsDto);
 
-    /**
-     * 고객 등급 변경
-     */
-    CustomerDto.CustomerResponseDto changeCustomerGrade(Long customerId, CustomerDto.CustomerGradeChangeDto gradeChangeDto);
 
     /**
      * 고객 상태 변경
      */
-    CustomerDto.CustomerResponseDto changeCustomerStatus(Long customerId, CustomerDto.CustomerStatusChangeDto statusChangeDto);
+    void changeCustomerStatus(Long customerId, CustomerDto.CustomerStatusChangeDto statusChangeDto);
+
+    /**
+     * 고객 등급 변경
+     */
+    void changeCustomerGrade(Long customerId, CustomerDto.CustomerGradeChangeDto gradeChangeDto);
 
     /**
      * 고객 활성화/비활성화
@@ -172,7 +175,6 @@ public interface CustomerService {
     /**
      * 고객 등급 자동 업데이트 (주문금액 기준)
      */
-    void updateCustomerGradesBasedOnOrderAmount(Long companyId);
 
     /**
      * 휴면 고객 자동 전환
@@ -194,10 +196,6 @@ public interface CustomerService {
      */
     List<Object[]> getCustomerStatsByType(Long companyId);
 
-    /**
-     * 고객 등급별 통계
-     */
-    List<Object[]> getCustomerStatsByGrade(Long companyId);
 
     /**
      * 지역별 고객 분포

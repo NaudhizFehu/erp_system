@@ -6,17 +6,12 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.util.FileCopyUtils;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 
 /**
  * DDL 강제 실행 컴포넌트
@@ -36,10 +31,40 @@ public class DdlForcer {
 
     @EventListener(ApplicationReadyEvent.class)
     @Order(1) // 가장 먼저 실행
-    @Transactional
     public void forceDdlExecution() {
         try {
-            // 기존 테이블들 삭제 (순서 중요: 외래키 제약조건 고려)
+            log.info("=== DDL 강제 실행 시작 ===");
+            
+            // 1. 기존 테이블들 삭제 (개별 트랜잭션으로 처리)
+            dropExistingTables();
+            
+            // 2. Hibernate 스키마 생성 강제 실행
+            log.info("Hibernate 스키마 생성 강제 실행...");
+            entityManager.getEntityManagerFactory().getMetamodel().getEntities().forEach(entityType -> {
+                log.info("엔티티 발견: {}", entityType.getName());
+            });
+            
+            // 3. 직접 테이블 생성 (complete_schema.sql 대신)
+            log.info("직접 테이블 생성 방식으로 전환...");
+            createTablesWithHardcodedSql();
+            
+            // 4. 데이터 초기화 실행
+            initializeData();
+            
+            // 5. DB 코멘트 추가
+            addDatabaseComments();
+            
+            log.info("=== DDL 강제 실행 완료 ===");
+            
+        } catch (Exception e) {
+            log.error("DDL 강제 실행 중 오류 발생: {}", e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * 기존 테이블들 삭제 (개별 트랜잭션으로 처리)
+     */
+    private void dropExistingTables() {
             log.info("기존 테이블 삭제 중...");
             String[] dropTables = {
                 "DROP TABLE IF EXISTS stock_movements CASCADE",
@@ -58,30 +83,21 @@ public class DdlForcer {
             };
             
             for (String sql : dropTables) {
+            try {
+                // 각 삭제 작업을 개별 트랜잭션으로 처리
+                transactionTemplate.execute(status -> {
                 try {
                     jdbcTemplate.execute(sql);
                     log.info("✅ 테이블 삭제 완료: {}", sql);
+                        return null;
                 } catch (Exception e) {
                     log.warn("⚠️ 테이블 삭제 중 오류 (무시됨): {} - {}", sql, e.getMessage());
-                }
-            }
-            log.info("=== DDL 강제 실행 시작 ===");
-            
-            // 1. Hibernate 스키마 생성 강제 실행
-            log.info("Hibernate 스키마 생성 강제 실행...");
-            entityManager.getEntityManagerFactory().getMetamodel().getEntities().forEach(entityType -> {
-                log.info("엔티티 발견: {}", entityType.getName());
-            });
-            
-            // 2. 직접 테이블 생성 (complete_schema.sql 대신)
-            log.info("직접 테이블 생성 방식으로 전환...");
-            createTablesWithHardcodedSql();
-            
-            // 3. 데이터 초기화 실행
-            initializeData();
-            
+                        return null;
+                    }
+                });
         } catch (Exception e) {
-            log.error("DDL 강제 실행 중 오류 발생: {}", e.getMessage(), e);
+                log.warn("⚠️ 테이블 삭제 트랜잭션 중 오류: {} - {}", sql, e.getMessage());
+            }
         }
     }
     
@@ -90,6 +106,8 @@ public class DdlForcer {
      */
     private void createTablesWithHardcodedSql() {
         log.info("하드코딩된 SQL로 테이블 생성 중...");
+        
+        // 각 테이블을 개별 트랜잭션으로 생성
         String[] createTables = {
                 "CREATE TABLE IF NOT EXISTS companies (" +
                 "id BIGSERIAL PRIMARY KEY, " +
@@ -108,18 +126,12 @@ public class DdlForcer {
                 "fax VARCHAR(20), " +
                 "email VARCHAR(100), " +
                 "website VARCHAR(200), " +
-                "established_date DATE, " +
                 "status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE', " +
-                "company_type VARCHAR(20), " +
-                "employee_count INTEGER, " +
-                "capital_amount DECIMAL(15,0), " +
-                "description TEXT, " +
-                "logo_url VARCHAR(500), " +
+                "is_deleted BOOLEAN NOT NULL DEFAULT FALSE, " +
                 "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, " +
                 "updated_at TIMESTAMP, " +
                 "created_by BIGINT, " +
                 "updated_by BIGINT, " +
-                "is_deleted BOOLEAN NOT NULL DEFAULT FALSE, " +
                 "deleted_at TIMESTAMP, " +
                 "deleted_by BIGINT" +
                 ")",
@@ -129,39 +141,30 @@ public class DdlForcer {
                 "company_id BIGINT NOT NULL, " +
                 "department_code VARCHAR(20) NOT NULL, " +
                 "name VARCHAR(100) NOT NULL, " +
-                "name_en VARCHAR(100), " +
-                "description VARCHAR(500), " +
-                "level INTEGER NOT NULL DEFAULT 1, " +
-                "sort_order INTEGER DEFAULT 0, " +
+                "name_en VARCHAR(200), " +
+                "description TEXT, " +
                 "parent_department_id BIGINT, " +
                 "manager_id BIGINT, " +
-                "department_type VARCHAR(20), " +
+                "level INTEGER NOT NULL DEFAULT 1, " +
+                "sort_order INTEGER DEFAULT 0, " +
+                "department_type VARCHAR(20) NOT NULL DEFAULT 'DEPARTMENT', " +
                 "status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE', " +
-                "cost_center_code VARCHAR(20), " +
-                "phone VARCHAR(20), " +
-                "fax VARCHAR(20), " +
-                "email VARCHAR(100), " +
-                "location VARCHAR(200), " +
-                "budget_amount DECIMAL(15,2), " +
+                "is_deleted BOOLEAN NOT NULL DEFAULT FALSE, " +
                 "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, " +
                 "updated_at TIMESTAMP, " +
                 "created_by BIGINT, " +
                 "updated_by BIGINT, " +
-                "is_deleted BOOLEAN NOT NULL DEFAULT FALSE, " +
                 "deleted_at TIMESTAMP, " +
                 "deleted_by BIGINT, " +
-                "FOREIGN KEY (company_id) REFERENCES companies(id), " +
-                "FOREIGN KEY (parent_department_id) REFERENCES departments(id)" +
+                "FOREIGN KEY (company_id) REFERENCES companies(id)" +
                 ")",
                 
                 "CREATE TABLE IF NOT EXISTS users (" +
                 "id BIGSERIAL PRIMARY KEY, " +
-                "company_id BIGINT NOT NULL, " +
-                "department_id BIGINT, " +
                 "username VARCHAR(50) UNIQUE NOT NULL, " +
+                "password VARCHAR(200) NOT NULL, " +
                 "email VARCHAR(100) UNIQUE NOT NULL, " +
-                "password VARCHAR(255) NOT NULL, " +
-                "full_name VARCHAR(50) NOT NULL, " +
+                "full_name VARCHAR(100) NOT NULL, " +
                 "phone VARCHAR(20), " +
                 "role VARCHAR(20) NOT NULL DEFAULT 'USER', " +
                 "is_active BOOLEAN NOT NULL DEFAULT TRUE, " +
@@ -169,6 +172,8 @@ public class DdlForcer {
                 "is_password_expired BOOLEAN NOT NULL DEFAULT FALSE, " +
                 "last_login_at TIMESTAMP, " +
                 "password_changed_at TIMESTAMP, " +
+                "company_id BIGINT NOT NULL, " +
+                "department_id BIGINT, " +
                 "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, " +
                 "updated_at TIMESTAMP, " +
                 "created_by BIGINT, " +
@@ -178,6 +183,24 @@ public class DdlForcer {
                 "deleted_by BIGINT, " +
                 "FOREIGN KEY (company_id) REFERENCES companies(id), " +
                 "FOREIGN KEY (department_id) REFERENCES departments(id)" +
+                ")",
+                
+                "CREATE TABLE IF NOT EXISTS positions (" +
+                "id BIGSERIAL PRIMARY KEY, " +
+                "company_id BIGINT NOT NULL, " +
+                "position_code VARCHAR(20) NOT NULL, " +
+                "name VARCHAR(100) NOT NULL, " +
+                "description TEXT, " +
+                "level INTEGER NOT NULL DEFAULT 1, " +
+                "is_active BOOLEAN NOT NULL DEFAULT TRUE, " +
+                "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, " +
+                "updated_at TIMESTAMP, " +
+                "created_by BIGINT, " +
+                "updated_by BIGINT, " +
+                "is_deleted BOOLEAN NOT NULL DEFAULT FALSE, " +
+                "deleted_at TIMESTAMP, " +
+                "deleted_by BIGINT, " +
+                "FOREIGN KEY (company_id) REFERENCES companies(id)" +
                 ")",
                 
                 "CREATE TABLE IF NOT EXISTS employees (" +
@@ -201,7 +224,6 @@ public class DdlForcer {
                 "termination_date DATE, " +
                 "employment_status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE', " +
                 "employment_type VARCHAR(20), " +
-                "base_salary DECIMAL(12,2), " +
                 "bank_name VARCHAR(50), " +
                 "account_number VARCHAR(50), " +
                 "account_holder VARCHAR(50), " +
@@ -327,24 +349,6 @@ public class DdlForcer {
                 "FOREIGN KEY (parent_account_id) REFERENCES accounts(id)" +
                 ")",
                 
-                "CREATE TABLE IF NOT EXISTS positions (" +
-                "id BIGSERIAL PRIMARY KEY, " +
-                "company_id BIGINT NOT NULL, " +
-                "position_code VARCHAR(20) NOT NULL, " +
-                "name VARCHAR(100) NOT NULL, " +
-                "description TEXT, " +
-                "level INTEGER NOT NULL DEFAULT 1, " +
-                "is_active BOOLEAN NOT NULL DEFAULT TRUE, " +
-                "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, " +
-                "updated_at TIMESTAMP, " +
-                "created_by BIGINT, " +
-                "updated_by BIGINT, " +
-                "is_deleted BOOLEAN NOT NULL DEFAULT FALSE, " +
-                "deleted_at TIMESTAMP, " +
-                "deleted_by BIGINT, " +
-                "FOREIGN KEY (company_id) REFERENCES companies(id)" +
-                ")",
-                
                 "CREATE TABLE IF NOT EXISTS customers (" +
                 "id BIGSERIAL PRIMARY KEY, " +
                 "company_id BIGINT NOT NULL, " +
@@ -459,22 +463,50 @@ public class DdlForcer {
             
         for (String sql : createTables) {
             try {
+                // 각 테이블을 개별 트랜잭션으로 생성
+                transactionTemplate.execute(status -> {
+            try {
                 jdbcTemplate.execute(sql);
                 log.info("✅ 테이블 생성 성공");
+                        return null;
             } catch (Exception e) {
                 log.warn("⚠️ 테이블 생성 중 오류 (이미 존재할 수 있음): {}", e.getMessage());
+                        return null;
+                    }
+                });
+            } catch (Exception e) {
+                log.warn("⚠️ 테이블 생성 트랜잭션 중 오류: {}", e.getMessage());
             }
         }
         log.info("✅ 하드코딩된 테이블 생성 완료");
     }
     
     /**
-     * 데이터 초기화 실행
+     * 데이터 초기화 실행 (안전한 개별 트랜잭션 처리)
      */
     private void initializeData() {
         log.info("=== 데이터 초기화 시작 ===");
         
-        // 3-1. 회사 데이터 삽입
+        // 각 데이터 삽입을 개별적으로 안전하게 처리 (외래키 의존성 순서 고려)
+        insertCompanyData();
+        insertDepartmentData();
+        insertUserData();
+        insertPositionData();
+        insertEmployeeData();
+        insertProductCategoryData();
+        insertWarehouseData();  // 상품보다 먼저 삽입
+        insertProductData();
+        insertInventoryData();  // 상품과 창고 후에 삽입
+        insertCustomerData();
+        
+        log.info("=== 데이터 초기화 완료 ===");
+    }
+    
+    /**
+     * 회사 데이터 삽입
+     */
+    private void insertCompanyData() {
+        try {
         transactionTemplate.execute(status -> {
             try {
                 jdbcTemplate.execute("""
@@ -488,428 +520,405 @@ public class DdlForcer {
             }
             return null;
         });
-        
-        // 3-2. 부서 데이터 삽입
-        transactionTemplate.execute(status -> {
-            try {
-                jdbcTemplate.execute("""
-                        INSERT INTO departments (id, department_code, name, description, parent_department_id, manager_id, company_id)
-                        VALUES (1, 'HR_DEPT', '인사부', '인사관리 및 채용업무', NULL, NULL, 1)
-                    ON CONFLICT (id) DO NOTHING
-                    """);
-                log.info("✅ 인사부 데이터 삽입 성공");
             } catch (Exception e) {
-                log.warn("⚠️ 인사부 데이터 삽입 중 오류: {}", e.getMessage());
-            }
-            return null;
-        });
+            log.warn("⚠️ 회사 데이터 삽입 트랜잭션 중 오류: {}", e.getMessage());
+        }
+    }
+    
+    /**
+     * 부서 데이터 삽입
+     */
+    private void insertDepartmentData() {
+        String[] departmentInserts = {
+            "INSERT INTO departments (id, department_code, name, description, parent_department_id, manager_id, company_id, department_type) VALUES (1, 'HR_DEPT', '인사부', '인사관리 및 채용업무', NULL, NULL, 1, 'DEPARTMENT') ON CONFLICT (id) DO NOTHING",
+            "INSERT INTO departments (id, department_code, name, description, parent_department_id, manager_id, company_id, department_type) VALUES (2, 'SALES_DEPT', '영업부', '영업 및 고객관리', NULL, NULL, 1, 'DEPARTMENT') ON CONFLICT (id) DO NOTHING",
+            "INSERT INTO departments (id, department_code, name, description, parent_department_id, manager_id, company_id, department_type) VALUES (3, 'IT_DEPT', 'IT부서', '시스템 개발 및 유지보수', NULL, NULL, 1, 'DEPARTMENT') ON CONFLICT (id) DO NOTHING"
+        };
         
-        transactionTemplate.execute(status -> {
-            try {
-                jdbcTemplate.execute("""
-                        INSERT INTO departments (id, department_code, name, description, parent_department_id, manager_id, company_id)
-                        VALUES (2, 'SALES_DEPT', '영업부', '영업 및 고객관리', NULL, NULL, 1)
-                    ON CONFLICT (id) DO NOTHING
-                    """);
-                log.info("✅ 영업부 데이터 삽입 성공");
-            } catch (Exception e) {
-                log.warn("⚠️ 영업부 데이터 삽입 중 오류: {}", e.getMessage());
-            }
-            return null;
-        });
-        
-        transactionTemplate.execute(status -> {
-            try {
-                jdbcTemplate.execute("""
-                        INSERT INTO departments (id, department_code, name, description, parent_department_id, manager_id, company_id)
-                        VALUES (3, 'IT_DEPT', 'IT부서', '시스템 개발 및 유지보수', NULL, NULL, 1)
-                    ON CONFLICT (id) DO NOTHING
-                    """);
-                log.info("✅ IT부서 데이터 삽입 성공");
-            } catch (Exception e) {
-                log.warn("⚠️ IT부서 데이터 삽입 중 오류: {}", e.getMessage());
-            }
-            return null;
-        });
-        
-        // 3-3. 사용자 계정 데이터 삽입
-        transactionTemplate.execute(status -> {
+        for (String sql : departmentInserts) {
+            executeSafeInsert(sql, "부서 데이터");
+        }
+    }
+    
+    /**
+     * 사용자 데이터 삽입
+     */
+    private void insertUserData() {
             try {
                 String adminPassword = passwordEncoder.encode("admin123");
-                log.info("🔐 admin123 해시: {}", adminPassword);
+            String userPassword = passwordEncoder.encode("user123");
                 
                 // 비밀번호 검증
-                boolean matches = passwordEncoder.matches("admin123", adminPassword);
-                log.info("🔍 비밀번호 검증 결과: {}", matches);
+            boolean adminMatches = passwordEncoder.matches("admin123", adminPassword);
+            boolean userMatches = passwordEncoder.matches("user123", userPassword);
+            log.info("🔐 admin 비밀번호 검증 결과: {}", adminMatches);
+            log.info("🔐 user 비밀번호 검증 결과: {}", userMatches);
+            
+            String[] userInserts = {
+                String.format("INSERT INTO users (id, username, password, email, full_name, phone, role, is_active, is_locked, is_password_expired, company_id, department_id, password_changed_at) VALUES (1, 'admin', '%s', 'admin@abc.com', '관리자', '02-1234-5678', 'ADMIN', true, false, false, 1, 1, NOW()) ON CONFLICT (id) DO NOTHING", adminPassword),
+                String.format("INSERT INTO users (id, username, password, email, full_name, phone, role, is_active, is_locked, is_password_expired, company_id, department_id, password_changed_at) VALUES (2, 'user', '%s', 'user@abc.com', '일반사용자', '02-2345-6789', 'USER', true, false, false, 1, 3, NOW()) ON CONFLICT (id) DO NOTHING", userPassword)
+            };
+            
+            for (String sql : userInserts) {
+                executeSafeInsert(sql, "사용자 데이터");
+            }
+            
+            log.info("✅ 로그인 계정 정보:");
+            log.info("   👤 admin 계정 - 사용자명: admin, 비밀번호: admin123, 역할: ADMIN");
+            log.info("   👤 user 계정 - 사용자명: user, 비밀번호: user123, 역할: USER");
+            
+            } catch (Exception e) {
+            log.warn("⚠️ 사용자 데이터 삽입 중 오류: {}", e.getMessage());
+        }
+    }
+    
+    /**
+     * 직급 데이터 삽입
+     */
+    private void insertPositionData() {
+        String[] positionInserts = {
+            "INSERT INTO positions (id, company_id, position_code, name, description, level, is_active, is_deleted) VALUES (1, 1, 'CEO', '대표이사', '최고경영자', 1, true, false) ON CONFLICT (id) DO NOTHING",
+            "INSERT INTO positions (id, company_id, position_code, name, description, level, is_active, is_deleted) VALUES (2, 1, 'MANAGER', '부장', '부서장', 4, true, false) ON CONFLICT (id) DO NOTHING",
+            "INSERT INTO positions (id, company_id, position_code, name, description, level, is_active, is_deleted) VALUES (3, 1, 'STAFF', '대리', '대리급', 7, true, false) ON CONFLICT (id) DO NOTHING"
+        };
+        
+        for (String sql : positionInserts) {
+            executeSafeInsert(sql, "직급 데이터");
+        }
+    }
+    
+    /**
+     * 직원 데이터 삽입
+     */
+    private void insertEmployeeData() {
+        String[] employeeInserts = {
+            "INSERT INTO employees (id, company_id, department_id, position_id, employee_number, name, email, phone, hire_date, employment_status, address, birth_date, is_deleted) VALUES (1, 1, 1, 1, 'EMP001', '김관리', 'admin@abc.com', '010-1234-5678', '2020-01-01', 'ACTIVE', '서울특별시 강남구', '1980-01-01', false) ON CONFLICT (id) DO NOTHING",
+            "INSERT INTO employees (id, company_id, department_id, position_id, employee_number, name, email, phone, hire_date, employment_status, address, birth_date, is_deleted) VALUES (2, 1, 2, 2, 'EMP002', '이영업', 'sales@abc.com', '010-2345-6789', '2020-02-01', 'ACTIVE', '서울특별시 서초구', '1985-05-15', false) ON CONFLICT (id) DO NOTHING",
+            "INSERT INTO employees (id, company_id, department_id, position_id, employee_number, name, email, phone, hire_date, employment_status, address, birth_date, is_deleted) VALUES (3, 1, 3, 3, 'EMP003', '박개발', 'dev@abc.com', '010-3456-7890', '2020-03-01', 'ACTIVE', '서울특별시 마포구', '1990-08-20', false) ON CONFLICT (id) DO NOTHING"
+        };
+        
+        for (String sql : employeeInserts) {
+            executeSafeInsert(sql, "직원 데이터");
+        }
+    }
+    
+    /**
+     * 상품 카테고리 데이터 삽입
+     */
+    private void insertProductCategoryData() {
+        String[] categoryInserts = {
+            "INSERT INTO product_categories (id, company_id, category_code, name, description, parent_category_id, is_active, is_deleted) VALUES (1, 1, 'ELECTRONICS', '전자제품', '전자제품 카테고리', NULL, true, false) ON CONFLICT (id) DO NOTHING",
+            "INSERT INTO product_categories (id, company_id, category_code, name, description, parent_category_id, is_active, is_deleted) VALUES (2, 1, 'COMPUTER', '컴퓨터', '컴퓨터 및 주변기기', 1, true, false) ON CONFLICT (id) DO NOTHING",
+            "INSERT INTO product_categories (id, company_id, category_code, name, description, parent_category_id, is_active, is_deleted) VALUES (3, 1, 'OFFICE', '사무용품', '사무용품 및 소모품', NULL, true, false) ON CONFLICT (id) DO NOTHING"
+        };
+        
+        for (String sql : categoryInserts) {
+            executeSafeInsert(sql, "상품 카테고리 데이터");
+        }
+    }
+    
+    /**
+     * 상품 데이터 삽입
+     */
+    private void insertProductData() {
+        String[] productInserts = {
+            "INSERT INTO products (id, company_id, category_id, product_code, product_name, description, product_type, product_status, base_unit, standard_cost, selling_price, is_active, is_deleted) VALUES (1, 1, 2, 'LAPTOP001', '노트북', '고성능 노트북', 'FINISHED_GOODS', 'ACTIVE', '대', 1200000, 1500000, true, false) ON CONFLICT (id) DO NOTHING",
+            "INSERT INTO products (id, company_id, category_id, product_code, product_name, description, product_type, product_status, base_unit, standard_cost, selling_price, is_active, is_deleted) VALUES (2, 1, 2, 'MOUSE001', '무선마우스', '블루투스 무선마우스', 'FINISHED_GOODS', 'ACTIVE', '개', 30000, 50000, true, false) ON CONFLICT (id) DO NOTHING",
+            "INSERT INTO products (id, company_id, category_id, product_code, product_name, description, product_type, product_status, base_unit, standard_cost, selling_price, is_active, is_deleted) VALUES (3, 1, 3, 'PEN001', '볼펜', '검은색 볼펜', 'CONSUMABLE', 'ACTIVE', '자루', 500, 1000, true, false) ON CONFLICT (id) DO NOTHING",
+            "INSERT INTO products (id, company_id, category_id, product_code, product_name, description, product_type, product_status, base_unit, standard_cost, selling_price, is_active, is_deleted) VALUES (4, 1, 3, 'A4PAPER001', 'A4용지', 'A4 복사용지 80g', 'CONSUMABLE', 'ACTIVE', '박스', 15000, 25000, true, false) ON CONFLICT (id) DO NOTHING"
+        };
+        
+        for (String sql : productInserts) {
+            executeSafeInsert(sql, "상품 데이터");
+        }
+    }
+    
+    /**
+     * 창고 데이터 삽입
+     */
+    private void insertWarehouseData() {
+        String[] warehouseInserts = {
+            "INSERT INTO warehouses (id, company_id, warehouse_code, name, location, capacity, warehouse_type, is_active, is_deleted) VALUES (1, 1, 'MAIN_WH', '본사창고', '서울특별시 강남구 테헤란로 123', 1000, 'MAIN', true, false) ON CONFLICT (id) DO NOTHING",
+            "INSERT INTO warehouses (id, company_id, warehouse_code, name, location, capacity, warehouse_type, is_active, is_deleted) VALUES (2, 1, 'SUB_WH', '지점창고', '서울특별시 서초구 서초대로 456', 500, 'BRANCH', true, false) ON CONFLICT (id) DO NOTHING"
+        };
+        
+        for (String sql : warehouseInserts) {
+            executeSafeInsert(sql, "창고 데이터");
+        }
+    }
+    
+    /**
+     * 재고 데이터 삽입
+     */
+    private void insertInventoryData() {
+        String[] inventoryInserts = {
+            "INSERT INTO inventories (id, company_id, product_id, warehouse_id, quantity, reserved_quantity, available_quantity, reorder_point, max_stock, is_deleted) VALUES (1, 1, 1, 1, 10, 0, 10, 2, 50, false) ON CONFLICT (id) DO NOTHING",
+            "INSERT INTO inventories (id, company_id, product_id, warehouse_id, quantity, reserved_quantity, available_quantity, reorder_point, max_stock, is_deleted) VALUES (2, 1, 2, 1, 50, 5, 45, 10, 100, false) ON CONFLICT (id) DO NOTHING",
+            "INSERT INTO inventories (id, company_id, product_id, warehouse_id, quantity, reserved_quantity, available_quantity, reorder_point, max_stock, is_deleted) VALUES (3, 1, 3, 1, 200, 0, 200, 50, 500, false) ON CONFLICT (id) DO NOTHING",
+            "INSERT INTO inventories (id, company_id, product_id, warehouse_id, quantity, reserved_quantity, available_quantity, reorder_point, max_stock, is_deleted) VALUES (4, 1, 4, 1, 30, 0, 30, 5, 100, false) ON CONFLICT (id) DO NOTHING"
+        };
+        
+        for (String sql : inventoryInserts) {
+            executeSafeInsert(sql, "재고 데이터");
+        }
+    }
+    
+    /**
+     * 고객 데이터 삽입
+     */
+    private void insertCustomerData() {
+        String[] customerInserts = {
+            "INSERT INTO customers (id, company_id, customer_code, customer_name, customer_type, phone, email, address, is_deleted) VALUES (1, 1, 'CUST001', 'ABC 기업', 'CORPORATE', '02-1234-5678', 'info@abc.com', '서울특별시 강남구 테헤란로 123', false) ON CONFLICT (id) DO NOTHING",
+            "INSERT INTO customers (id, company_id, customer_code, customer_name, customer_type, phone, email, address, is_deleted) VALUES (2, 1, 'CUST002', 'XYZ 주식회사', 'CORPORATE', '02-2345-6789', 'contact@xyz.com', '서울특별시 서초구 서초대로 456', false) ON CONFLICT (id) DO NOTHING",
+            "INSERT INTO customers (id, company_id, customer_code, customer_name, customer_type, phone, email, address, is_deleted) VALUES (3, 1, 'CUST003', '홍길동', 'INDIVIDUAL', '010-5555-6666', 'hong@email.com', '서울특별시 마포구 홍대입구역', false) ON CONFLICT (id) DO NOTHING"
+        };
+        
+        for (String sql : customerInserts) {
+            executeSafeInsert(sql, "고객 데이터");
+        }
+    }
+    
+    /**
+     * 안전한 데이터 삽입 실행 (개별 트랜잭션 + 재시도 로직)
+     */
+    private void executeSafeInsert(String sql, String dataType) {
+        int maxRetries = 3;
+        int retryCount = 0;
+        
+        while (retryCount < maxRetries) {
+            try {
+                // 개별 트랜잭션으로 실행하여 연결 문제 격리
+                transactionTemplate.execute(status -> {
+                    try {
+                        jdbcTemplate.execute(sql);
+                        log.info("✅ {} 삽입 성공", dataType);
+                        return null;
+                    } catch (Exception e) {
+                        log.warn("⚠️ {} 삽입 중 오류: {}", dataType, e.getMessage());
+                        // 트랜잭션 롤백
+                        status.setRollbackOnly();
+                        return null;
+                    }
+                });
+                // 성공 시 루프 종료
+                break;
+            } catch (Exception e) {
+                retryCount++;
+                log.warn("⚠️ {} 삽입 트랜잭션 중 오류 (시도 {}/{}): {}", dataType, retryCount, maxRetries, e.getMessage());
                 
-                jdbcTemplate.execute(String.format("""
-                    INSERT INTO users (id, username, password, email, full_name, phone, role, is_active, is_locked, is_password_expired, company_id, department_id, password_changed_at)
-                    VALUES (1, 'admin', '%s', 'admin@abc.com', '관리자', '02-1234-5678', 'ADMIN', true, false, false, 1, 1, NOW())
-                    ON CONFLICT (id) DO NOTHING
-                    """, adminPassword));
-                log.info("✅ admin 계정 삽입 성공 (비밀번호: admin123)");
-            } catch (Exception e) {
-                log.warn("⚠️ admin 계정 삽입 중 오류: {}", e.getMessage());
+                // 연결 문제 시 재시도
+                if (e.getMessage().contains("I/O error") || e.getMessage().contains("Connection")) {
+                    if (retryCount < maxRetries) {
+                        log.info("🔄 데이터베이스 연결 문제 감지, 2초 후 재시도...");
+                        try {
+                            Thread.sleep(2000); // 2초 대기
+                        } catch (InterruptedException ie) {
+                            Thread.currentThread().interrupt();
+                            break;
+                        }
+                    } else {
+                        log.warn("⚠️ 최대 재시도 횟수 초과, {} 삽입 건너뜀", dataType);
+                    }
+                } else {
+                    // 연결 문제가 아닌 경우 재시도하지 않음
+                    break;
+                }
             }
-            return null;
-        });
+        }
+    }
+
+    /**
+     * DB 테이블과 컬럼에 코멘트 추가
+     */
+    private void addDatabaseComments() {
+        log.info("=== DB 코멘트 추가 시작 ===");
         
+        try {
+            // 테이블 코멘트 추가 (개별 트랜잭션)
+            addTableComments();
+            
+            // 컬럼 코멘트 추가 (개별 트랜잭션)
+            addColumnComments();
+            
+            log.info("✅ DB 코멘트 추가 완료");
+            } catch (Exception e) {
+            log.warn("⚠️ DB 코멘트 추가 중 오류: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * 테이블 코멘트 추가
+     */
+    private void addTableComments() {
+        String[] tableComments = {
+            "COMMENT ON TABLE companies IS '회사 정보 테이블'",
+            "COMMENT ON TABLE departments IS '부서 정보 테이블'",
+            "COMMENT ON TABLE positions IS '직급 정보 테이블'",
+            "COMMENT ON TABLE employees IS '직원 정보 테이블'",
+            "COMMENT ON TABLE users IS '사용자 계정 테이블'",
+            "COMMENT ON TABLE accounts IS '계정 정보 테이블'",
+            "COMMENT ON TABLE customers IS '고객 정보 테이블'",
+            "COMMENT ON TABLE products IS '상품 정보 테이블'",
+            "COMMENT ON TABLE product_categories IS '상품 카테고리 테이블'",
+            "COMMENT ON TABLE orders IS '주문 정보 테이블'",
+            "COMMENT ON TABLE inventories IS '재고 정보 테이블'",
+            "COMMENT ON TABLE warehouses IS '창고 정보 테이블'",
+            "COMMENT ON TABLE stock_movements IS '재고 이동 이력 테이블'"
+        };
+
+        for (String comment : tableComments) {
+            executeSafeComment(comment, "테이블 코멘트");
+        }
+    }
+
+    /**
+     * 컬럼 코멘트 추가
+     */
+    private void addColumnComments() {
+        String[] columnComments = {
+            // companies 테이블
+            "COMMENT ON COLUMN companies.id IS '회사 고유 ID'",
+            "COMMENT ON COLUMN companies.company_code IS '회사 코드'",
+            "COMMENT ON COLUMN companies.name IS '회사명'",
+            "COMMENT ON COLUMN companies.name_en IS '회사명(영문)'",
+            "COMMENT ON COLUMN companies.business_number IS '사업자등록번호'",
+            "COMMENT ON COLUMN companies.corporation_number IS '법인등록번호'",
+            "COMMENT ON COLUMN companies.ceo_name IS '대표자명'",
+            "COMMENT ON COLUMN companies.business_type IS '업종'",
+            "COMMENT ON COLUMN companies.business_item IS '업태'",
+            "COMMENT ON COLUMN companies.address IS '주소'",
+            "COMMENT ON COLUMN companies.detailed_address IS '상세주소'",
+            "COMMENT ON COLUMN companies.postal_code IS '우편번호'",
+            "COMMENT ON COLUMN companies.phone IS '전화번호'",
+            "COMMENT ON COLUMN companies.fax IS '팩스번호'",
+            "COMMENT ON COLUMN companies.email IS '이메일'",
+            "COMMENT ON COLUMN companies.website IS '웹사이트'",
+            "COMMENT ON COLUMN companies.status IS '회사 상태'",
+
+            // departments 테이블
+            "COMMENT ON COLUMN departments.id IS '부서 고유 ID'",
+            "COMMENT ON COLUMN departments.company_id IS '소속 회사 ID'",
+            "COMMENT ON COLUMN departments.department_code IS '부서 코드'",
+            "COMMENT ON COLUMN departments.name IS '부서명'",
+            "COMMENT ON COLUMN departments.name_en IS '부서명(영문)'",
+            "COMMENT ON COLUMN departments.description IS '부서 설명'",
+            "COMMENT ON COLUMN departments.parent_department_id IS '상위 부서 ID'",
+            "COMMENT ON COLUMN departments.manager_id IS '부서장 ID'",
+            "COMMENT ON COLUMN departments.level IS '부서 레벨'",
+            "COMMENT ON COLUMN departments.sort_order IS '정렬 순서'",
+            "COMMENT ON COLUMN departments.department_type IS '부서 유형'",
+            "COMMENT ON COLUMN departments.status IS '부서 상태'",
+
+            // positions 테이블
+            "COMMENT ON COLUMN positions.id IS '직급 고유 ID'",
+            "COMMENT ON COLUMN positions.company_id IS '소속 회사 ID'",
+            "COMMENT ON COLUMN positions.position_code IS '직급 코드'",
+            "COMMENT ON COLUMN positions.name IS '직급명'",
+            "COMMENT ON COLUMN positions.description IS '직급 설명'",
+            "COMMENT ON COLUMN positions.level IS '직급 레벨'",
+            "COMMENT ON COLUMN positions.is_active IS '활성화 여부'",
+
+            // employees 테이블
+            "COMMENT ON COLUMN employees.id IS '직원 고유 ID'",
+            "COMMENT ON COLUMN employees.company_id IS '소속 회사 ID'",
+            "COMMENT ON COLUMN employees.department_id IS '소속 부서 ID'",
+            "COMMENT ON COLUMN employees.position_id IS '직급 ID'",
+            "COMMENT ON COLUMN employees.employee_number IS '직원번호'",
+            "COMMENT ON COLUMN employees.name IS '직원명'",
+            "COMMENT ON COLUMN employees.name_en IS '직원명(영문)'",
+            "COMMENT ON COLUMN employees.email IS '이메일'",
+            "COMMENT ON COLUMN employees.phone IS '전화번호'",
+            "COMMENT ON COLUMN employees.mobile IS '휴대폰번호'",
+            "COMMENT ON COLUMN employees.resident_number IS '주민등록번호'",
+            "COMMENT ON COLUMN employees.birth_date IS '생년월일'",
+            "COMMENT ON COLUMN employees.gender IS '성별'",
+            "COMMENT ON COLUMN employees.address IS '주소'",
+            "COMMENT ON COLUMN employees.detailed_address IS '상세주소'",
+            "COMMENT ON COLUMN employees.postal_code IS '우편번호'",
+            "COMMENT ON COLUMN employees.hire_date IS '입사일'",
+            "COMMENT ON COLUMN employees.termination_date IS '퇴사일'",
+            "COMMENT ON COLUMN employees.employment_status IS '고용 상태'",
+            "COMMENT ON COLUMN employees.employment_type IS '고용 유형'",
+
+            // users 테이블 (기본 컬럼만)
+            "COMMENT ON COLUMN users.id IS '사용자 고유 ID'",
+            "COMMENT ON COLUMN users.username IS '사용자명'",
+            "COMMENT ON COLUMN users.password IS '암호화된 비밀번호'",
+            "COMMENT ON COLUMN users.email IS '이메일'",
+            "COMMENT ON COLUMN users.role IS '사용자 역할'",
+            "COMMENT ON COLUMN users.is_active IS '활성화 여부'",
+
+            // customers 테이블 (기본 컬럼만)
+            "COMMENT ON COLUMN customers.id IS '고객 고유 ID'",
+            "COMMENT ON COLUMN customers.company_id IS '소속 회사 ID'",
+            "COMMENT ON COLUMN customers.customer_code IS '고객 코드'",
+            "COMMENT ON COLUMN customers.customer_name IS '고객명'",
+            "COMMENT ON COLUMN customers.customer_type IS '고객 유형'",
+            "COMMENT ON COLUMN customers.customer_status IS '고객 상태'",
+            "COMMENT ON COLUMN customers.email IS '이메일'",
+            "COMMENT ON COLUMN customers.phone IS '전화번호'",
+            "COMMENT ON COLUMN customers.address IS '주소'",
+
+            // products 테이블 (기본 컬럼만)
+            "COMMENT ON COLUMN products.id IS '상품 고유 ID'",
+            "COMMENT ON COLUMN products.company_id IS '소속 회사 ID'",
+            "COMMENT ON COLUMN products.product_code IS '상품 코드'",
+            "COMMENT ON COLUMN products.product_name IS '상품명'",
+            "COMMENT ON COLUMN products.description IS '상품 설명'",
+            "COMMENT ON COLUMN products.category_id IS '카테고리 ID'",
+            "COMMENT ON COLUMN products.selling_price IS '판매가격'",
+            "COMMENT ON COLUMN products.standard_cost IS '표준원가'",
+
+            // orders 테이블 (기본 컬럼만)
+            "COMMENT ON COLUMN orders.id IS '주문 고유 ID'",
+            "COMMENT ON COLUMN orders.company_id IS '소속 회사 ID'",
+            "COMMENT ON COLUMN orders.customer_id IS '고객 ID'",
+            "COMMENT ON COLUMN orders.order_number IS '주문번호'",
+            "COMMENT ON COLUMN orders.order_date IS '주문일'",
+            "COMMENT ON COLUMN orders.order_status IS '주문 상태'",
+            "COMMENT ON COLUMN orders.total_amount IS '총 주문금액'",
+            "COMMENT ON COLUMN orders.payment_status IS '결제 상태'",
+            "COMMENT ON COLUMN orders.delivery_date IS '배송일'",
+
+            // inventories 테이블 (기본 컬럼만)
+            "COMMENT ON COLUMN inventories.id IS '재고 고유 ID'",
+            "COMMENT ON COLUMN inventories.company_id IS '소속 회사 ID'",
+            "COMMENT ON COLUMN inventories.product_id IS '상품 ID'",
+            "COMMENT ON COLUMN inventories.warehouse_id IS '창고 ID'",
+            "COMMENT ON COLUMN inventories.quantity IS '재고 수량'",
+
+            // warehouses 테이블 (기본 컬럼만)
+            "COMMENT ON COLUMN warehouses.id IS '창고 고유 ID'",
+            "COMMENT ON COLUMN warehouses.company_id IS '소속 회사 ID'",
+            "COMMENT ON COLUMN warehouses.warehouse_code IS '창고 코드'",
+            "COMMENT ON COLUMN warehouses.name IS '창고명'",
+            "COMMENT ON COLUMN warehouses.location IS '창고 위치'",
+            "COMMENT ON COLUMN warehouses.capacity IS '창고 용량'",
+            "COMMENT ON COLUMN warehouses.warehouse_type IS '창고 유형'"
+        };
+
+        for (String comment : columnComments) {
+            executeSafeComment(comment, "컬럼 코멘트");
+        }
+    }
+
+    /**
+     * 안전한 코멘트 실행 (개별 트랜잭션)
+     */
+    private void executeSafeComment(String sql, String commentType) {
+        try {
         transactionTemplate.execute(status -> {
             try {
-                String userPassword = passwordEncoder.encode("admin123");
-                jdbcTemplate.execute(String.format("""
-                    INSERT INTO users (id, username, password, email, full_name, phone, role, is_active, is_locked, is_password_expired, company_id, department_id, password_changed_at)
-                    VALUES (2, 'user', '%s', 'user@abc.com', '일반사용자', '02-2345-6789', 'USER', true, false, false, 1, 3, NOW())
-                    ON CONFLICT (id) DO NOTHING
-                    """, userPassword));
-                log.info("✅ user 계정 삽입 성공 (비밀번호: admin123)");
+                    jdbcTemplate.execute(sql);
+                    log.debug("✅ {} 추가 성공: {}", commentType, sql);
+                    return null;
             } catch (Exception e) {
-                log.warn("⚠️ user 계정 삽입 중 오류: {}", e.getMessage());
-            }
+                    log.warn("⚠️ {} 추가 중 오류: {} - {}", commentType, sql, e.getMessage());
             return null;
-        });
-        
-        // 3-4. 직급 데이터 삽입
-        transactionTemplate.execute(status -> {
-            try {
-                jdbcTemplate.execute("""
-                        INSERT INTO positions (id, company_id, position_code, name, description, level, is_active, is_deleted)
-                        VALUES (1, 1, 'CEO', '대표이사', '최고경영자', 1, true, false)
-                        ON CONFLICT (id) DO NOTHING
-                        """);
-                log.info("✅ 대표이사 직급 데이터 삽입 성공");
+                }
+            });
             } catch (Exception e) {
-                log.warn("⚠️ 대표이사 직급 데이터 삽입 중 오류: {}", e.getMessage());
+            log.warn("⚠️ {} 추가 트랜잭션 중 오류: {} - {}", commentType, sql, e.getMessage());
             }
-            return null;
-        });
-        
-        transactionTemplate.execute(status -> {
-            try {
-                jdbcTemplate.execute("""
-                        INSERT INTO positions (id, company_id, position_code, name, description, level, is_active, is_deleted)
-                        VALUES (2, 1, 'MANAGER', '부장', '부서장', 4, true, false)
-                        ON CONFLICT (id) DO NOTHING
-                        """);
-                log.info("✅ 부장 직급 데이터 삽입 성공");
-            } catch (Exception e) {
-                log.warn("⚠️ 부장 직급 데이터 삽입 중 오류: {}", e.getMessage());
-            }
-            return null;
-        });
-        
-        transactionTemplate.execute(status -> {
-            try {
-                jdbcTemplate.execute("""
-                        INSERT INTO positions (id, company_id, position_code, name, description, level, is_active, is_deleted)
-                        VALUES (3, 1, 'STAFF', '대리', '대리급', 7, true, false)
-                        ON CONFLICT (id) DO NOTHING
-                        """);
-                log.info("✅ 대리 직급 데이터 삽입 성공");
-            } catch (Exception e) {
-                log.warn("⚠️ 대리 직급 데이터 삽입 중 오류: {}", e.getMessage());
-            }
-            return null;
-        });
-        
-        // 3-5. 직원 데이터 삽입 (모든 직원)
-        transactionTemplate.execute(status -> {
-            try {
-                jdbcTemplate.execute("""
-                        INSERT INTO employees (id, company_id, department_id, position_id, employee_number, name, email, phone, hire_date, employment_status, base_salary, address, birth_date, is_deleted)
-                        VALUES (1, 1, 1, 1, 'EMP001', '김관리', 'admin@abc.com', '010-1234-5678', '2020-01-01', 'ACTIVE', 200000000, '서울특별시 강남구', '1980-01-01', false)
-                        ON CONFLICT (id) DO NOTHING
-                        """);
-                log.info("✅ 김관리 직원 데이터 삽입 성공");
-            } catch (Exception e) {
-                log.warn("⚠️ 김관리 직원 데이터 삽입 중 오류: {}", e.getMessage());
-            }
-            return null;
-        });
-        
-        transactionTemplate.execute(status -> {
-            try {
-                jdbcTemplate.execute("""
-                        INSERT INTO employees (id, company_id, department_id, position_id, employee_number, name, email, phone, hire_date, employment_status, base_salary, address, birth_date, is_deleted)
-                        VALUES (2, 1, 2, 2, 'EMP002', '이영업', 'sales@abc.com', '010-2345-6789', '2020-02-01', 'ACTIVE', 150000000, '서울특별시 서초구', '1985-05-15', false)
-                        ON CONFLICT (id) DO NOTHING
-                        """);
-                log.info("✅ 이영업 직원 데이터 삽입 성공");
-            } catch (Exception e) {
-                log.warn("⚠️ 이영업 직원 데이터 삽입 중 오류: {}", e.getMessage());
-            }
-            return null;
-        });
-        
-        transactionTemplate.execute(status -> {
-            try {
-                jdbcTemplate.execute("""
-                        INSERT INTO employees (id, company_id, department_id, position_id, employee_number, name, email, phone, hire_date, employment_status, base_salary, address, birth_date, is_deleted)
-                        VALUES (3, 1, 3, 3, 'EMP003', '박개발', 'dev@abc.com', '010-3456-7890', '2020-03-01', 'ACTIVE', 120000000, '서울특별시 마포구', '1990-08-20', false)
-                        ON CONFLICT (id) DO NOTHING
-                        """);
-                log.info("✅ 박개발 직원 데이터 삽입 성공");
-            } catch (Exception e) {
-                log.warn("⚠️ 박개발 직원 데이터 삽입 중 오류: {}", e.getMessage());
-            }
-            return null;
-        });
-        
-        transactionTemplate.execute(status -> {
-            try {
-                jdbcTemplate.execute("""
-                        INSERT INTO employees (id, company_id, department_id, position_id, employee_number, name, email, phone, hire_date, employment_status, base_salary, address, birth_date, is_deleted)
-                        VALUES (4, 1, 1, 2, 'EMP004', '김철수', 'kim@abc.com', '010-4567-8901', '2021-01-15', 'ACTIVE', 80000000, '서울특별시 송파구', '1988-03-10', false)
-                        ON CONFLICT (id) DO NOTHING
-                        """);
-                log.info("✅ 김철수 직원 데이터 삽입 성공");
-            } catch (Exception e) {
-                log.warn("⚠️ 김철수 직원 데이터 삽입 중 오류: {}", e.getMessage());
-            }
-            return null;
-        });
-        
-        transactionTemplate.execute(status -> {
-            try {
-                jdbcTemplate.execute("""
-                        INSERT INTO employees (id, company_id, department_id, position_id, employee_number, name, email, phone, hire_date, employment_status, base_salary, address, birth_date, is_deleted)
-                        VALUES (5, 1, 2, 3, 'EMP005', '이영희', 'lee@abc.com', '010-5678-9012', '2021-02-20', 'ACTIVE', 70000000, '서울특별시 강동구', '1992-07-25', false)
-                        ON CONFLICT (id) DO NOTHING
-                        """);
-                log.info("✅ 이영희 직원 데이터 삽입 성공");
-            } catch (Exception e) {
-                log.warn("⚠️ 이영희 직원 데이터 삽입 중 오류: {}", e.getMessage());
-            }
-            return null;
-        });
-        
-        transactionTemplate.execute(status -> {
-            try {
-                jdbcTemplate.execute("""
-                        INSERT INTO employees (id, company_id, department_id, position_id, employee_number, name, email, phone, hire_date, employment_status, base_salary, address, birth_date, is_deleted)
-                        VALUES (6, 1, 3, 1, 'EMP006', '박민수', 'park@abc.com', '010-6789-0123', '2021-03-10', 'ACTIVE', 90000000, '서울특별시 영등포구', '1987-11-05', false)
-                        ON CONFLICT (id) DO NOTHING
-                        """);
-                log.info("✅ 박민수 직원 데이터 삽입 성공");
-            } catch (Exception e) {
-                log.warn("⚠️ 박민수 직원 데이터 삽입 중 오류: {}", e.getMessage());
-            }
-            return null;
-        });
-        
-        // 3-6. 제품 카테고리 데이터 삽입
-        transactionTemplate.execute(status -> {
-            try {
-                jdbcTemplate.execute("""
-                        INSERT INTO product_categories (id, company_id, category_code, name, description, parent_category_id, is_active, is_deleted)
-                        VALUES (1, 1, 'ELECTRONICS', '전자제품', '전자제품 카테고리', NULL, true, false)
-                        ON CONFLICT (id) DO NOTHING
-                        """);
-                log.info("✅ 전자제품 카테고리 데이터 삽입 성공");
-            } catch (Exception e) {
-                log.warn("⚠️ 전자제품 카테고리 데이터 삽입 중 오류: {}", e.getMessage());
-            }
-            return null;
-        });
-        
-        transactionTemplate.execute(status -> {
-            try {
-                jdbcTemplate.execute("""
-                        INSERT INTO product_categories (id, company_id, category_code, name, description, parent_category_id, is_active, is_deleted)
-                        VALUES (2, 1, 'COMPUTER', '컴퓨터', '컴퓨터 및 주변기기', 1, true, false)
-                        ON CONFLICT (id) DO NOTHING
-                        """);
-                log.info("✅ 컴퓨터 카테고리 데이터 삽입 성공");
-            } catch (Exception e) {
-                log.warn("⚠️ 컴퓨터 카테고리 데이터 삽입 중 오류: {}", e.getMessage());
-            }
-            return null;
-        });
-        
-        transactionTemplate.execute(status -> {
-            try {
-                jdbcTemplate.execute("""
-                        INSERT INTO product_categories (id, company_id, category_code, name, description, parent_category_id, is_active, is_deleted)
-                        VALUES (3, 1, 'OFFICE', '사무용품', '사무용품 및 소모품', NULL, true, false)
-                        ON CONFLICT (id) DO NOTHING
-                        """);
-                log.info("✅ 사무용품 카테고리 데이터 삽입 성공");
-            } catch (Exception e) {
-                log.warn("⚠️ 사무용품 카테고리 데이터 삽입 중 오류: {}", e.getMessage());
-            }
-            return null;
-        });
-        
-        // 3-7. 제품 데이터 삽입
-        transactionTemplate.execute(status -> {
-            try {
-                jdbcTemplate.execute("""
-                        INSERT INTO products (id, company_id, category_id, product_code, product_name, description, product_type, product_status, base_unit, standard_cost, selling_price, is_active, is_deleted)
-                        VALUES (1, 1, 2, 'LAPTOP001', '노트북', '고성능 노트북', 'FINISHED_GOODS', 'ACTIVE', '대', 1200000, 1500000, true, false)
-                        ON CONFLICT (id) DO NOTHING
-                        """);
-                log.info("✅ 노트북 제품 데이터 삽입 성공");
-            } catch (Exception e) {
-                log.warn("⚠️ 노트북 제품 데이터 삽입 중 오류: {}", e.getMessage());
-            }
-            return null;
-        });
-        
-        transactionTemplate.execute(status -> {
-            try {
-                jdbcTemplate.execute("""
-                        INSERT INTO products (id, company_id, category_id, product_code, product_name, description, product_type, product_status, base_unit, standard_cost, selling_price, is_active, is_deleted)
-                        VALUES (2, 1, 2, 'MOUSE001', '무선마우스', '블루투스 무선마우스', 'FINISHED_GOODS', 'ACTIVE', '개', 30000, 50000, true, false)
-                        ON CONFLICT (id) DO NOTHING
-                        """);
-                log.info("✅ 무선마우스 제품 데이터 삽입 성공");
-            } catch (Exception e) {
-                log.warn("⚠️ 무선마우스 제품 데이터 삽입 중 오류: {}", e.getMessage());
-            }
-            return null;
-        });
-        
-        transactionTemplate.execute(status -> {
-            try {
-                jdbcTemplate.execute("""
-                        INSERT INTO products (id, company_id, category_id, product_code, product_name, description, product_type, product_status, base_unit, standard_cost, selling_price, is_active, is_deleted)
-                        VALUES (3, 1, 3, 'PEN001', '볼펜', '검은색 볼펜', 'CONSUMABLE', 'ACTIVE', '자루', 500, 1000, true, false)
-                        ON CONFLICT (id) DO NOTHING
-                        """);
-                log.info("✅ 볼펜 제품 데이터 삽입 성공");
-            } catch (Exception e) {
-                log.warn("⚠️ 볼펜 제품 데이터 삽입 중 오류: {}", e.getMessage());
-            }
-            return null;
-        });
-        
-        transactionTemplate.execute(status -> {
-            try {
-                jdbcTemplate.execute("""
-                        INSERT INTO products (id, company_id, category_id, product_code, product_name, description, product_type, product_status, base_unit, standard_cost, selling_price, is_active, is_deleted)
-                        VALUES (4, 1, 2, 'KEYBOARD001', '키보드', '기계식 키보드', 'FINISHED_GOODS', 'ACTIVE', '개', 100000, 150000, true, false)
-                        ON CONFLICT (id) DO NOTHING
-                        """);
-                log.info("✅ 키보드 제품 데이터 삽입 성공");
-            } catch (Exception e) {
-                log.warn("⚠️ 키보드 제품 데이터 삽입 중 오류: {}", e.getMessage());
-            }
-            return null;
-        });
-        
-        transactionTemplate.execute(status -> {
-            try {
-                jdbcTemplate.execute("""
-                        INSERT INTO products (id, company_id, category_id, product_code, product_name, description, product_type, product_status, base_unit, standard_cost, selling_price, is_active, is_deleted)
-                        VALUES (5, 1, 2, 'MONITOR001', '모니터', '27인치 4K 모니터', 'FINISHED_GOODS', 'ACTIVE', '대', 400000, 500000, true, false)
-                        ON CONFLICT (id) DO NOTHING
-                        """);
-                log.info("✅ 모니터 제품 데이터 삽입 성공");
-            } catch (Exception e) {
-                log.warn("⚠️ 모니터 제품 데이터 삽입 중 오류: {}", e.getMessage());
-            }
-            return null;
-        });
-        
-        transactionTemplate.execute(status -> {
-            try {
-                jdbcTemplate.execute("""
-                        INSERT INTO products (id, company_id, category_id, product_code, product_name, description, product_type, product_status, base_unit, standard_cost, selling_price, is_active, is_deleted)
-                        VALUES (6, 1, 3, 'PAPER001', 'A4용지', '복사용 A4용지', 'CONSUMABLE', 'ACTIVE', '박스', 3000, 5000, true, false)
-                        ON CONFLICT (id) DO NOTHING
-                        """);
-                log.info("✅ A4용지 제품 데이터 삽입 성공");
-            } catch (Exception e) {
-                log.warn("⚠️ A4용지 제품 데이터 삽입 중 오류: {}", e.getMessage());
-            }
-            return null;
-        });
-        
-        // 3-8. 고객 데이터 삽입 (모든 고객)
-        transactionTemplate.execute(status -> {
-            try {
-                jdbcTemplate.execute("""
-                        INSERT INTO customers (id, company_id, customer_code, customer_name, customer_type, customer_status, phone, email, address, is_deleted)
-                        VALUES (1, 1, 'CUST001', 'ABC 기업', 'CORPORATE', 'ACTIVE', '02-1234-5678', 'info@abc.com', '서울특별시 강남구 테헤란로 123', false)
-                        ON CONFLICT (id) DO NOTHING
-                        """);
-                log.info("✅ ABC 기업 고객 데이터 삽입 성공");
-            } catch (Exception e) {
-                log.warn("⚠️ ABC 기업 고객 데이터 삽입 중 오류: {}", e.getMessage());
-            }
-            return null;
-        });
-        
-        transactionTemplate.execute(status -> {
-            try {
-                jdbcTemplate.execute("""
-                        INSERT INTO customers (id, company_id, customer_code, customer_name, customer_type, customer_status, phone, email, address, is_deleted)
-                        VALUES (2, 1, 'CUST002', 'XYZ 주식회사', 'CORPORATE', 'ACTIVE', '02-2345-6789', 'contact@xyz.com', '서울특별시 서초구 서초대로 456', false)
-                        ON CONFLICT (id) DO NOTHING
-                        """);
-                log.info("✅ XYZ 주식회사 고객 데이터 삽입 성공");
-            } catch (Exception e) {
-                log.warn("⚠️ XYZ 주식회사 고객 데이터 삽입 중 오류: {}", e.getMessage());
-            }
-            return null;
-        });
-        
-        transactionTemplate.execute(status -> {
-            try {
-                jdbcTemplate.execute("""
-                        INSERT INTO customers (id, company_id, customer_code, customer_name, customer_type, customer_status, phone, email, address, is_deleted)
-                        VALUES (3, 1, 'CUST003', '홍길동', 'INDIVIDUAL', 'ACTIVE', '010-5555-6666', 'hong@email.com', '서울특별시 마포구 홍대입구역', false)
-                        ON CONFLICT (id) DO NOTHING
-                        """);
-                log.info("✅ 홍길동 고객 데이터 삽입 성공");
-            } catch (Exception e) {
-                log.warn("⚠️ 홍길동 고객 데이터 삽입 중 오류: {}", e.getMessage());
-            }
-            return null;
-        });
-        
-        transactionTemplate.execute(status -> {
-            try {
-                jdbcTemplate.execute("""
-                        INSERT INTO customers (id, company_id, customer_code, customer_name, customer_type, customer_status, phone, email, address, is_deleted)
-                        VALUES (4, 1, 'CUST004', '김철수', 'INDIVIDUAL', 'ACTIVE', '010-7777-8888', 'kim@email.com', '서울특별시 송파구 잠실동', false)
-                        ON CONFLICT (id) DO NOTHING
-                        """);
-                log.info("✅ 김철수 고객 데이터 삽입 성공");
-            } catch (Exception e) {
-                log.warn("⚠️ 김철수 고객 데이터 삽입 중 오류: {}", e.getMessage());
-            }
-            return null;
-        });
-        
-        transactionTemplate.execute(status -> {
-            try {
-                jdbcTemplate.execute("""
-                        INSERT INTO customers (id, company_id, customer_code, customer_name, customer_type, customer_status, phone, email, address, is_deleted)
-                        VALUES (5, 1, 'CUST005', '이영희', 'INDIVIDUAL', 'ACTIVE', '010-9999-0000', 'lee@email.com', '서울특별시 강동구 천호동', false)
-                        ON CONFLICT (id) DO NOTHING
-                        """);
-                log.info("✅ 이영희 고객 데이터 삽입 성공");
-            } catch (Exception e) {
-                log.warn("⚠️ 이영희 고객 데이터 삽입 중 오류: {}", e.getMessage());
-            }
-            return null;
-        });
-        
-        transactionTemplate.execute(status -> {
-            try {
-                jdbcTemplate.execute("""
-                        INSERT INTO customers (id, company_id, customer_code, customer_name, customer_type, customer_status, phone, email, address, is_deleted)
-                        VALUES (6, 1, 'CUST006', '박민수', 'INDIVIDUAL', 'ACTIVE', '010-1111-3333', 'park@email.com', '서울특별시 영등포구 여의도동', false)
-                        ON CONFLICT (id) DO NOTHING
-                        """);
-                log.info("✅ 박민수 고객 데이터 삽입 성공");
-            } catch (Exception e) {
-                log.warn("⚠️ 박민수 고객 데이터 삽입 중 오류: {}", e.getMessage());
-            }
-            return null;
-        });
-        
-        log.info("=== 데이터 초기화 완료 ===");
     }
 }

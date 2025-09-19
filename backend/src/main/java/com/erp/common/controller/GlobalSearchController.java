@@ -28,7 +28,7 @@ public class GlobalSearchController {
     private final GlobalSearchService globalSearchService;
 
     @GetMapping
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "전역 검색", description = "모든 모듈에서 검색어로 통합 검색을 수행합니다")
     public ResponseEntity<ApiResponse<List<GlobalSearchDto.SearchResult>>> globalSearch(
             @Parameter(description = "검색어") @RequestParam String q,
@@ -45,7 +45,7 @@ public class GlobalSearchController {
     }
 
     @GetMapping("/customers")
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "고객 검색", description = "고객을 검색합니다")
     public ResponseEntity<ApiResponse<List<GlobalSearchDto.SearchResult>>> searchCustomers(
             @Parameter(description = "검색어") @RequestParam String q,
@@ -62,7 +62,7 @@ public class GlobalSearchController {
     }
 
     @GetMapping("/employees")
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "직원 검색", description = "직원을 검색합니다")
     public ResponseEntity<ApiResponse<List<GlobalSearchDto.SearchResult>>> searchEmployees(
             @Parameter(description = "검색어") @RequestParam String q,
@@ -79,7 +79,7 @@ public class GlobalSearchController {
     }
 
     @GetMapping("/products")
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "상품 검색", description = "상품을 검색합니다")
     public ResponseEntity<ApiResponse<List<GlobalSearchDto.SearchResult>>> searchProducts(
             @Parameter(description = "검색어") @RequestParam String q,
@@ -96,7 +96,7 @@ public class GlobalSearchController {
     }
 
     @GetMapping("/orders")
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "주문 검색", description = "주문을 검색합니다")
     public ResponseEntity<ApiResponse<List<GlobalSearchDto.SearchResult>>> searchOrders(
             @Parameter(description = "검색어") @RequestParam String q,
@@ -113,7 +113,7 @@ public class GlobalSearchController {
     }
 
     @GetMapping("/departments")
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "부서 검색", description = "부서를 검색합니다")
     public ResponseEntity<ApiResponse<List<GlobalSearchDto.SearchResult>>> searchDepartments(
             @Parameter(description = "검색어") @RequestParam String q,
@@ -130,7 +130,7 @@ public class GlobalSearchController {
     }
 
     @GetMapping("/companies")
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "회사 검색", description = "회사를 검색합니다")
     public ResponseEntity<ApiResponse<List<GlobalSearchDto.SearchResult>>> searchCompanies(
             @Parameter(description = "검색어") @RequestParam String q) {

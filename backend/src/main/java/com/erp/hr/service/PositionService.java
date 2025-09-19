@@ -96,15 +96,12 @@ public interface PositionService {
      */
     List<PositionDto> getActivePositionsByCompany(Long companyId);
     
-    /**
-     * 카테고리별 직급 조회
-     */
-    List<PositionDto> getPositionsByCategory(com.erp.hr.entity.Position.PositionCategory category);
+    // getPositionsByCategory 메서드 제거됨 (positionCategory 필드가 DB 스키마에 없음)
     
     /**
      * 유형별 직급 조회
      */
-    List<PositionDto> getPositionsByType(com.erp.hr.entity.Position.PositionType type);
+    // getPositionsByType 메서드 제거됨 (positionType 필드가 DB 스키마에 없음)
     
     /**
      * 회사별 직급 검색

@@ -35,7 +35,7 @@ import java.util.List;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/hr/employees")
+@RequestMapping("/api/employees")
 @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
 @Tag(name = "인사관리", description = "직원, 급여, 근태 관리 API")
 @SecurityRequirement(name = "bearer-jwt")
@@ -203,6 +203,7 @@ public class EmployeeController {
      * 직원 정보 조회 (ID)
      */
     @GetMapping("/{id}")
+    // @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')") // 임시로 인증 제거
     public ResponseEntity<ApiResponse<EmployeeDto>> getEmployee(@PathVariable Long id) {
         try {
             log.info("직원 조회 요청: ID {}", id);

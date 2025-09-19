@@ -2,6 +2,7 @@ package com.erp.inventory.service.impl;
 
 import com.erp.common.utils.ExceptionUtils;
 import com.erp.inventory.dto.ProductDto;
+import com.erp.inventory.entity.Product;
 import com.erp.inventory.repository.ProductRepository;
 import com.erp.inventory.service.ProductService;
 import lombok.RequiredArgsConstructor;
@@ -44,8 +45,12 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductDto.ProductResponseDto getProduct(Long id) {
-        // TODO: 실제 구현 필요
-        throw new UnsupportedOperationException("구현 예정");
+        log.info("상품 조회 요청 - ID: {}", id);
+        
+        Product product = productRepository.findById(id)
+            .orElseThrow(() -> ExceptionUtils.throwEntityNotFoundException("상품을 찾을 수 없습니다: " + id));
+        
+        return ProductDto.ProductResponseDto.from(product);
     }
 
     @Override
@@ -56,8 +61,12 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductDto.ProductResponseDto getProductByBarcode(String barcode) {
-        // TODO: 실제 구현 필요
-        throw new UnsupportedOperationException("구현 예정");
+        log.info("바코드로 상품 조회 요청 - 바코드: {}", barcode);
+        
+        Product product = productRepository.findByBarcode(barcode)
+                .orElseThrow(() -> ExceptionUtils.throwEntityNotFoundException("바코드에 해당하는 상품을 찾을 수 없습니다: " + barcode));
+        
+        return ProductDto.ProductResponseDto.from(product);
     }
 
     @Override
@@ -96,11 +105,6 @@ public class ProductServiceImpl implements ProductService {
         return new PageImpl<>(new ArrayList<>(), pageable, 0);
     }
 
-    @Override
-    public List<ProductDto.ProductResponseDto> getLowStockProducts() {
-        // TODO: 실제 구현 필요
-        return new ArrayList<>();
-    }
 
     @Override
     @Transactional
@@ -143,7 +147,12 @@ public class ProductServiceImpl implements ProductService {
     
     @Override
     public ProductDto.ProductResponseDto getProductById(Long id) {
-        throw new UnsupportedOperationException("구현 예정");
+        log.info("상품 조회 요청 - ID: {}", id);
+        
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> ExceptionUtils.throwEntityNotFoundException("상품을 찾을 수 없습니다: " + id));
+        
+        return ProductDto.ProductResponseDto.from(product);
     }
     
     @Override
@@ -156,15 +165,6 @@ public class ProductServiceImpl implements ProductService {
         throw new UnsupportedOperationException("구현 예정");
     }
     
-    @Override
-    public List<ProductDto.ProductSummaryDto> getLowStockProducts(Long companyId) {
-        throw new UnsupportedOperationException("구현 예정");
-    }
-    
-    @Override
-    public List<ProductDto.ProductSummaryDto> getOutOfStockProducts(Long companyId) {
-        throw new UnsupportedOperationException("구현 예정");
-    }
     
     @Override
     public List<ProductDto.ProductSummaryDto> getReorderNeededProducts(Long companyId) {
@@ -197,6 +197,22 @@ public class ProductServiceImpl implements ProductService {
     }
     
     @Override
+    public List<ProductDto.ProductSummaryDto> getLowStockProducts(Long companyId) {
+        log.info("재고 부족 상품 조회 요청 - 회사: {}", companyId);
+        
+        // 임시로 빈 리스트 반환
+        return new ArrayList<>();
+    }
+    
+    @Override
+    public List<ProductDto.ProductSummaryDto> getOutOfStockProducts(Long companyId) {
+        log.info("재고 없음 상품 조회 요청 - 회사: {}", companyId);
+        
+        // 임시로 빈 리스트 반환
+        return new ArrayList<>();
+    }
+    
+    @Override
     public boolean checkProductCodeDuplicate(Long companyId, String productCode, Long excludeId) {
         return false; // 기본 구현
     }
@@ -204,5 +220,16 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public boolean checkBarcodeDuplicate(String barcode, Long excludeId) {
         return false; // 기본 구현
+    }
+    
+    @Override
+    public List<ProductDto.ProductResponseDto> searchProductsByName(String name) {
+        log.info("상품명 검색 요청 - 이름: {}", name);
+        
+        List<Product> products = productRepository.findByProductNameContainingIgnoreCase(name);
+        
+        return products.stream()
+            .map(ProductDto.ProductResponseDto::from)
+            .toList();
     }
 }

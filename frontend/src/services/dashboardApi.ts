@@ -3,7 +3,7 @@
  * 대시보드 관련 API 통신을 담당합니다
  */
 
-import api, { AxiosResponse } from 'api'
+import api, { AxiosResponse } from './api'
 import type {
   DashboardApiResponse,
   DashboardData,

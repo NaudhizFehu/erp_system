@@ -1,7 +1,12 @@
 package com.erp.common.entity;
 
+import com.erp.hr.entity.Department;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -134,11 +139,7 @@ public class Company extends BaseEntity {
     @Column(name = "website", length = 200)
     private String website;
 
-    /**
-     * 회사 설립일
-     */
-    @Column(name = "established_date")
-    private java.time.LocalDate establishedDate;
+    // established_date 필드는 실제 DB 스키마에 없으므로 제거됨
 
     /**
      * 회사 상태
@@ -148,45 +149,20 @@ public class Company extends BaseEntity {
     @Column(name = "status", nullable = false, length = 20)
     private CompanyStatus status = CompanyStatus.ACTIVE;
 
-    /**
-     * 회사 유형
-     */
-    @Enumerated(EnumType.STRING)
-    @Column(name = "company_type", length = 20)
-    private CompanyType companyType;
-
-    /**
-     * 직원 수
-     */
-    @Min(value = 0, message = "직원 수는 0 이상이어야 합니다")
-    @Column(name = "employee_count")
-    private Integer employeeCount;
-
-    /**
-     * 자본금 (원)
-     */
-    @Min(value = 0, message = "자본금은 0 이상이어야 합니다")
-    @Column(name = "capital_amount", precision = 15, scale = 0)
-    private java.math.BigDecimal capitalAmount;
-
-    /**
-     * 회사 설명
-     */
-    @Column(name = "description", columnDefinition = "TEXT")
-    private String description;
-
-    /**
-     * 로고 이미지 URL
-     */
-    @Size(max = 500, message = "로고 이미지 URL은 500자 이하여야 합니다")
-    @Column(name = "logo_url", length = 500)
-    private String logoUrl;
+    // company_type, employee_count, capital_amount, description, logo_url 필드들은 
+    // 실제 DB 스키마에 없으므로 제거됨
 
     /**
      * 회사 소속 부서들
      */
     @OneToMany(mappedBy = "company", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Department> departments;
+
+    /**
+     * 회사 소속 직원들
+     */
+    @OneToMany(mappedBy = "company", fetch = FetchType.LAZY)
+    private List<com.erp.hr.entity.Employee> employees;
 
     /**
      * 회사 소속 사용자들
@@ -214,26 +190,7 @@ public class Company extends BaseEntity {
         }
     }
 
-    /**
-     * 회사 유형 열거형
-     */
-    public enum CompanyType {
-        CORPORATION("법인"),
-        INDIVIDUAL("개인사업자"),
-        PARTNERSHIP("합명회사"),
-        LIMITED_PARTNERSHIP("합자회사"),
-        LIMITED_LIABILITY("유한회사");
-
-        private final String description;
-
-        CompanyType(String description) {
-            this.description = description;
-        }
-
-        public String getDescription() {
-            return description;
-        }
-    }
+    // CompanyType enum은 실제 DB 스키마에 company_type 컬럼이 없으므로 제거됨
 
     /**
      * 회사가 활성 상태인지 확인

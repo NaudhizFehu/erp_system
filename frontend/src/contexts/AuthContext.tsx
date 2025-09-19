@@ -97,15 +97,31 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const accessToken = tokenUtils.getAccessToken()
       const refreshToken = tokenUtils.getRefreshToken()
 
+      console.log('초기 인증 상태 확인:', { 
+        hasAccessToken: !!accessToken, 
+        hasRefreshToken: !!refreshToken,
+        accessTokenValid: accessToken ? tokenUtils.isTokenValid(accessToken) : false,
+        refreshTokenValid: refreshToken ? tokenUtils.isTokenValid(refreshToken) : false
+      })
+
+      // 토큰이 없으면 즉시 로그아웃 상태로 설정
+      if (!accessToken && !refreshToken) {
+        console.log('토큰이 없음, 로그아웃 상태로 설정')
+        dispatch({ type: 'LOGIN_FAILURE' })
+        return
+      }
+
       if (accessToken && tokenUtils.isTokenValid(accessToken)) {
         try {
           // 토큰이 유효하면 사용자 정보 조회
+          console.log('액세스 토큰이 유효함, 사용자 정보 조회 시도')
           const user = await authApi.getCurrentUser()
           dispatch({
             type: 'LOGIN_SUCCESS',
             payload: { user, accessToken, refreshToken: refreshToken || '' }
           })
         } catch (error) {
+          console.warn('토큰이 유효하지 않음, 로그아웃 처리:', error)
           // 토큰이 유효하지 않으면 로그아웃 처리
           tokenUtils.clearTokens()
           dispatch({ type: 'LOGIN_FAILURE' })
@@ -113,6 +129,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       } else if (refreshToken && tokenUtils.isTokenValid(refreshToken)) {
         try {
           // 리프레시 토큰으로 새 액세스 토큰 발급
+          console.log('리프레시 토큰으로 새 액세스 토큰 발급 시도')
           const response = await authApi.refreshToken(refreshToken)
           tokenUtils.setAccessToken(response.accessToken)
           tokenUtils.setRefreshToken(response.refreshToken)
@@ -127,12 +144,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
             }
           })
         } catch (error) {
+          console.warn('리프레시 토큰이 유효하지 않음, 로그아웃 처리:', error)
           // 리프레시 토큰도 유효하지 않으면 로그아웃 처리
           tokenUtils.clearTokens()
           dispatch({ type: 'LOGIN_FAILURE' })
         }
       } else {
         // 토큰이 없거나 유효하지 않으면 로그아웃 상태
+        console.log('토큰이 없거나 유효하지 않음, 로그아웃 상태로 설정')
         dispatch({ type: 'LOGIN_FAILURE' })
       }
     }

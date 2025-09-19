@@ -91,7 +91,7 @@ const getGradeBadgeVariant = (grade: string) => {
   }
 }
 
-export default function CustomerCard({
+function CustomerCard({
   customer,
   onView,
   onEdit,
@@ -305,6 +305,8 @@ export default function CustomerCard({
     </Card>
   )
 }
+
+export { CustomerCard }
 
 
 

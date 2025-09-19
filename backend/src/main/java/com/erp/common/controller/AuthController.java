@@ -370,6 +370,7 @@ public class AuthController {
             // 현재 사용자 정보 가져오기
             UserPrincipal currentUser = JwtAuthenticationFilter.getCurrentUser();
             if (currentUser == null) {
+                log.warn("인증되지 않은 사용자가 /me 엔드포인트에 접근 시도");
                 throw ExceptionUtils.unauthorized();
             }
             
@@ -380,6 +381,7 @@ public class AuthController {
             // 사용자 정보 응답 생성
             LoginResponse.UserInfo userInfo = LoginResponse.UserInfo.from(user);
             
+            log.debug("사용자 정보 조회 성공: userId={}, username={}", user.getId(), user.getUsername());
             return ResponseEntity.ok(ApiResponse.success("사용자 정보 조회 완료", userInfo));
             
         } catch (BusinessException e) {
@@ -521,6 +523,111 @@ public class AuthController {
         } catch (Exception e) {
             log.error("사용자 활성화 상태 변경 중 오류 발생: userId={}", userId, e);
             throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, "사용자 활성화 상태 변경 중 오류가 발생했습니다");
+        }
+    }
+
+    /**
+     * 디버깅용: admin 계정 정보 확인
+     * 개발 환경에서만 사용
+     */
+    @GetMapping("/debug/admin-info")
+    public ResponseEntity<ApiResponse<Object>> getAdminInfo() {
+        log.info("디버깅: admin 계정 정보 확인 요청");
+        
+        try {
+            // admin 계정 조회
+            var adminUser = userRepository.findByUsernameWithCompanyAndDepartment("admin");
+            
+            if (adminUser.isPresent()) {
+                User user = adminUser.get();
+                var adminInfo = new java.util.HashMap<String, Object>();
+                adminInfo.put("id", user.getId());
+                adminInfo.put("username", user.getUsername());
+                adminInfo.put("email", user.getEmail());
+                adminInfo.put("fullName", user.getFullName());
+                adminInfo.put("role", user.getRole());
+                adminInfo.put("isActive", user.getIsActive());
+                adminInfo.put("isLocked", user.getIsLocked());
+                adminInfo.put("isDeleted", user.getIsDeleted());
+                adminInfo.put("isPasswordExpired", user.getIsPasswordExpired());
+                adminInfo.put("companyId", user.getCompany() != null ? user.getCompany().getId() : null);
+                adminInfo.put("companyName", user.getCompany() != null ? user.getCompany().getName() : null);
+                adminInfo.put("departmentId", user.getDepartment() != null ? user.getDepartment().getId() : null);
+                adminInfo.put("departmentName", user.getDepartment() != null ? user.getDepartment().getName() : null);
+                adminInfo.put("createdAt", user.getCreatedAt());
+                adminInfo.put("lastLoginAt", user.getLastLoginAt());
+                
+                // 비밀번호 검증 테스트
+                boolean adminPasswordMatches = passwordEncoder.matches("admin123", user.getPassword());
+                boolean userPasswordMatches = passwordEncoder.matches("user123", user.getPassword());
+                adminInfo.put("adminPasswordMatches", adminPasswordMatches);
+                adminInfo.put("userPasswordMatches", userPasswordMatches);
+                
+                log.info("✅ admin 계정 정보 확인 완료: {}", adminInfo);
+                return ResponseEntity.ok(ApiResponse.success("admin 계정 정보 조회 완료", adminInfo));
+            } else {
+                log.warn("❌ admin 계정을 찾을 수 없습니다");
+                return ResponseEntity.ok(ApiResponse.success("admin 계정을 찾을 수 없습니다", null));
+            }
+            
+        } catch (Exception e) {
+            log.error("admin 계정 정보 확인 중 오류 발생", e);
+            return ResponseEntity.ok(ApiResponse.success("admin 계정 정보 확인 중 오류 발생: " + e.getMessage(), null));
+        }
+    }
+
+    /**
+     * 디버깅용: 로그인 테스트
+     * 개발 환경에서만 사용
+     */
+    @PostMapping("/debug/test-login")
+    public ResponseEntity<ApiResponse<Object>> testLogin(@RequestBody LoginRequest loginRequest) {
+        log.info("디버깅: 로그인 테스트 요청 - username: {}", loginRequest.usernameOrEmail());
+        
+        try {
+            // 1. 사용자 조회 테스트
+            var user = userRepository.findByUsernameWithCompanyAndDepartment(loginRequest.usernameOrEmail());
+            if (user.isEmpty()) {
+                return ResponseEntity.ok(ApiResponse.success("사용자를 찾을 수 없습니다", null));
+            }
+            
+            User foundUser = user.get();
+            log.info("✅ 사용자 조회 성공: {}", foundUser.getUsername());
+            
+            // 2. 비밀번호 검증 테스트
+            boolean passwordMatches = passwordEncoder.matches(loginRequest.password(), foundUser.getPassword());
+            log.info("🔐 비밀번호 검증 결과: {}", passwordMatches);
+            
+            // 3. 계정 상태 확인
+            var statusInfo = new java.util.HashMap<String, Object>();
+            statusInfo.put("isActive", foundUser.getIsActive());
+            statusInfo.put("isLocked", foundUser.getIsLocked());
+            statusInfo.put("isDeleted", foundUser.getIsDeleted());
+            statusInfo.put("isPasswordExpired", foundUser.getIsPasswordExpired());
+            statusInfo.put("passwordMatches", passwordMatches);
+            
+            // 4. 인증 테스트
+            try {
+                Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                        loginRequest.usernameOrEmail(),
+                        loginRequest.password()
+                    )
+                );
+                statusInfo.put("authenticationSuccess", true);
+                statusInfo.put("authorities", authentication.getAuthorities());
+                log.info("✅ 인증 성공");
+            } catch (Exception e) {
+                statusInfo.put("authenticationSuccess", false);
+                statusInfo.put("authenticationError", e.getMessage());
+                log.warn("❌ 인증 실패: {}", e.getMessage());
+            }
+            
+            return ResponseEntity.ok(ApiResponse.success("로그인 테스트 완료", statusInfo));
+            
+        } catch (Exception e) {
+            log.error("로그인 테스트 중 오류 발생", e);
+            return ResponseEntity.ok(ApiResponse.success("로그인 테스트 중 오류 발생: " + e.getMessage(), null));
         }
     }
 }

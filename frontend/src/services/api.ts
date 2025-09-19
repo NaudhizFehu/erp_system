@@ -54,7 +54,10 @@ api.interceptors.response.use(
   },
   (error) => {
     // 에러 응답 처리
-    if (error.response?.data?.message) {
+    if (error.response?.status === 401) {
+      // 401 오류는 조용히 처리 (토큰 만료 등)
+      console.warn('인증 오류:', error.response?.data?.message || 'Unauthorized')
+    } else if (error.response?.data?.message) {
       // 백엔드에서 제공하는 한국어 에러 메시지 표시
       toast.error(error.response.data.message)
     } else if (error.code === 'ECONNABORTED') {

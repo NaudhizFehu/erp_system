@@ -61,10 +61,5 @@ public class ProductCategory extends BaseEntity {
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 
-    /**
-     * 전체 경로 (예: "전자제품 > 컴퓨터 > 노트북")
-     */
-    @Column(name = "full_path", length = 1000)
-    private String fullPath;
 }
 

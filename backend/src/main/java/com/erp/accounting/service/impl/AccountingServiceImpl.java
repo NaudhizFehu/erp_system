@@ -572,7 +572,6 @@ public class AccountingServiceImpl implements AccountingService {
         String dateStr = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         
         // 오늘 날짜의 마지막 순번 조회
-        String pattern = prefix + dateStr + "%";
         long count = transactionRepository.count();
         
         String sequence = String.format("%04d", (count % 10000) + 1);

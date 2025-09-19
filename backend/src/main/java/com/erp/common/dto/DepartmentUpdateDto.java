@@ -1,6 +1,6 @@
 package com.erp.common.dto;
 
-import com.erp.common.entity.Department;
+import com.erp.hr.entity.Department;
 import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 

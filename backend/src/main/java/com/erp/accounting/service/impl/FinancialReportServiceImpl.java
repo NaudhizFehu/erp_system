@@ -1,10 +1,8 @@
 package com.erp.accounting.service.impl;
 
 import com.erp.accounting.dto.FinancialReportDto;
-import com.erp.accounting.dto.FinancialReportItemDto;
 import com.erp.accounting.entity.Account;
 import com.erp.accounting.entity.FinancialReport;
-import com.erp.accounting.entity.FinancialReportItem;
 import com.erp.accounting.repository.AccountRepository;
 import com.erp.accounting.repository.FinancialReportRepository;
 import com.erp.accounting.repository.TransactionRepository;
@@ -24,7 +22,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -112,6 +109,12 @@ public class FinancialReportServiceImpl implements FinancialReportService {
                     break;
                 case EQUITY:
                     totalEquity = totalEquity.add(balance);
+                    break;
+                case REVENUE:
+                    // 손익계산서 항목이므로 재무상태표에서는 제외
+                    break;
+                case EXPENSE:
+                    // 손익계산서 항목이므로 재무상태표에서는 제외
                     break;
             }
         }

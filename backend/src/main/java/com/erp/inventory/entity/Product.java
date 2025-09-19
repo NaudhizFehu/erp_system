@@ -461,8 +461,8 @@ public class Product extends BaseEntity {
      */
     public BigDecimal getTotalStock() {
         return inventories.stream()
-                .filter(inv -> inv.getCurrentStock() != null)
-                .map(inv -> BigDecimal.valueOf(inv.getCurrentStock()))
+                .filter(inv -> inv.getQuantity() != null)
+                .map(inv -> BigDecimal.valueOf(inv.getQuantity()))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
@@ -471,8 +471,8 @@ public class Product extends BaseEntity {
      */
     public BigDecimal getAvailableStock() {
         return inventories.stream()
-                .filter(inv -> inv.getAvailableStock() != null)
-                .map(inv -> BigDecimal.valueOf(inv.getAvailableStock()))
+                .filter(inv -> inv.getAvailableQuantity() != null)
+                .map(inv -> BigDecimal.valueOf(inv.getAvailableQuantity()))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
@@ -481,8 +481,8 @@ public class Product extends BaseEntity {
      */
     public BigDecimal getReservedStock() {
         return inventories.stream()
-                .filter(inv -> inv.getReservedStock() != null)
-                .map(inv -> BigDecimal.valueOf(inv.getReservedStock()))
+                .filter(inv -> inv.getReservedQuantity() != null)
+                .map(inv -> BigDecimal.valueOf(inv.getReservedQuantity()))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 

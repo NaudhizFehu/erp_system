@@ -45,8 +45,6 @@ public class WarehouseDto {
             @Size(max = 200, message = "주소는 200자를 초과할 수 없습니다")
             String address,
 
-            @Size(max = 200, message = "상세주소는 200자를 초과할 수 없습니다")
-            String addressDetail,
 
             @Size(max = 10, message = "우편번호는 10자를 초과할 수 없습니다")
             String postalCode,
@@ -133,8 +131,6 @@ public class WarehouseDto {
             @Size(max = 200, message = "주소는 200자를 초과할 수 없습니다")
             String address,
 
-            @Size(max = 200, message = "상세주소는 200자를 초과할 수 없습니다")
-            String addressDetail,
 
             @Size(max = 10, message = "우편번호는 10자를 초과할 수 없습니다")
             String postalCode,
@@ -210,7 +206,6 @@ public class WarehouseDto {
             String warehouseStatusDescription,
             Boolean isActive,
             String address,
-            String addressDetail,
             String postalCode,
             String fullAddress,
             String phoneNumber,
@@ -267,7 +262,6 @@ public class WarehouseDto {
                     warehouse.getWarehouseStatus().getDescription(),
                     warehouse.getIsActive(),
                     warehouse.getAddress(),
-                    warehouse.getAddressDetail(),
                     warehouse.getPostalCode(),
                     warehouse.getFullAddress(),
                     warehouse.getPhoneNumber(),

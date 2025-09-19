@@ -29,26 +29,22 @@ public class InventoryDto {
             @NotNull(message = "창고 ID는 필수입니다")
             Long warehouseId,
 
-            String locationCode,
-            String locationDescription,
+            String locationCode, // locationCode 필드가 제거됨
+            String locationDescription, // locationDescription 필드가 제거됨
 
-            @DecimalMin(value = "0.0", message = "현재 재고 수량은 0 이상이어야 합니다")
-            Double currentStock,
+            Integer quantity,
 
-            @DecimalMin(value = "0.0", message = "예약된 재고 수량은 0 이상이어야 합니다")
-            Double reservedStock,
+            Integer availableStock,
 
-            @DecimalMin(value = "0.0", message = "안전 재고 수량은 0 이상이어야 합니다")
-            Double safetyStock,
+            Integer reservedStock,
 
-            @DecimalMin(value = "0.0", message = "최소 재고 수량은 0 이상이어야 합니다")
-            Double minStock,
+            Integer safetyStock,
 
-            @DecimalMin(value = "0.0", message = "최대 재고 수량은 0 이상이어야 합니다")
-            Double maxStock,
+            Integer minStock,
 
-            @DecimalMin(value = "0.0", message = "재주문점은 0 이상이어야 합니다")
-            Double reorderPoint,
+            Integer maxStock,
+
+            Integer reorderPoint,
 
             @DecimalMin(value = "0.0", message = "재주문 수량은 0 이상이어야 합니다")
             Double reorderQuantity,
@@ -70,8 +66,8 @@ public class InventoryDto {
         public InventoryCreateDto {
             // 기본값 설정
             if (locationCode == null) locationCode = "DEFAULT";
-            if (currentStock == null) currentStock = 0.0;
-            if (reservedStock == null) reservedStock = 0.0;
+            if (quantity == null) quantity = 0;
+            if (reservedStock == null) reservedStock = 0;
             if (averageCost == null) averageCost = BigDecimal.ZERO;
             if (stockGrade == null) stockGrade = Inventory.StockGrade.A;
         }
@@ -81,8 +77,8 @@ public class InventoryDto {
      * 재고 수정 요청 DTO
      */
     public record InventoryUpdateDto(
-            String locationCode,
-            String locationDescription,
+            String locationCode, // locationCode 필드가 제거됨
+            String locationDescription, // locationDescription 필드가 제거됨
 
             @DecimalMin(value = "0.0", message = "예약된 재고 수량은 0 이상이어야 합니다")
             Double reservedStock,
@@ -96,8 +92,7 @@ public class InventoryDto {
             @DecimalMin(value = "0.0", message = "최대 재고 수량은 0 이상이어야 합니다")
             Double maxStock,
 
-            @DecimalMin(value = "0.0", message = "재주문점은 0 이상이어야 합니다")
-            Double reorderPoint,
+            Integer reorderPoint,
 
             @DecimalMin(value = "0.0", message = "재주문 수량은 0 이상이어야 합니다")
             Double reorderQuantity,
@@ -127,45 +122,14 @@ public class InventoryDto {
             String categoryName,
             Long warehouseId,
             String warehouseName,
-            String locationCode,
-            String locationDescription,
+            String locationCode, // locationCode 필드가 제거됨
+            String locationDescription, // locationDescription 필드가 제거됨
             String fullLocation,
-            Double currentStock,
-            Double availableStock,
-            Double reservedStock,
-            Double orderedStock,
-            Double defectiveStock,
-            Double quarantineStock,
-            Double safetyStock,
-            Double minStock,
-            Double maxStock,
-            Double reorderPoint,
-            Double reorderQuantity,
-            BigDecimal averageCost,
-            BigDecimal lastPurchasePrice,
-            BigDecimal totalStockValue,
-            Inventory.StockStatus stockStatus,
-            String stockStatusDescription,
-            Inventory.StockGrade stockGrade,
-            String stockGradeDescription,
-            Boolean isLowStock,
-            Boolean isOutOfStock,
-            Boolean isOverStock,
-            Boolean needsReorder,
-            LocalDateTime lastReceiptDate,
-            LocalDateTime lastIssueDate,
-            LocalDateTime lastStocktakingDate,
-            LocalDateTime lastStockUpdate,
-            Integer movementCount,
-            Double temperature,
-            Double humidity,
-            LocalDateTime expiryDate,
-            LocalDateTime manufactureDate,
-            String lotNumber,
-            String serialNumber,
-            String supplierInfo,
-            String remarks,
-            String metadata,
+            Integer quantity,
+            Integer availableStock,
+            Integer reservedStock,
+            Integer maxStock,
+            Integer reorderPoint,
             LocalDateTime createdAt,
             LocalDateTime updatedAt,
             
@@ -190,45 +154,14 @@ public class InventoryDto {
                     inventory.getProduct().getCategory().getName(),
                     inventory.getWarehouse().getId(),
                     inventory.getWarehouse().getWarehouseName(),
-                    inventory.getLocationCode(),
-                    inventory.getLocationDescription(),
+                    null, // locationCode 필드가 제거됨
+                    null, // locationDescription 필드가 제거됨
                     inventory.getFullLocation(),
-                    inventory.getCurrentStock(),
-                    inventory.getAvailableStock(),
-                    inventory.getReservedStock(),
-                    inventory.getOrderedStock(),
-                    inventory.getDefectiveStock(),
-                    inventory.getQuarantineStock(),
-                    inventory.getSafetyStock(),
-                    inventory.getMinStock(),
+                    inventory.getQuantity(),
+                    inventory.getAvailableQuantity(), // availableQuantity 필드 사용
+                    inventory.getReservedQuantity(),
                     inventory.getMaxStock(),
                     inventory.getReorderPoint(),
-                    inventory.getReorderQuantity(),
-                    inventory.getAverageCost(),
-                    inventory.getLastPurchasePrice(),
-                    inventory.getTotalStockValue(),
-                    inventory.getStockStatus(),
-                    inventory.getStockStatus().getDescription(),
-                    inventory.getStockGrade(),
-                    inventory.getStockGrade().getDescription(),
-                    inventory.getIsLowStock(),
-                    inventory.getIsOutOfStock(),
-                    inventory.getIsOverStock(),
-                    inventory.getNeedsReorder(),
-                    inventory.getLastReceiptDate(),
-                    inventory.getLastIssueDate(),
-                    inventory.getLastStocktakingDate(),
-                    inventory.getLastStockUpdate(),
-                    inventory.getMovementCount(),
-                    inventory.getTemperature(),
-                    inventory.getHumidity(),
-                    inventory.getExpiryDate(),
-                    inventory.getManufactureDate(),
-                    inventory.getLotNumber(),
-                    inventory.getSerialNumber(),
-                    inventory.getSupplierInfo(),
-                    inventory.getRemarks(),
-                    inventory.getMetadata(),
                     inventory.getCreatedAt(),
                     inventory.getUpdatedAt(),
                     null, // usageRate - 창고에서 계산
@@ -250,17 +183,10 @@ public class InventoryDto {
             String categoryName,
             String warehouseName,
             String locationCode,
-            Double currentStock,
-            Double availableStock,
-            Double reservedStock,
-            String baseUnit,
-            Inventory.StockStatus stockStatus,
-            String stockStatusDescription,
-            Boolean isLowStock,
-            Boolean isOutOfStock,
-            Boolean needsReorder,
-            BigDecimal totalStockValue,
-            LocalDateTime lastStockUpdate
+            Integer quantity,
+            Integer availableStock,
+            Integer reservedStock,
+            String baseUnit
     ) {
         /**
          * Entity에서 요약 DTO로 변환
@@ -272,18 +198,11 @@ public class InventoryDto {
                     inventory.getProduct().getProductName(),
                     inventory.getProduct().getCategory().getName(),
                     inventory.getWarehouse().getWarehouseName(),
-                    inventory.getLocationCode(),
-                    inventory.getCurrentStock(),
-                    inventory.getAvailableStock(),
-                    inventory.getReservedStock(),
-                    inventory.getProduct().getBaseUnit(),
-                    inventory.getStockStatus(),
-                    inventory.getStockStatus().getDescription(),
-                    inventory.getIsLowStock(),
-                    inventory.getIsOutOfStock(),
-                    inventory.getNeedsReorder(),
-                    inventory.getTotalStockValue(),
-                    inventory.getLastStockUpdate()
+                    null, // locationCode 필드가 제거됨
+                    inventory.getQuantity(),
+                    inventory.getAvailableQuantity(), // availableQuantity 필드 사용
+                    inventory.getReservedQuantity(),
+                    inventory.getProduct().getBaseUnit()
             );
         }
     }
@@ -589,7 +508,7 @@ public class InventoryDto {
             String productName,
             Long warehouseId,
             String warehouseName,
-            Double currentStock,
+                Integer quantity,
             LocalDateTime lastMovementDate,
             Integer daysSinceLastMovement,
             BigDecimal stockValue,

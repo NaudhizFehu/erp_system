@@ -109,7 +109,7 @@ const TrendIndicator = ({ current, previous }: { current: number; previous: numb
   )
 }
 
-export default function RevenueChart({
+function RevenueChart({
   data,
   loading = false,
   error,
@@ -427,6 +427,8 @@ export default function RevenueChart({
     </Card>
   )
 }
+
+export { RevenueChart }
 
 
 

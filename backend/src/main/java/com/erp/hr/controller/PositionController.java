@@ -4,7 +4,6 @@ import com.erp.common.dto.ApiResponse;
 import com.erp.hr.dto.PositionCreateDto;
 import com.erp.hr.dto.PositionDto;
 import com.erp.hr.dto.PositionUpdateDto;
-import com.erp.hr.entity.Position;
 import com.erp.hr.service.PositionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -105,7 +104,7 @@ public class PositionController {
      */
     @GetMapping
     public ResponseEntity<ApiResponse<Page<PositionDto>>> getAllPositions(
-            @PageableDefault(size = 20, sort = "positionLevel") Pageable pageable) {
+            @PageableDefault(size = 20, sort = "level") Pageable pageable) {
         try {
             log.info("전체 직급 목록 조회 요청: 페이지 {}, 크기 {}", 
                     pageable.getPageNumber(), pageable.getPageSize());
@@ -165,37 +164,9 @@ public class PositionController {
         }
     }
 
-    /**
-     * 직급 분류별 조회
-     */
-    @GetMapping("/category/{category}")
-    public ResponseEntity<ApiResponse<List<PositionDto>>> getPositionsByCategory(
-            @PathVariable Position.PositionCategory category) {
-        try {
-            log.info("직급 분류별 조회 요청: 분류 {}", category);
-            List<PositionDto> positions = positionService.getPositionsByCategory(category);
-            return ResponseEntity.ok(ApiResponse.success(positions));
-        } catch (Exception e) {
-            log.error("직급 분류별 조회 실패: 분류 {}, 오류: {}", category, e.getMessage(), e);
-            throw e;
-        }
-    }
+    // getPositionsByCategory API 제거됨 (positionCategory 필드가 DB 스키마에 없음)
 
-    /**
-     * 직급 유형별 조회
-     */
-    @GetMapping("/type/{type}")
-    public ResponseEntity<ApiResponse<List<PositionDto>>> getPositionsByType(
-            @PathVariable Position.PositionType type) {
-        try {
-            log.info("직급 유형별 조회 요청: 유형 {}", type);
-            List<PositionDto> positions = positionService.getPositionsByType(type);
-            return ResponseEntity.ok(ApiResponse.success(positions));
-        } catch (Exception e) {
-            log.error("직급 유형별 조회 실패: 유형 {}, 오류: {}", type, e.getMessage(), e);
-            throw e;
-        }
-    }
+    // getPositionsByType API 제거됨 (positionType 필드가 DB 스키마에 없음)
 
     /**
      * 활성 직급 목록 조회
@@ -218,7 +189,7 @@ public class PositionController {
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<Page<PositionDto>>> searchPositions(
             @RequestParam String searchTerm,
-            @PageableDefault(size = 20, sort = "positionLevel") Pageable pageable) {
+            @PageableDefault(size = 20, sort = "level") Pageable pageable) {
         try {
             log.info("직급 검색 요청: {}", searchTerm);
             Page<PositionDto> positions = positionService.searchPositions(searchTerm, pageable);
@@ -236,7 +207,7 @@ public class PositionController {
     public ResponseEntity<ApiResponse<Page<PositionDto>>> searchPositionsByCompany(
             @PathVariable Long companyId,
             @RequestParam String searchTerm,
-            @PageableDefault(size = 20, sort = "positionLevel") Pageable pageable) {
+            @PageableDefault(size = 20, sort = "level") Pageable pageable) {
         try {
             log.info("회사별 직급 검색 요청: 회사 ID {}, 검색어 {}", companyId, searchTerm);
             Page<PositionDto> positions = positionService.searchPositionsByCompany(

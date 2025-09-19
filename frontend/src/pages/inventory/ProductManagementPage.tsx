@@ -40,8 +40,8 @@ import {
   BarChart3,
   RefreshCw
 } from 'lucide-react'
-import ProductTable from '../../components/inventory/ProductTable'
-import ProductForm from '../../components/inventory/ProductForm'
+import { ProductTable } from '../../components/inventory/ProductTable'
+import { ProductForm } from '../../components/inventory/ProductForm'
 import { 
   useProducts, 
   useCreateProduct, 
@@ -63,7 +63,7 @@ import {
   KOREAN_LABELS 
 } from '../../types/inventory'
 import { formatNumber, formatCurrency } from '../../utils/format'
-import LoadingSpinner from '../../components/common/LoadingSpinner'
+import { LoadingSpinner } from '../../components/common/LoadingSpinner'
 import toast from 'react-hot-toast'
 
 interface ProductManagementPageProps {
@@ -73,9 +73,9 @@ interface ProductManagementPageProps {
 export default function ProductManagementPage({ companyId }: ProductManagementPageProps) {
   const [selectedTab, setSelectedTab] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState<string>('')
-  const [selectedType, setSelectedType] = useState<string>('')
-  const [selectedStatus, setSelectedStatus] = useState<string>('')
+  const [selectedCategory, setSelectedCategory] = useState<string>('all')
+  const [selectedType, setSelectedType] = useState<string>('all')
+  const [selectedStatus, setSelectedStatus] = useState<string>('all')
   const [selectedProducts, setSelectedProducts] = useState<number[]>([])
   const [isProductFormOpen, setIsProductFormOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
@@ -91,9 +91,9 @@ export default function ProductManagementPage({ companyId }: ProductManagementPa
     searchTerm: debouncedSearchTerm,
     page: currentPage,
     size: pageSize,
-    categoryId: selectedCategory ? Number(selectedCategory) : undefined,
-    productType: selectedType ? (selectedType as ProductType) : undefined,
-    productStatus: selectedStatus ? (selectedStatus as ProductStatus) : undefined,
+    categoryId: selectedCategory && selectedCategory !== 'all' ? Number(selectedCategory) : undefined,
+    productType: selectedType && selectedType !== 'all' ? (selectedType as ProductType) : undefined,
+    productStatus: selectedStatus && selectedStatus !== 'all' ? (selectedStatus as ProductStatus) : undefined,
   }
 
   // 탭별 추가 필터
@@ -229,9 +229,9 @@ export default function ProductManagementPage({ companyId }: ProductManagementPa
   // 검색 초기화
   const handleResetFilters = () => {
     setSearchTerm('')
-    setSelectedCategory('')
-    setSelectedType('')
-    setSelectedStatus('')
+    setSelectedCategory('all')
+    setSelectedType('all')
+    setSelectedStatus('all')
     setCurrentPage(0)
   }
 
@@ -369,7 +369,7 @@ export default function ProductManagementPage({ companyId }: ProductManagementPa
                   <SelectValue placeholder="분류 선택" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">전체 분류</SelectItem>
+                  <SelectItem value="all">전체 분류</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category.id} value={category.id.toString()}>
                       {category.fullPath}
@@ -383,7 +383,7 @@ export default function ProductManagementPage({ companyId }: ProductManagementPa
                   <SelectValue placeholder="상품유형" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">전체 유형</SelectItem>
+                  <SelectItem value="all">전체 유형</SelectItem>
                   {Object.values(ProductType).map((type) => (
                     <SelectItem key={type} value={type}>
                       {KOREAN_LABELS[type]}
@@ -397,7 +397,7 @@ export default function ProductManagementPage({ companyId }: ProductManagementPa
                   <SelectValue placeholder="상품상태" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">전체 상태</SelectItem>
+                  <SelectItem value="all">전체 상태</SelectItem>
                   {Object.values(ProductStatus).map((status) => (
                     <SelectItem key={status} value={status}>
                       {KOREAN_LABELS[status]}

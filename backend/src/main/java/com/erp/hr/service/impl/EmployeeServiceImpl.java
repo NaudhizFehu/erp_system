@@ -2,8 +2,8 @@ package com.erp.hr.service.impl;
 
 import com.erp.common.entity.Company;
 import com.erp.common.repository.CompanyRepository;
-import com.erp.common.entity.Department;
-import com.erp.common.repository.DepartmentRepository;
+import com.erp.hr.entity.Department;
+import com.erp.hr.repository.DepartmentRepository;
 import com.erp.common.utils.ExceptionUtils;
 import com.erp.hr.dto.EmployeeCreateDto;
 import com.erp.hr.dto.EmployeeDto;
@@ -13,7 +13,8 @@ import com.erp.hr.entity.Position;
 import com.erp.hr.repository.EmployeeRepository;
 import com.erp.hr.repository.PositionRepository;
 import com.erp.hr.service.EmployeeService;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,10 +29,11 @@ import java.util.stream.Collectors;
  * 직원 서비스 구현체
  * 직원 관련 비즈니스 로직을 구현합니다
  */
-@Slf4j
 @Service
 @Transactional(readOnly = true)
 public class EmployeeServiceImpl implements EmployeeService {
+
+    private static final Logger log = LoggerFactory.getLogger(EmployeeServiceImpl.class);
 
     @Autowired
     private EmployeeRepository employeeRepository;
@@ -69,10 +71,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         Position position = positionRepository.findById(createDto.positionId())
                 .orElseThrow(() -> ExceptionUtils.entityNotFound("직급을 찾을 수 없습니다"));
 
-        // 급여 범위 검증
-        if (createDto.baseSalary() != null && !position.isValidSalaryRange(createDto.baseSalary())) {
-            ExceptionUtils.throwValidation("기본급이 해당 직급의 급여 범위를 벗어납니다");
-        }
+        // 급여 범위 검증 - baseSalary 필드 제거로 인해 비활성화
 
         // Employee 엔티티 생성
         Employee employee = new Employee();
@@ -86,7 +85,6 @@ public class EmployeeServiceImpl implements EmployeeService {
         employee.setBirthDate(createDto.birthDate());
         employee.setGender(createDto.gender());
         employee.setAddress(createDto.address());
-        employee.setAddressDetail(createDto.addressDetail());
         employee.setPostalCode(createDto.postalCode());
         employee.setCompany(company);
         employee.setDepartment(department);
@@ -94,7 +92,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         employee.setHireDate(createDto.hireDate());
         employee.setEmploymentStatus(createDto.employmentStatus());
         employee.setEmploymentType(createDto.employmentType());
-        employee.setBaseSalary(createDto.baseSalary());
+        // employee.setBaseSalary(createDto.baseSalary()); // baseSalary 필드 제거됨
         employee.setBankName(createDto.bankName());
         employee.setAccountNumber(createDto.accountNumber());
         employee.setAccountHolder(createDto.accountHolder());
@@ -139,10 +137,7 @@ public class EmployeeServiceImpl implements EmployeeService {
             Position position = positionRepository.findById(updateDto.positionId())
                     .orElseThrow(() -> ExceptionUtils.entityNotFound("직급을 찾을 수 없습니다"));
             
-            // 급여 범위 검증
-            if (updateDto.baseSalary() != null && !position.isValidSalaryRange(updateDto.baseSalary())) {
-                ExceptionUtils.throwValidation("기본급이 해당 직급의 급여 범위를 벗어납니다");
-            }
+            // 급여 범위 검증 - baseSalary 필드 제거로 인해 비활성화
             
             employee.setPosition(position);
         }
@@ -156,11 +151,10 @@ public class EmployeeServiceImpl implements EmployeeService {
         if (updateDto.birthDate() != null) employee.setBirthDate(updateDto.birthDate());
         if (updateDto.gender() != null) employee.setGender(updateDto.gender());
         if (updateDto.address() != null) employee.setAddress(updateDto.address());
-        if (updateDto.addressDetail() != null) employee.setAddressDetail(updateDto.addressDetail());
         if (updateDto.postalCode() != null) employee.setPostalCode(updateDto.postalCode());
         if (updateDto.employmentStatus() != null) employee.setEmploymentStatus(updateDto.employmentStatus());
         if (updateDto.employmentType() != null) employee.setEmploymentType(updateDto.employmentType());
-        if (updateDto.baseSalary() != null) employee.setBaseSalary(updateDto.baseSalary());
+        // if (updateDto.baseSalary() != null) employee.setBaseSalary(updateDto.baseSalary()); // baseSalary 필드 제거됨
         if (updateDto.bankName() != null) employee.setBankName(updateDto.bankName());
         if (updateDto.accountNumber() != null) employee.setAccountNumber(updateDto.accountNumber());
         if (updateDto.accountHolder() != null) employee.setAccountHolder(updateDto.accountHolder());
@@ -184,7 +178,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     public EmployeeDto getEmployee(Long id) {
         log.info("직원 조회: ID {}", id);
 
-        Employee employee = employeeRepository.findById(id)
+        Employee employee = employeeRepository.findByIdWithDetails(id)
                 .orElseThrow(() -> ExceptionUtils.entityNotFound("직원을 찾을 수 없습니다"));
 
         return EmployeeDto.from(employee);

@@ -1,9 +1,10 @@
 package com.erp.common.dto;
 
 import com.erp.common.entity.Company;
-import jakarta.validation.constraints.*;
-import java.time.LocalDate;
-import java.math.BigDecimal;
+import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Email;
+// LocalDate, BigDecimal import는 더 이상 사용하지 않으므로 제거됨
 
 /**
  * 회사 수정 DTO
@@ -53,20 +54,10 @@ public record CompanyUpdateDto(
         @Size(max = 200, message = "홈페이지 URL은 200자 이하여야 합니다")
         String website,
         
-        LocalDate establishedDate,
-        Company.CompanyStatus status,
-        Company.CompanyType companyType,
+        Company.CompanyStatus status
+        // establishedDate 필드는 실제 DB 스키마에 없으므로 제거됨
         
-        @Min(value = 0, message = "직원 수는 0 이상이어야 합니다")
-        Integer employeeCount,
-        
-        @Min(value = 0, message = "자본금은 0 이상이어야 합니다")
-        BigDecimal capitalAmount,
-        
-        String description,
-        
-        @Size(max = 500, message = "로고 이미지 URL은 500자 이하여야 합니다")
-        String logoUrl
+        // companyType, employeeCount, capitalAmount, description, logoUrl 필드들은 실제 DB 스키마에 없으므로 제거됨
 ) {
     public CompanyUpdateDto {
         // 수정 DTO는 모든 필드가 선택사항이므로 별도 검증 없음

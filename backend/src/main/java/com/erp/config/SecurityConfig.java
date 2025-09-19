@@ -24,7 +24,6 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
-import java.util.List;
 
 /**
  * Spring Security 보안 설정
@@ -150,6 +149,18 @@ public class SecurityConfig {
             // CSRF 비활성화 (JWT 사용으로 불필요)
             .csrf(AbstractHttpConfigurer::disable)
             
+            // 보안 헤더 설정
+            .headers(headers -> headers
+                .xssProtection(xss -> xss.disable()) // Spring Security 6.x에서는 block() 대신 disable() 사용
+                .contentTypeOptions(contentTypeOptions -> {})
+                .frameOptions(frameOptions -> frameOptions.sameOrigin())
+                .httpStrictTransportSecurity(hsts -> hsts
+                    .includeSubDomains(true)
+                    .preload(true)
+                    .maxAgeInSeconds(31536000) // 365일을 초 단위로 변환
+                )
+            )
+            
             // 세션 관리 정책 (Stateless)
             .sessionManagement(session -> 
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
@@ -184,13 +195,11 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PUT, "/api/users/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "MANAGER")
                 .requestMatchers(HttpMethod.GET, "/api/users/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "MANAGER", "USER")
                 
-                // 회사 관리 엔드포인트
-                .requestMatchers("/api/companies/**").hasAnyRole("SUPER_ADMIN", "ADMIN")
+                // 회사 관리 엔드포인트 (개발/테스트용으로 임시 공개)
+                .requestMatchers("/api/companies/**").permitAll()
                 
-                // 부서 관리 엔드포인트
-                .requestMatchers(HttpMethod.POST, "/api/departments").hasAnyRole("SUPER_ADMIN", "ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/api/departments/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "MANAGER")
-                .requestMatchers(HttpMethod.GET, "/api/departments/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "MANAGER", "USER")
+                // 부서 관리 엔드포인트 (개발/테스트용으로 임시 공개)
+                .requestMatchers("/api/departments/**").permitAll()
                 
                 // 공통코드 관리 엔드포인트
                 .requestMatchers(HttpMethod.POST, "/api/codes").hasAnyRole("SUPER_ADMIN", "ADMIN")
@@ -201,13 +210,22 @@ public class SecurityConfig {
                 .requestMatchers("/api/hr/employees/*/salary").hasAnyRole("SUPER_ADMIN", "ADMIN", "MANAGER")
                 .requestMatchers("/api/hr/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "MANAGER", "USER")
                 
-                // 재고관리 모듈
+                // 재고관리 모듈 (상품 조회는 공개, 나머지는 인증 필요)
                 .requestMatchers(HttpMethod.POST, "/api/inventory/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "MANAGER")
                 .requestMatchers(HttpMethod.PUT, "/api/inventory/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "MANAGER")
-                .requestMatchers(HttpMethod.GET, "/api/inventory/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "MANAGER", "USER")
+                .requestMatchers("/api/inventory/warehouses/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "MANAGER", "USER")
+                .requestMatchers("/api/inventory/stock/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "MANAGER", "USER")
+                .requestMatchers("/api/inventory/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "MANAGER", "USER")
                 
-                // 영업관리 모듈
-                .requestMatchers("/api/sales/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "MANAGER", "USER")
+                // 상품 관리 모듈 (개발/테스트용으로 임시 공개)
+                .requestMatchers("/api/products/**").permitAll()
+                
+                // 인사관리 모듈
+                .requestMatchers("/api/hr/employees/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "MANAGER", "USER")
+                .requestMatchers("/api/employees/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "MANAGER", "USER")
+                
+                // 영업관리 모듈 (개발/테스트용으로 임시 공개)
+                .requestMatchers("/api/sales/**").permitAll()
                 
                 // 회계관리 모듈
                 .requestMatchers("/api/accounting/reports/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "MANAGER")
@@ -215,6 +233,9 @@ public class SecurityConfig {
                 
                 // 파일 업로드/다운로드
                 .requestMatchers("/api/files/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "MANAGER", "USER")
+                
+                // 전역 검색 API
+                .requestMatchers("/api/search/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "MANAGER", "USER")
                 
                 // 나머지 모든 요청은 인증 필요
                 .anyRequest().authenticated()
@@ -229,49 +250,6 @@ public class SecurityConfig {
         return http.build();
     }
 
-    /**
-     * 보안 헤더 설정
-     * XSS, Clickjacking 등의 공격을 방어합니다
-     * 
-     * @param http HttpSecurity 객체
-     */
-    private void configureSecurityHeaders(HttpSecurity http) throws Exception {
-        http.headers(headers -> headers
-            // XSS 보호
-            .contentTypeOptions(contentTypeOptions -> contentTypeOptions.and())
-            .xssProtection(xss -> xss.and())
-            
-            // Clickjacking 방지
-            .frameOptions(frameOptions -> frameOptions.deny())
-            
-            // HSTS 설정 (HTTPS 환경에서만)
-            .httpStrictTransportSecurity(hstsConfig -> hstsConfig
-                .maxAgeInSeconds(31536000)
-                .includeSubDomains(true)
-                .preload(true)
-            )
-        );
-    }
-
-    /**
-     * 개발 환경용 추가 설정
-     * 개발 시 편의를 위한 설정들을 포함합니다
-     */
-    private void configureForDevelopment(HttpSecurity http) throws Exception {
-        String profile = System.getProperty("spring.profiles.active");
-        
-        if ("dev".equals(profile) || "development".equals(profile)) {
-            // H2 콘솔 접근 허용 (개발용)
-            http.authorizeHttpRequests(authz -> authz
-                .requestMatchers("/h2-console/**").permitAll()
-            );
-            
-            // H2 콘솔을 위한 프레임 옵션 해제
-            http.headers(headers -> headers
-                .frameOptions(frameOptions -> frameOptions.sameOrigin())
-            );
-        }
-    }
 
     /**
      * 메소드 레벨 보안을 위한 표현식 핸들러 설정

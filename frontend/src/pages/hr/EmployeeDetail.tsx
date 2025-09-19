@@ -32,12 +32,14 @@ function EmployeeDetail() {
       setLoading(true)
       setError(null)
       
+      console.log('직원 상세 정보 조회 시작:', employeeId)
       // API 호출
       const employeeData = await employeeService.getEmployeeById(employeeId)
+      console.log('직원 상세 정보 조회 성공:', employeeData)
       setEmployee(employeeData)
     } catch (err) {
-      setError('직원 정보를 불러오는 중 오류가 발생했습니다.')
       console.error('직원 상세 정보 조회 오류:', err)
+      setError('직원 정보를 불러오는 중 오류가 발생했습니다.')
     } finally {
       setLoading(false)
     }
@@ -189,16 +191,16 @@ function EmployeeDetail() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium text-muted-foreground">회사</label>
-              <p className="text-sm">{employee.companyName}</p>
+              <p className="text-sm">{employee.company.name}</p>
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">부서</label>
-              <p className="text-sm">{employee.departmentName}</p>
+              <p className="text-sm">{employee.department.name}</p>
             </div>
-            {employee.positionName && (
+            {employee.position && (
               <div>
                 <label className="text-sm font-medium text-muted-foreground">직급</label>
-                <p className="text-sm">{employee.positionName}</p>
+                <p className="text-sm">{employee.position.name}</p>
               </div>
             )}
             <div>
@@ -242,15 +244,31 @@ function EmployeeDetail() {
       </Card>
 
       {/* 급여 정보 */}
-      {employee.baseSalary && (
+      {(employee.bankName || employee.accountNumber) && (
         <Card>
           <CardHeader>
             <CardTitle>급여 정보</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">기본급</label>
-              <p className="text-sm">{employee.baseSalary.toLocaleString()}원</p>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {employee.bankName && (
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">은행명</label>
+                  <p className="text-sm">{employee.bankName}</p>
+                </div>
+              )}
+              {employee.accountNumber && (
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">계좌번호</label>
+                  <p className="text-sm">{employee.accountNumber}</p>
+                </div>
+              )}
+              {employee.accountHolder && (
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">예금주</label>
+                  <p className="text-sm">{employee.accountHolder}</p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

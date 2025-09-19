@@ -139,7 +139,7 @@ const MetricCard = ({
   )
 }
 
-export default function OverviewWidget({
+function OverviewWidget({
   data,
   loading = false,
   error,
@@ -392,6 +392,8 @@ export default function OverviewWidget({
     </Card>
   )
 }
+
+export { OverviewWidget }
 
 
 

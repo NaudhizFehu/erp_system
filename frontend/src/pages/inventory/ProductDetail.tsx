@@ -34,7 +34,13 @@ function ProductDetail() {
       
       // API 호출
       const productData = await productService.getProductById(productId)
-      setProduct(productData)
+      
+      // 안전한 필드 접근
+      if (productData) {
+        setProduct(productData)
+      } else {
+        throw new Error('상품 데이터를 받아올 수 없습니다.')
+      }
     } catch (err) {
       setError('상품 정보를 불러오는 중 오류가 발생했습니다.')
       console.error('상품 상세 정보 조회 오류:', err)
@@ -115,7 +121,11 @@ function ProductDetail() {
     )
   }
 
-  const stockStatus = getStockStatus(product.currentStock, product.safetyStock, product.reorderPoint)
+  const stockStatus = getStockStatus(
+    product.quantity || 0, 
+    product.safetyStock || 0, 
+    product.reorderPoint || 0
+  )
 
   return (
     <div className="space-y-6">
@@ -131,8 +141,8 @@ function ProductDetail() {
             뒤로가기
           </Button>
           <div>
-            <h1 className="text-2xl font-bold">{product.productName}</h1>
-            <p className="text-muted-foreground">상품 코드: {product.productCode}</p>
+            <h1 className="text-2xl font-bold">{product.productName || '상품명 없음'}</h1>
+            <p className="text-muted-foreground">상품 코드: {product.productCode || '코드 없음'}</p>
           </div>
         </div>
         <div className="flex items-center space-x-2">
@@ -149,17 +159,17 @@ function ProductDetail() {
 
       {/* 상태 및 유형 */}
       <div className="flex items-center space-x-4">
-        <Badge className={getStatusColor(product.productStatus)}>
+        <Badge className={getStatusColor(product.productStatus || 'ACTIVE')}>
           {product.productStatus === 'ACTIVE' ? '활성' : 
            product.productStatus === 'INACTIVE' ? '비활성' : '단종'}
         </Badge>
-        <Badge className={getTypeColor(product.productType)}>
+        <Badge className={getTypeColor(product.productType || 'FINISHED_GOODS')}>
           {product.productType === 'RAW_MATERIAL' ? '원자재' :
            product.productType === 'SEMI_FINISHED' ? '반제품' :
            product.productType === 'FINISHED_GOODS' ? '완제품' : '서비스'}
         </Badge>
         <Badge variant="outline">
-          {product.categoryName}
+          {product.categoryName || '미분류'}
         </Badge>
       </div>
 
@@ -225,12 +235,12 @@ function ProductDetail() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium text-muted-foreground">판매가</label>
-              <p className="text-lg font-semibold">{product.sellingPrice.toLocaleString()}원</p>
+              <p className="text-lg font-semibold">{(product.sellingPrice || 0).toLocaleString()}원</p>
             </div>
             {product.standardCost && (
               <div>
                 <label className="text-sm font-medium text-muted-foreground">표준 원가</label>
-                <p className="text-lg font-semibold">{product.standardCost.toLocaleString()}원</p>
+                <p className="text-lg font-semibold">{(product.standardCost || 0).toLocaleString()}원</p>
               </div>
             )}
           </div>
@@ -250,21 +260,21 @@ function ProductDetail() {
             <div>
               <label className="text-sm font-medium text-muted-foreground">현재 재고</label>
               <p className={`text-lg font-semibold ${stockStatus.color}`}>
-                {product.currentStock.toLocaleString()} {product.baseUnit}
+                {(product.quantity || 0).toLocaleString()} {product.baseUnit}
               </p>
               <p className={`text-xs ${stockStatus.color}`}>{stockStatus.message}</p>
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">안전 재고</label>
-              <p className="text-sm">{product.safetyStock.toLocaleString()} {product.baseUnit}</p>
+              <p className="text-sm">{(product.safetyStock || 0).toLocaleString()} {product.baseUnit}</p>
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">발주점</label>
-              <p className="text-sm">{product.reorderPoint.toLocaleString()} {product.baseUnit}</p>
+              <p className="text-sm">{(product.reorderPoint || 0).toLocaleString()} {product.baseUnit}</p>
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">발주량</label>
-              <p className="text-sm">{product.reorderQuantity.toLocaleString()} {product.baseUnit}</p>
+              <p className="text-sm">{(product.reorderQuantity || 0).toLocaleString()} {product.baseUnit}</p>
             </div>
           </div>
         </CardContent>

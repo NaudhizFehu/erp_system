@@ -74,7 +74,7 @@ export interface OrderDetail extends Order {
  * 주문 관련 API 호출을 담당합니다
  */
 class OrderService {
-  private baseUrl = '/api/orders'
+  private baseUrl = '/orders'
 
   /**
    * 주문 목록 조회

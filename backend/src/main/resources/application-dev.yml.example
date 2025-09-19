@@ -1,0 +1,108 @@
+# ERP 시스템 개발 환경 설정 템플릿
+# 실제 값은 application-dev.yml에서 설정 (GitLab 전용)
+
+spring:
+  # 데이터베이스 설정 (PostgreSQL)
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/erp_db}
+    username: ${DB_USERNAME:your_username}
+    password: ${DB_PASSWORD:your_password}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 2
+      idle-timeout: 300000
+      connection-timeout: 30000
+      validation-timeout: 5000
+      keep-alive-time: 30000
+      max-lifetime: 1200000
+      leak-detection-threshold: 60000
+      connection-test-query: SELECT 1
+      register-mbeans: true
+
+  # JPA 설정
+  jpa:
+    hibernate:
+      ddl-auto: ${DDL_AUTO:update}
+    show-sql: ${SHOW_SQL:false}
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        use_sql_comments: true
+        jdbc:
+          batch_size: 20
+          batch_versioned_data: true
+        order_inserts: true
+        order_updates: true
+        generate_statistics: false
+
+  # 보안 설정
+  security:
+    jwt:
+      secret: ${JWT_SECRET:your-jwt-secret-key}
+      expiration: ${JWT_EXPIRATION:86400}
+      refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800}
+
+# 서버 설정
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: ${SERVER_CONTEXT_PATH:/}
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
+# 로깅 설정
+logging:
+  level:
+    com.erp: ${LOG_LEVEL:INFO}
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: ${SHOW_SQL:false}
+    org.hibernate.type.descriptor.sql.BasicBinder: ${SHOW_SQL:false}
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: ${LOG_FILE_PATH:logs/erp-system.log}
+
+# CORS 설정
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173}
+  allowed-methods: ${CORS_ALLOWED_METHODS:GET,POST,PUT,DELETE,OPTIONS}
+  allowed-headers: ${CORS_ALLOWED_HEADERS:Content-Type,Authorization,X-Requested-With}
+  allow-credentials: true
+  max-age: 3600
+
+# 파일 업로드 설정
+file:
+  upload:
+    max-size: ${MAX_FILE_SIZE:10MB}
+    path: ${UPLOAD_PATH:uploads/}
+
+# 캐시 설정
+cache:
+  ttl: ${CACHE_TTL:3600}
+  max-size: ${CACHE_MAX_SIZE:1000}
+
+# 개발 환경 전용 설정
+dev:
+  # 테스트 계정 자동 생성
+  test-accounts:
+    enabled: true
+    admin:
+      username: admin
+      password: admin123
+      email: admin@erp.com
+    user:
+      username: user
+      password: user123
+      email: user@erp.com
+  
+  # 빠른 로그인 기능
+  quick-login:
+    enabled: true
+  
+  # JWT 만료 시간 연장 (24시간)
+  jwt-extended-expiration: true

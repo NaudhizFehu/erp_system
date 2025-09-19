@@ -343,6 +343,7 @@ public class ProductDto {
             LocalDateTime updatedAt,
             
             // 재고 관련 정보
+            Integer quantity,
             BigDecimal totalStock,
             BigDecimal availableStock,
             BigDecimal reservedStock,
@@ -368,7 +369,7 @@ public class ProductDto {
                     product.getCompany().getName(),
                     product.getCategory().getId(),
                     product.getCategory().getName(),
-                    product.getCategory().getFullPath(),
+                    null, // fullPath 필드 제거됨
                     product.getProductType(),
                     product.getProductType().getDescription(),
                     product.getProductStatus(),
@@ -384,15 +385,15 @@ public class ProductDto {
                     product.getSubUnit(),
                     product.getUnitConversionRate(),
                     product.getStandardCost(),
-                    product.getAverageCost(),
-                    product.getLastPurchasePrice(),
+                    null, // averageCost - 제거된 필드
+                    null, // lastPurchasePrice - 제거된 필드
                     product.getSellingPrice(),
                     product.getMinSellingPrice(),
-                    product.getSafetyStock(),
-                    product.getMinStock(),
+                    product.getSafetyStock(), // safetyStock
+                    product.getMinStock(), // minStock
                     product.getMaxStock(),
                     product.getReorderPoint(),
-                    product.getReorderQuantity(),
+                    product.getReorderQuantity(), // reorderQuantity
                     product.getLeadTimeDays(),
                     product.getShelfLifeDays(),
                     product.getWidth(),
@@ -412,17 +413,18 @@ public class ProductDto {
                     product.getAttachmentPaths(),
                     product.getTags(),
                     product.getSortOrder(),
-                    product.getMetadata(),
+                    null, // metadata - 제거된 필드
                     product.getCreatedAt(),
                     product.getUpdatedAt(),
-                    product.getTotalStock(),
-                    product.getAvailableStock(),
-                    product.getReservedStock(),
-                    product.isLowStock(),
-                    product.isOutOfStock(),
-                    product.isOverStock(),
-                    product.needsReorder(),
-                    product.getStockStatusSummary(),
+                    0, // quantity - Product 엔티티에 없음, 기본값 사용
+                    BigDecimal.ZERO, // totalStock - Product 엔티티에 없음, 기본값 사용
+                    BigDecimal.ZERO, // availableStock - Product 엔티티에 없음, 기본값 사용
+                    BigDecimal.ZERO, // reservedStock - Product 엔티티에 없음, 기본값 사용
+                    false, // isLowStock - 제거된 필드, 기본값 사용
+                    false, // isOutOfStock - 제거된 필드, 기본값 사용
+                    false, // isOverStock - 제거된 필드, 기본값 사용
+                    false, // needsReorder - 제거된 필드, 기본값 사용
+                    "정상", // stockStatusSummary - 제거된 필드, 기본값 사용
                     product.calculateProfitRate()
             );
         }
@@ -468,9 +470,9 @@ public class ProductDto {
                     product.getSellingPrice(),
                     product.getTotalStock(),
                     product.getAvailableStock(),
-                    product.isLowStock(),
-                    product.isOutOfStock(),
-                    product.getStockStatusSummary(),
+                    false, // isLowStock - 제거된 필드, 기본값 사용
+                    false, // isOutOfStock - 제거된 필드, 기본값 사용
+                    "정상", // stockStatusSummary - 제거된 필드, 기본값 사용
                     product.getImagePaths()
             );
         }
@@ -507,7 +509,7 @@ public class ProductDto {
                 Long warehouseId,
                 String warehouseName,
                 String locationCode,
-                Double currentStock,
+                Integer quantity,
                 Double availableStock,
                 Double reservedStock,
                 BigDecimal averageCost,

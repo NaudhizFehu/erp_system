@@ -33,6 +33,12 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     Page<Product> findByCompanyIdOrderByProductNameAsc(Long companyId, Pageable pageable);
 
     /**
+     * 회사별 모든 상품 조회 (페이징 없음)
+     */
+    @EntityGraph(attributePaths = {"company", "category"})
+    List<Product> findByCompanyId(Long companyId);
+
+    /**
      * 회사 및 상품 코드로 조회
      */
     @EntityGraph(attributePaths = {"company", "category"})
@@ -64,6 +70,12 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
            "(SELECT c.id FROM ProductCategory c WHERE c.id = :categoryId OR c.parentCategory.id = :categoryId) " +
            "AND p.isActive = true ORDER BY p.productName ASC")
     Page<Product> findByCategoryIncludingSubCategories(@Param("categoryId") Long categoryId, Pageable pageable);
+
+    /**
+     * 상품명으로 검색 (대소문자 무시)
+     */
+    @EntityGraph(attributePaths = {"company", "category"})
+    List<Product> findByProductNameContainingIgnoreCase(String name);
 
     /**
      * 상품 검색 (통합 검색)
@@ -242,7 +254,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
      */
     // @Modifying
     // @Query("UPDATE Product p SET p.totalStock = " +
-    //        "(SELECT COALESCE(SUM(i.currentStock), 0) FROM Inventory i WHERE i.product.id = p.id) " +
+    //        "(SELECT COALESCE(SUM(i.quantity), 0) FROM Inventory i WHERE i.product.id = p.id) " +
     //        "WHERE p.id = :productId")
     // void updateTotalStock(@Param("productId") Long productId);
 
@@ -252,7 +264,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
      */
     // @Modifying
     // @Query("UPDATE Product p SET p.totalStock = " +
-    //        "(SELECT COALESCE(SUM(i.currentStock), 0) FROM Inventory i WHERE i.product.id = p.id) " +
+    //        "(SELECT COALESCE(SUM(i.quantity), 0) FROM Inventory i WHERE i.product.id = p.id) " +
     //        "WHERE p.company.id = :companyId")
     // void updateAllTotalStock(@Param("companyId") Long companyId);
 
@@ -353,5 +365,9 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
      * 전역 검색용 - 회사별 상품명으로 검색
      */
     @EntityGraph(attributePaths = {"company", "category"})
-    List<Product> findByCompanyIdAndProductNameContainingIgnoreCase(Long companyId, String productName);
+    @Query("SELECT p FROM Product p " +
+           "JOIN FETCH p.company " +
+           "LEFT JOIN FETCH p.category " +
+           "WHERE p.company.id = :companyId AND LOWER(p.productName) LIKE LOWER(CONCAT('%', :name, '%')) AND p.isDeleted = false")
+    List<Product> findByCompanyIdAndProductNameContainingIgnoreCase(@Param("companyId") Long companyId, @Param("name") String name);
 }
