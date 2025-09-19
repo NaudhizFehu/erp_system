@@ -2,9 +2,6 @@ package com.erp.sales.entity;
 
 import com.erp.common.entity.BaseEntity;
 import com.erp.common.entity.Company;
-import com.erp.sales.entity.Customer;
-import com.erp.sales.entity.Quote;
-import com.erp.sales.entity.OrderItem;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.Data;
@@ -86,9 +83,6 @@ public class Order extends BaseEntity {
     @JoinColumn(name = "customer_id", nullable = false, foreignKey = @ForeignKey(name = "fk_order_customer"))
     private Customer customer;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "quote_id", foreignKey = @ForeignKey(name = "fk_order_quote"))
-    private Quote quote;
 
     @NotNull(message = "주문일자는 필수입니다")
     @Column(name = "order_date", nullable = false)
@@ -142,7 +136,6 @@ public class Order extends BaseEntity {
         Order order = new Order();
         order.setCompany(quote.getCompany());
         order.setCustomer(quote.getCustomer());
-        order.setQuote(quote);
         order.setOrderDate(LocalDate.now());
         order.setTotalAmount(quote.getTotalAmount());
         return order;

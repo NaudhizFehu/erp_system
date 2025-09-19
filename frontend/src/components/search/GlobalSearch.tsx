@@ -68,7 +68,7 @@ function GlobalSearch() {
     { id: 'cat-2', text: '모든 상품', type: 'category', category: 'product', icon: 'Package' },
     { id: 'cat-3', text: '모든 고객', type: 'category', category: 'customer', icon: 'Building2' },
     { id: 'cat-4', text: '모든 부서', type: 'category', category: 'department', icon: 'FolderOpen' },
-    { id: 'cat-5', text: '회사 정보', type: 'category', category: 'company', icon: 'Building2' }
+    { id: 'cat-5', text: '모든 회사', type: 'category', category: 'company', icon: 'Building2' }
   ]
 
   // 실제 데이터 기반 검색 제안
@@ -273,7 +273,7 @@ function GlobalSearch() {
         // 부서 카테고리: 모든 부서 조회
         performCategorySearch('department', '')
       } else if (suggestion.category === 'company') {
-        // 회사 카테고리: 회사 정보 조회
+        // 회사 카테고리: 모든 회사 조회
         performCategorySearch('company', '')
       } else {
         // 기본 검색

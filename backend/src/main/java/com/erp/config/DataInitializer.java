@@ -10,13 +10,17 @@ import com.erp.hr.repository.DepartmentRepository;
 import com.erp.common.repository.UserRepository;
 import com.erp.inventory.repository.ProductRepository;
 import com.erp.inventory.repository.ProductCategoryRepository;
+import com.erp.sales.entity.Customer;
+import com.erp.sales.repository.CustomerRepository;
+import com.erp.sales.entity.Order;
+import com.erp.sales.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
-import org.springframework.core.annotation.Order;
+import java.util.List;
 import org.springframework.stereotype.Component;
 
 // LocalDate import는 더 이상 사용하지 않으므로 제거됨
@@ -36,10 +40,11 @@ public class DataInitializer {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final ProductCategoryRepository productCategoryRepository;
+    private final CustomerRepository customerRepository;
+    private final OrderRepository orderRepository;
     private final PasswordEncoder passwordEncoder;
 
     @EventListener(ApplicationReadyEvent.class)
-    @Order(2) // DdlForcer 이후에 실행
     public void initializeData() {
         log.info("애플리케이션 시작 완료 후 데이터 초기화 시작");
 
@@ -59,6 +64,12 @@ public class DataInitializer {
             // 상품 카테고리 및 상품 데이터 생성
             createProductCategories();
             createProducts();
+            
+            // 고객 데이터 생성
+            createCustomers();
+            
+            // 주문 데이터 생성
+            createOrders();
 
             log.info("초기 데이터 초기화 완료");
         } catch (Exception e) {
@@ -396,7 +407,181 @@ public class DataInitializer {
             paper.setIsDeleted(false);
             productRepository.save(paper);
 
-            log.info("상품 데이터 생성 완료: 노트북, 무선마우스, 볼펜, 키보드, 모니터, A4용지");
+            // 추가 상품들
+            String[] additionalProductNames = {
+                "스마트폰", "태블릿", "이어폰", "스피커", "웹캠",
+                "헤드셋", "충전기", "케이블", "메모리카드", "외장하드"
+            };
+
+            String[] additionalProductCodes = {
+                "PHONE001", "TABLET001", "EARPHONE001", "SPEAKER001", "WEBCAM001",
+                "HEADSET001", "CHARGER001", "CABLE001", "MEMORY001", "HDD001"
+            };
+
+            String[] additionalDescriptions = {
+                "최신 스마트폰", "고성능 태블릿", "무선 이어폰", "블루투스 스피커", "4K 웹캠",
+                "게이밍 헤드셋", "고속 충전기", "USB-C 케이블", "128GB 메모리카드", "1TB 외장하드"
+            };
+
+            java.math.BigDecimal[] additionalPrices = {
+                new java.math.BigDecimal("800000"), new java.math.BigDecimal("600000"), new java.math.BigDecimal("150000"),
+                new java.math.BigDecimal("200000"), new java.math.BigDecimal("100000"), new java.math.BigDecimal("300000"),
+                new java.math.BigDecimal("50000"), new java.math.BigDecimal("20000"), new java.math.BigDecimal("80000"),
+                new java.math.BigDecimal("120000")
+            };
+
+            String[] additionalManufacturers = {
+                "애플", "삼성", "소니", "보스", "로지텍",
+                "레이저", "애플", "삼성", "샌디스크", "시게이트"
+            };
+
+            String[] additionalBrands = {
+                "iPhone", "Galaxy", "Sony", "Bose", "Logitech",
+                "Razer", "Apple", "Samsung", "SanDisk", "Seagate"
+            };
+
+            for (int i = 0; i < additionalProductNames.length; i++) {
+                Product product = new Product();
+                product.setProductCode(additionalProductCodes[i]);
+                product.setProductName(additionalProductNames[i]);
+                product.setDescription(additionalDescriptions[i]);
+                product.setCategory(computerCategory); // 모두 컴퓨터 카테고리로 분류
+                product.setCompany(company);
+                product.setSellingPrice(additionalPrices[i]);
+                product.setMinStock(new java.math.BigDecimal("5"));
+                product.setMaxStock(new java.math.BigDecimal("50"));
+                product.setBaseUnit("개");
+                product.setManufacturer(additionalManufacturers[i]);
+                product.setBrand(additionalBrands[i]);
+                product.setProductStatus(Product.ProductStatus.ACTIVE);
+                product.setCreatedBy(1L);
+                product.setUpdatedBy(1L);
+                product.setIsDeleted(false);
+                productRepository.save(product);
+            }
+
+            log.info("상품 데이터 생성 완료: 총 16개 (노트북, 무선마우스, 볼펜, 키보드, 모니터, A4용지 + 추가 10개)");
+        }
+    }
+
+    /**
+     * 고객 데이터 생성 (15개)
+     */
+    @Transactional
+    private void createCustomers() {
+        if (customerRepository.count() == 0) {
+            Company company = companyRepository.findByCompanyCode("COMP001")
+                .orElseThrow(() -> new RuntimeException("회사를 찾을 수 없습니다"));
+
+            String[] customerNames = {
+                "삼성전자", "LG전자", "현대자동차", "SK하이닉스", "네이버",
+                "카카오", "쿠팡", "배달의민족", "토스", "당근마켓",
+                "라인", "야놀자", "직방", "마켓컬리", "무신사"
+            };
+
+            String[] customerCodes = {
+                "CUST001", "CUST002", "CUST003", "CUST004", "CUST005",
+                "CUST006", "CUST007", "CUST008", "CUST009", "CUST010",
+                "CUST011", "CUST012", "CUST013", "CUST014", "CUST015"
+            };
+
+            String[] businessNumbers = {
+                "123-45-67890", "234-56-78901", "345-67-89012", "456-78-90123", "567-89-01234",
+                "678-90-12345", "789-01-23456", "890-12-34567", "901-23-45678", "012-34-56789",
+                "111-22-33344", "222-33-44455", "333-44-55566", "444-55-66677", "555-66-77788"
+            };
+
+            String[] ceoNames = {
+                "김삼성", "이엘지", "박현대", "최하이닉스", "정네이버",
+                "강카카오", "윤쿠팡", "임배민", "조토스", "한당근",
+                "서라인", "오야놀자", "신직방", "권컬리", "황무신사"
+            };
+
+            for (int i = 0; i < customerNames.length; i++) {
+                Customer customer = new Customer();
+                customer.setCustomerCode(customerCodes[i]);
+                customer.setCustomerName(customerNames[i]);
+                customer.setBusinessRegistrationNumber(businessNumbers[i]);
+                customer.setCeoName(ceoNames[i]);
+                customer.setAddress("서울시 강남구 테헤란로 " + (100 + i));
+                customer.setPhoneNumber("02-" + String.format("%04d", 1000 + i));
+                customer.setEmail("contact@" + customerNames[i].toLowerCase() + ".com");
+                customer.setCompany(company);
+                customer.setCustomerType(Customer.CustomerType.CORPORATE);
+                customer.setCustomerStatus(Customer.CustomerStatus.ACTIVE);
+                customer.setCreatedBy(1L);
+                customer.setUpdatedBy(1L);
+                customer.setIsDeleted(false);
+                customerRepository.save(customer);
+            }
+
+            log.info("고객 데이터 생성 완료: {}개", customerNames.length);
+        }
+    }
+
+    /**
+     * 주문 데이터 생성 (15개)
+     */
+    @Transactional
+    private void createOrders() {
+        if (orderRepository.count() == 0) {
+            Company company = companyRepository.findByCompanyCode("COMP001")
+                .orElseThrow(() -> new RuntimeException("회사를 찾을 수 없습니다"));
+
+            // 고객 목록 가져오기
+            List<Customer> customers = customerRepository.findByCompanyId(company.getId());
+            if (customers.isEmpty()) {
+                log.warn("고객 데이터가 없어 주문을 생성할 수 없습니다.");
+                return;
+            }
+
+            String[] orderNumbers = {
+                "ORD001", "ORD002", "ORD003", "ORD004", "ORD005",
+                "ORD006", "ORD007", "ORD008", "ORD009", "ORD010",
+                "ORD011", "ORD012", "ORD013", "ORD014", "ORD015"
+            };
+
+            Order.OrderStatus[] orderStatuses = {
+                Order.OrderStatus.PENDING, Order.OrderStatus.CONFIRMED, Order.OrderStatus.PROCESSING,
+                Order.OrderStatus.SHIPPED, Order.OrderStatus.DELIVERED, Order.OrderStatus.PENDING,
+                Order.OrderStatus.CONFIRMED, Order.OrderStatus.PROCESSING, Order.OrderStatus.SHIPPED,
+                Order.OrderStatus.DELIVERED, Order.OrderStatus.PENDING, Order.OrderStatus.CONFIRMED,
+                Order.OrderStatus.PROCESSING, Order.OrderStatus.SHIPPED, Order.OrderStatus.DELIVERED
+            };
+
+            Order.PaymentStatus[] paymentStatuses = {
+                Order.PaymentStatus.PENDING, Order.PaymentStatus.PAID, Order.PaymentStatus.PARTIAL,
+                Order.PaymentStatus.PAID, Order.PaymentStatus.PAID, Order.PaymentStatus.PENDING,
+                Order.PaymentStatus.PAID, Order.PaymentStatus.PARTIAL, Order.PaymentStatus.PAID,
+                Order.PaymentStatus.PAID, Order.PaymentStatus.PENDING, Order.PaymentStatus.PAID,
+                Order.PaymentStatus.PARTIAL, Order.PaymentStatus.PAID, Order.PaymentStatus.PAID
+            };
+
+            java.math.BigDecimal[] amounts = {
+                new java.math.BigDecimal("1500000"), new java.math.BigDecimal("2500000"), new java.math.BigDecimal("3500000"),
+                new java.math.BigDecimal("4500000"), new java.math.BigDecimal("5500000"), new java.math.BigDecimal("6500000"),
+                new java.math.BigDecimal("7500000"), new java.math.BigDecimal("8500000"), new java.math.BigDecimal("9500000"),
+                new java.math.BigDecimal("10500000"), new java.math.BigDecimal("11500000"), new java.math.BigDecimal("12500000"),
+                new java.math.BigDecimal("13500000"), new java.math.BigDecimal("14500000"), new java.math.BigDecimal("15500000")
+            };
+
+            for (int i = 0; i < orderNumbers.length; i++) {
+                Order order = new Order();
+                order.setOrderNumber(orderNumbers[i]);
+                order.setCompany(company);
+                order.setCustomer(customers.get(i % customers.size())); // 고객 순환 할당
+                order.setOrderDate(java.time.LocalDate.now().minusDays(i));
+                order.setDeliveryDate(java.time.LocalDate.now().plusDays(i + 1));
+                order.setOrderStatus(orderStatuses[i]);
+                order.setPaymentStatus(paymentStatuses[i]);
+                order.setTotalAmount(amounts[i]);
+                order.setCreatedBy(1L);
+                order.setUpdatedBy(1L);
+                order.setIsDeleted(false);
+                orderRepository.save(order);
+            }
+
+            log.info("주문 데이터 생성 완료: {}개", orderNumbers.length);
         }
     }
 }
