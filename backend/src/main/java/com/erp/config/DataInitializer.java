@@ -105,7 +105,7 @@ public class DataInitializer {
     @Transactional
     private void createDepartments() {
         if (departmentRepository.count() == 0) {
-            Company company = companyRepository.findByCompanyCode("COMP001")
+            Company company = companyRepository.findById(1L)
                 .orElseThrow(() -> new RuntimeException("회사를 찾을 수 없습니다"));
 
             // 개발팀
@@ -158,7 +158,7 @@ public class DataInitializer {
         updateExistingUserPasswords();
         
         if (userRepository.count() == 0) {
-            Company company = companyRepository.findByCompanyCode("COMP001")
+            Company company = companyRepository.findById(1L)
                 .orElseThrow(() -> new RuntimeException("회사를 찾을 수 없습니다"));
 
             Department devDept = departmentRepository.findByDepartmentCode("DEPT001")
@@ -285,7 +285,7 @@ public class DataInitializer {
     private void createProducts() {
         if (productRepository.count() == 0) {
             // 회사가 없으면 생성
-            Company company = companyRepository.findByCompanyCode("COMP001")
+            Company company = companyRepository.findById(1L)
                 .orElseGet(() -> {
                     log.warn("회사가 없어서 새로 생성합니다");
                     Company newCompany = new Company();
@@ -489,7 +489,7 @@ public class DataInitializer {
     private void createCustomers() {
         if (customerRepository.count() == 0) {
             // 회사가 없으면 생성
-            Company company = companyRepository.findByCompanyCode("COMP001")
+            Company company = companyRepository.findById(1L)
                 .orElseGet(() -> {
                     log.warn("회사가 없어서 새로 생성합니다");
                     Company newCompany = new Company();
@@ -562,7 +562,7 @@ public class DataInitializer {
     private void createOrders() {
         if (orderRepository.count() == 0) {
             // 회사가 없으면 생성
-            Company company = companyRepository.findByCompanyCode("COMP001")
+            Company company = companyRepository.findById(1L)
                 .orElseGet(() -> {
                     log.warn("회사가 없어서 새로 생성합니다");
                     Company newCompany = new Company();
