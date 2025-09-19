@@ -261,6 +261,10 @@ local/
 backend/src/main/resources/application-dev.yml
 backend/src/main/resources/application-prod.yml
 
+# GitLab 전용 디렉토리 및 파일
+.gitlab/
+.gitlab-ci.yml
+
 # 프론트엔드 환경변수
 frontend/.env.development
 frontend/.env.production
