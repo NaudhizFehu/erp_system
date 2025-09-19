@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { AuthProvider } from '@/contexts/AuthContext'
+import { NotificationProvider } from '@/contexts/NotificationContext'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { Layout } from '@/components/layout/Layout'
 import { LoginPage } from '@/pages/auth/LoginPage'
@@ -17,6 +18,8 @@ import { OrderDetail } from '@/pages/sales/OrderDetail'
 import { AccountList } from '@/pages/accounting/AccountList'
 import { CompanyList } from '@/pages/company/CompanyList'
 import { CompanyDetail } from '@/pages/company/CompanyDetail'
+import { NotificationListPage } from '@/pages/notifications/NotificationListPage'
+import { NotificationTestPage } from '@/pages/notifications/NotificationTestPage'
 
 /**
  * 메인 애플리케이션 컴포넌트
@@ -25,7 +28,8 @@ import { CompanyDetail } from '@/pages/company/CompanyDetail'
 function App() {
   return (
     <AuthProvider>
-      <Routes>
+      <NotificationProvider>
+        <Routes>
         {/* 공개 라우트 */}
         <Route path="/login" element={<LoginPage />} />
         
@@ -59,14 +63,19 @@ function App() {
                 {/* 회사관리 */}
                 <Route path="/companies" element={<CompanyList />} />
                 <Route path="/companies/:id" element={<CompanyDetail />} />
+                
+                {/* 알림관리 */}
+                <Route path="/notifications" element={<NotificationListPage />} />
+                <Route path="/notifications/test" element={<NotificationTestPage />} />
               </Routes>
             </Layout>
           </ProtectedRoute>
         } />
-      </Routes>
-      
-      {/* React Query 개발자 도구 */}
-      <ReactQueryDevtools initialIsOpen={false} />
+        </Routes>
+        
+        {/* React Query 개발자 도구 */}
+        <ReactQueryDevtools initialIsOpen={false} />
+      </NotificationProvider>
     </AuthProvider>
   )
 }
