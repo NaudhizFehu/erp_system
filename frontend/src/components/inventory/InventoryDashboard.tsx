@@ -149,7 +149,7 @@ function AlertCard({ title, count, items, color, onViewAll }: AlertCardProps) {
               <div key={index} className="flex justify-between items-center text-sm">
                 <span className="truncate flex-1">{item.productName || item.name}</span>
                 <span className="text-muted-foreground ml-2">
-                  {item.currentStock !== undefined ? `${formatNumber(item.currentStock)}개` : ''}
+                  {item.quantity !== undefined ? `${formatNumber(item.quantity)}개` : ''}
                 </span>
               </div>
             ))}
@@ -175,7 +175,7 @@ const CHART_COLORS = [
   '#06b6d4', '#f97316', '#84cc16', '#ec4899', '#6b7280'
 ]
 
-export default function InventoryDashboard({ companyId }: InventoryDashboardProps) {
+function InventoryDashboard({ companyId }: InventoryDashboardProps) {
   const [refreshKey, setRefreshKey] = useState(0)
 
   // 데이터 페칭
@@ -486,6 +486,8 @@ export default function InventoryDashboard({ companyId }: InventoryDashboardProp
     </div>
   )
 }
+
+export { InventoryDashboard }
 
 
 

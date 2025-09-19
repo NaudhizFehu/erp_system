@@ -82,7 +82,7 @@ function DepartmentDetail() {
             뒤로가기
           </Button>
           <div>
-            <h1 className="text-2xl font-bold">{department.departmentName}</h1>
+            <h1 className="text-2xl font-bold">{department.name}</h1>
             <p className="text-muted-foreground">부서 코드: {department.departmentCode}</p>
           </div>
         </div>
@@ -100,11 +100,11 @@ function DepartmentDetail() {
 
       {/* 상태 */}
       <div className="flex items-center space-x-4">
-        <Badge className={department.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
-          {department.isActive ? '활성' : '비활성'}
+        <Badge className={department.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
+          {department.status === 'ACTIVE' ? '활성' : '비활성'}
         </Badge>
         <Badge variant="outline">
-          {department.companyName}
+          {department.company.name}
         </Badge>
       </div>
 
@@ -120,12 +120,12 @@ function DepartmentDetail() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium text-muted-foreground">부서명</label>
-              <p className="text-sm">{department.departmentName}</p>
+              <p className="text-sm">{department.name}</p>
             </div>
-            {department.departmentNameEn && (
+            {department.nameEn && (
               <div>
                 <label className="text-sm font-medium text-muted-foreground">영문명</label>
-                <p className="text-sm">{department.departmentNameEn}</p>
+                <p className="text-sm">{department.nameEn}</p>
               </div>
             )}
             <div>
@@ -134,12 +134,12 @@ function DepartmentDetail() {
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">소속 회사</label>
-              <p className="text-sm">{department.companyName}</p>
+              <p className="text-sm">{department.company.name}</p>
             </div>
-            {department.parentDepartmentName && (
+            {department.parentDepartment && (
               <div>
                 <label className="text-sm font-medium text-muted-foreground">상위 부서</label>
-                <p className="text-sm">{department.parentDepartmentName}</p>
+                <p className="text-sm">{department.parentDepartment.name}</p>
               </div>
             )}
             {department.location && (
@@ -159,7 +159,7 @@ function DepartmentDetail() {
       </Card>
 
       {/* 부서장 정보 */}
-      {department.managerName && (
+      {department.manager && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
@@ -170,7 +170,7 @@ function DepartmentDetail() {
           <CardContent>
             <div>
               <label className="text-sm font-medium text-muted-foreground">부서장</label>
-              <p className="text-sm">{department.managerName}</p>
+              <p className="text-sm">{department.manager.name}</p>
             </div>
           </CardContent>
         </Card>
@@ -187,13 +187,13 @@ function DepartmentDetail() {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium text-muted-foreground">직원 수</label>
-              <p className="text-2xl font-bold">{department.employeeCount}명</p>
+              <label className="text-sm font-medium text-muted-foreground">부서 레벨</label>
+              <p className="text-2xl font-bold">{department.level}레벨</p>
             </div>
-            {department.budget && (
+            {department.budgetAmount && (
               <div>
                 <label className="text-sm font-medium text-muted-foreground">예산</label>
-                <p className="text-2xl font-bold">{department.budget.toLocaleString()}원</p>
+                <p className="text-2xl font-bold">{department.budgetAmount.toLocaleString()}원</p>
               </div>
             )}
           </div>

@@ -3,14 +3,14 @@ package com.erp.inventory.entity;
 import com.erp.common.entity.BaseEntity;
 import com.erp.common.entity.Company;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.DecimalMin;
+// import jakarta.validation.constraints.DecimalMin; // 사용하지 않음
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+// import java.time.LocalDateTime; // 제거된 필드들로 인해 사용하지 않음
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,15 +24,13 @@ import java.util.List;
     indexes = {
         @Index(name = "idx_inventory_company", columnList = "company_id"),
         @Index(name = "idx_inventory_product", columnList = "product_id"),
-        @Index(name = "idx_inventory_warehouse", columnList = "warehouse_id"),
-        @Index(name = "idx_inventory_location", columnList = "warehouse_id, location_code"),
-        @Index(name = "idx_inventory_stock_status", columnList = "company_id, stock_status"),
-        @Index(name = "idx_inventory_low_stock", columnList = "company_id, is_low_stock"),
-        @Index(name = "idx_inventory_last_updated", columnList = "last_stock_update")
+        @Index(name = "idx_inventory_warehouse", columnList = "warehouse_id")
+        // 존재하지 않는 컬럼들에 대한 인덱스 제거:
+        // stock_status, is_low_stock, last_stock_update 컬럼이 DB에 존재하지 않음
     },
     uniqueConstraints = {
-        @UniqueConstraint(name = "uk_inventory_product_warehouse_location", 
-                         columnNames = {"product_id", "warehouse_id", "location_code"})
+        // @UniqueConstraint(name = "uk_inventory_product_warehouse_location", 
+        //                  columnNames = {"product_id", "warehouse_id", "location_code"}) // location_code 컬럼이 존재하지 않음
     }
 )
 @Data
@@ -109,237 +107,56 @@ public class Inventory extends BaseEntity {
     @JoinColumn(name = "warehouse_id", nullable = false, foreignKey = @ForeignKey(name = "fk_inventory_warehouse"))
     private Warehouse warehouse;
 
-    /**
-     * 저장 위치 코드 (창고 내 구체적 위치)
-     */
-    @Column(name = "location_code", length = 50)
-    private String locationCode = "DEFAULT";
+    // locationCode 필드 제거 - 데이터베이스에 해당 컬럼이 존재하지 않음
+
+    // locationDescription 필드 제거 - 데이터베이스에 해당 컬럼이 존재하지 않음
 
     /**
-     * 저장 위치 설명
+     * 현재 재고 수량 (DB: INTEGER)
      */
-    @Column(name = "location_description", length = 200)
-    private String locationDescription;
+    @Column(name = "quantity", nullable = false)
+    private Integer quantity = 0;
 
     /**
-     * 현재 재고 수량
+     * 사용 가능한 재고 수량 (DB: INTEGER)
      */
-    @DecimalMin(value = "0.0", message = "현재 재고 수량은 0 이상이어야 합니다")
-    @Column(name = "current_stock", nullable = false)
-    private Double currentStock = 0.0;
+    @Column(name = "available_quantity", nullable = false)
+    private Integer availableQuantity = 0;
 
     /**
-     * 사용 가능한 재고 수량 (현재 재고 - 예약 재고)
+     * 예약된 재고 수량 (DB: INTEGER)
      */
-    @DecimalMin(value = "0.0", message = "사용 가능한 재고 수량은 0 이상이어야 합니다")
-    @Column(name = "available_stock", nullable = false)
-    private Double availableStock = 0.0;
+    @Column(name = "reserved_quantity", nullable = false)
+    private Integer reservedQuantity = 0;
+
+    // DdlForcer 스키마에 없는 필드들 - 주석 처리
+    // ordered_stock, defective_stock, quarantine_stock, safety_stock, min_stock
 
     /**
-     * 예약된 재고 수량
+     * 최대 재고 수량 (DB: INTEGER)
      */
-    @DecimalMin(value = "0.0", message = "예약된 재고 수량은 0 이상이어야 합니다")
-    @Column(name = "reserved_stock", nullable = false)
-    private Double reservedStock = 0.0;
-
-    /**
-     * 주문된 재고 수량 (입고 예정)
-     */
-    @DecimalMin(value = "0.0", message = "주문된 재고 수량은 0 이상이어야 합니다")
-    @Column(name = "ordered_stock", nullable = false)
-    private Double orderedStock = 0.0;
-
-    /**
-     * 불량 재고 수량
-     */
-    @DecimalMin(value = "0.0", message = "불량 재고 수량은 0 이상이어야 합니다")
-    @Column(name = "defective_stock", nullable = false)
-    private Double defectiveStock = 0.0;
-
-    /**
-     * 격리된 재고 수량
-     */
-    @DecimalMin(value = "0.0", message = "격리된 재고 수량은 0 이상이어야 합니다")
-    @Column(name = "quarantine_stock", nullable = false)
-    private Double quarantineStock = 0.0;
-
-    /**
-     * 안전 재고 수량 (상품별 설정을 오버라이드)
-     */
-    @DecimalMin(value = "0.0", message = "안전 재고 수량은 0 이상이어야 합니다")
-    @Column(name = "safety_stock")
-    private Double safetyStock;
-
-    /**
-     * 최소 재고 수량
-     */
-    @DecimalMin(value = "0.0", message = "최소 재고 수량은 0 이상이어야 합니다")
-    @Column(name = "min_stock")
-    private Double minStock;
-
-    /**
-     * 최대 재고 수량
-     */
-    @DecimalMin(value = "0.0", message = "최대 재고 수량은 0 이상이어야 합니다")
     @Column(name = "max_stock")
-    private Double maxStock;
+    private Integer maxStock;
 
     /**
-     * 재주문점
+     * 재주문점 (DB: INTEGER)
      */
-    @DecimalMin(value = "0.0", message = "재주문점은 0 이상이어야 합니다")
     @Column(name = "reorder_point")
-    private Double reorderPoint;
+    private Integer reorderPoint;
 
-    /**
-     * 재주문 수량
-     */
-    @DecimalMin(value = "0.0", message = "재주문 수량은 0 이상이어야 합니다")
-    @Column(name = "reorder_quantity")
-    private Double reorderQuantity;
+    // DdlForcer 스키마에 없는 필드들 - 주석 처리
+    // reorder_quantity, last_purchase_price, total_stock_value, stock_status, stock_grade
 
-    /**
-     * 평균 원가
-     */
-    @DecimalMin(value = "0.0", message = "평균 원가는 0 이상이어야 합니다")
-    @Column(name = "average_cost", precision = 15, scale = 2, nullable = false)
-    private BigDecimal averageCost = BigDecimal.ZERO;
+    // DdlForcer 스키마에 없는 추가 필드들 - 주석 처리
+    // is_low_stock, is_out_of_stock, is_over_stock, needs_reorder
+    // last_receipt_date, last_issue_date, last_stocktaking_date, last_stock_update
 
-    /**
-     * 최근 매입 단가
-     */
-    @DecimalMin(value = "0.0", message = "최근 매입 단가는 0 이상이어야 합니다")
-    @Column(name = "last_purchase_price", precision = 15, scale = 2)
-    private BigDecimal lastPurchasePrice;
+    // DdlForcer 스키마에 없는 추가 필드들 - 주석 처리
+    // movement_count, temperature, humidity, expiry_date, manufacture_date
+    // lot_number, serial_number, supplier_info
 
-    /**
-     * 총 재고 가치 (평균원가 기준)
-     */
-    @DecimalMin(value = "0.0", message = "총 재고 가치는 0 이상이어야 합니다")
-    @Column(name = "total_stock_value", precision = 18, scale = 2, nullable = false)
-    private BigDecimal totalStockValue = BigDecimal.ZERO;
-
-    /**
-     * 재고 상태
-     */
-    @Enumerated(EnumType.STRING)
-    @Column(name = "stock_status", nullable = false, length = 20)
-    private StockStatus stockStatus = StockStatus.NORMAL;
-
-    /**
-     * 재고 등급
-     */
-    @Enumerated(EnumType.STRING)
-    @Column(name = "stock_grade", length = 20)
-    private StockGrade stockGrade = StockGrade.A;
-
-    /**
-     * 안전재고 미달 여부
-     */
-    @Column(name = "is_low_stock", nullable = false)
-    private Boolean isLowStock = false;
-
-    /**
-     * 재고없음 여부
-     */
-    @Column(name = "is_out_of_stock", nullable = false)
-    private Boolean isOutOfStock = false;
-
-    /**
-     * 과재고 여부
-     */
-    @Column(name = "is_over_stock", nullable = false)
-    private Boolean isOverStock = false;
-
-    /**
-     * 재주문 필요 여부
-     */
-    @Column(name = "needs_reorder", nullable = false)
-    private Boolean needsReorder = false;
-
-    /**
-     * 마지막 입고일
-     */
-    @Column(name = "last_receipt_date")
-    private LocalDateTime lastReceiptDate;
-
-    /**
-     * 마지막 출고일
-     */
-    @Column(name = "last_issue_date")
-    private LocalDateTime lastIssueDate;
-
-    /**
-     * 마지막 재고 실사일
-     */
-    @Column(name = "last_stocktaking_date")
-    private LocalDateTime lastStocktakingDate;
-
-    /**
-     * 마지막 재고 업데이트 일시
-     */
-    @Column(name = "last_stock_update", nullable = false)
-    private LocalDateTime lastStockUpdate = LocalDateTime.now();
-
-    /**
-     * 재고 이동 횟수 (통계용)
-     */
-    @Column(name = "movement_count", nullable = false)
-    private Integer movementCount = 0;
-
-    /**
-     * 온도 (섭씨)
-     */
-    @Column(name = "temperature")
-    private Double temperature;
-
-    /**
-     * 습도 (%)
-     */
-    @Column(name = "humidity")
-    private Double humidity;
-
-    /**
-     * 유효기간
-     */
-    @Column(name = "expiry_date")
-    private LocalDateTime expiryDate;
-
-    /**
-     * 제조일
-     */
-    @Column(name = "manufacture_date")
-    private LocalDateTime manufactureDate;
-
-    /**
-     * 로트 번호
-     */
-    @Column(name = "lot_number", length = 50)
-    private String lotNumber;
-
-    /**
-     * 시리얼 번호
-     */
-    @Column(name = "serial_number", length = 50)
-    private String serialNumber;
-
-    /**
-     * 공급업체 정보
-     */
-    @Column(name = "supplier_info", length = 200)
-    private String supplierInfo;
-
-    /**
-     * 비고
-     */
-    @Column(name = "remarks", length = 500)
-    private String remarks;
-
-    /**
-     * 메타데이터 (JSON 형태)
-     */
-    @Column(name = "metadata", columnDefinition = "TEXT")
-    private String metadata;
+    // DdlForcer 스키마에 없는 추가 필드들 - 주석 처리
+    // remarks, metadata
 
     /**
      * 이 재고의 재고이동 내역
@@ -354,94 +171,31 @@ public class Inventory extends BaseEntity {
      * 재고 상태 업데이트
      */
     public void updateStockStatus() {
-        // 재고없음 확인
-        this.isOutOfStock = (currentStock == null || currentStock <= 0);
-        
-        if (isOutOfStock) {
-            this.stockStatus = StockStatus.OUT_OF_STOCK;
-            this.isLowStock = false;
-            this.isOverStock = false;
-            this.needsReorder = true;
-            return;
-        }
-
-        // 안전재고 미달 확인
-        Double safetyStockThreshold = getSafetyStockThreshold();
-        this.isLowStock = (safetyStockThreshold != null && currentStock < safetyStockThreshold);
-
-        // 과재고 확인
-        this.isOverStock = (maxStock != null && maxStock > 0 && currentStock > maxStock);
-
-        // 재주문 필요 확인
-        this.needsReorder = (reorderPoint != null && reorderPoint > 0 && availableStock != null && availableStock <= reorderPoint);
-
-        // 상태 결정
-        if (isOverStock) {
-            this.stockStatus = StockStatus.OVER_STOCK;
-        } else if (isLowStock) {
-            this.stockStatus = StockStatus.LOW_STOCK;
-        } else if (reservedStock != null && reservedStock > 0) {
-            this.stockStatus = StockStatus.RESERVED;
-        } else {
-            this.stockStatus = StockStatus.NORMAL;
-        }
-
-        this.lastStockUpdate = LocalDateTime.now();
+        // 제거된 필드들로 인해 단순화
+        // 실제 구현에서는 필요한 로직만 유지
     }
 
-    /**
-     * 사용 가능한 재고 수량 업데이트
-     */
-    public void updateAvailableStock() {
-        this.availableStock = (currentStock != null ? currentStock : 0.0) - 
-                             (reservedStock != null ? reservedStock : 0.0) -
-                             (quarantineStock != null ? quarantineStock : 0.0) -
-                             (defectiveStock != null ? defectiveStock : 0.0);
-        
-        if (this.availableStock < 0) {
-            this.availableStock = 0.0;
-        }
-    }
+    // updateAvailableStock() 메서드 제거 - availableStock 필드가 없음
 
     /**
      * 재고 가치 업데이트
      */
     public void updateStockValue() {
-        if (currentStock != null && averageCost != null) {
-            this.totalStockValue = averageCost.multiply(BigDecimal.valueOf(currentStock));
-        } else {
-            this.totalStockValue = BigDecimal.ZERO;
-        }
+        // totalStockValue 필드가 제거되어 단순화
+        // this.totalStockValue = BigDecimal.ZERO;
     }
 
     /**
      * 재고 입고 처리
      */
-    public void receiveStock(Double quantity, BigDecimal unitCost) {
+    public void receiveStock(Integer quantity, BigDecimal unitCost) {
         if (quantity == null || quantity <= 0) {
             return;
         }
 
-        // 평균 원가 계산 (가중평균법)
-        if (unitCost != null && unitCost.compareTo(BigDecimal.ZERO) > 0) {
-            BigDecimal currentValue = averageCost.multiply(BigDecimal.valueOf(currentStock != null ? currentStock : 0.0));
-            BigDecimal newValue = unitCost.multiply(BigDecimal.valueOf(quantity));
-            BigDecimal totalValue = currentValue.add(newValue);
-            Double totalQuantity = (currentStock != null ? currentStock : 0.0) + quantity;
-            
-            if (totalQuantity > 0) {
-                this.averageCost = totalValue.divide(BigDecimal.valueOf(totalQuantity), 2, BigDecimal.ROUND_HALF_UP);
-            }
-            
-            this.lastPurchasePrice = unitCost;
-        }
-
         // 재고 수량 업데이트
-        this.currentStock = (currentStock != null ? currentStock : 0.0) + quantity;
-        this.lastReceiptDate = LocalDateTime.now();
-        this.movementCount++;
+        this.quantity = (this.quantity != null ? this.quantity : 0) + quantity;
 
-        updateAvailableStock();
         updateStockValue();
         updateStockStatus();
     }
@@ -449,20 +203,17 @@ public class Inventory extends BaseEntity {
     /**
      * 재고 출고 처리
      */
-    public boolean issueStock(Double quantity) {
+    public boolean issueStock(Integer quantity) {
         if (quantity == null || quantity <= 0) {
             return false;
         }
 
-        if (availableStock == null || availableStock < quantity) {
+        if (this.quantity == null || this.quantity < quantity) {
             return false; // 재고 부족
         }
 
-        this.currentStock = (currentStock != null ? currentStock : 0.0) - quantity;
-        this.lastIssueDate = LocalDateTime.now();
-        this.movementCount++;
+        this.quantity = (this.quantity != null ? this.quantity : 0) - quantity;
 
-        updateAvailableStock();
         updateStockValue();
         updateStockStatus();
 
@@ -472,17 +223,16 @@ public class Inventory extends BaseEntity {
     /**
      * 재고 예약
      */
-    public boolean reserveStock(Double quantity) {
+    public boolean reserveStock(Integer quantity) {
         if (quantity == null || quantity <= 0) {
             return false;
         }
 
-        if (availableStock == null || availableStock < quantity) {
+        if (this.quantity == null || this.quantity < quantity) {
             return false; // 재고 부족
         }
 
-        this.reservedStock = (reservedStock != null ? reservedStock : 0.0) + quantity;
-        updateAvailableStock();
+        this.reservedQuantity = (reservedQuantity != null ? reservedQuantity : 0) + quantity;
         updateStockStatus();
 
         return true;
@@ -491,68 +241,56 @@ public class Inventory extends BaseEntity {
     /**
      * 재고 예약 해제
      */
-    public void unreserveStock(Double quantity) {
+    public void unreserveStock(Integer quantity) {
         if (quantity == null || quantity <= 0) {
             return;
         }
 
-        this.reservedStock = Math.max(0.0, (reservedStock != null ? reservedStock : 0.0) - quantity);
-        updateAvailableStock();
+        this.reservedQuantity = Math.max(0, (reservedQuantity != null ? reservedQuantity : 0) - quantity);
         updateStockStatus();
     }
 
     /**
      * 재고 실사 처리
      */
-    public void adjustStock(Double actualQuantity, String reason) {
+    public void adjustStock(Integer actualQuantity, String reason) {
         if (actualQuantity == null || actualQuantity < 0) {
             return;
         }
 
-        this.currentStock = actualQuantity;
-        this.lastStocktakingDate = LocalDateTime.now();
-        this.movementCount++;
+        this.quantity = actualQuantity;
+        // this.lastStocktakingDate = LocalDateTime.now();
+        // this.movementCount++;
 
-        updateAvailableStock();
         updateStockValue();
         updateStockStatus();
     }
 
     /**
-     * 안전재고 임계값 조회 (재고별 설정 우선, 없으면 상품별 설정 사용)
+     * 안전재고 임계값 조회 - 단순화된 버전
      */
     public Double getSafetyStockThreshold() {
-        if (safetyStock != null) {
-            return safetyStock;
-        }
-        if (product != null && product.getSafetyStock() != null) {
-            return product.getSafetyStock().doubleValue();
-        }
+        // safetyStock 필드가 제거되어 단순화
         return null;
     }
 
     /**
-     * 최소재고 임계값 조회
+     * 최소재고 임계값 조회 - 단순화된 버전
      */
     public Double getMinStockThreshold() {
-        if (minStock != null) {
-            return minStock;
-        }
-        if (product != null && product.getMinStock() != null) {
-            return product.getMinStock().doubleValue();
-        }
+        // minStock 필드가 제거되어 단순화
         return null;
     }
 
     /**
      * 최대재고 임계값 조회
      */
-    public Double getMaxStockThreshold() {
+    public Integer getMaxStockThreshold() {
         if (maxStock != null) {
             return maxStock;
         }
         if (product != null && product.getMaxStock() != null) {
-            return product.getMaxStock().doubleValue();
+            return product.getMaxStock().intValue();
         }
         return null;
     }
@@ -560,12 +298,12 @@ public class Inventory extends BaseEntity {
     /**
      * 재주문점 임계값 조회
      */
-    public Double getReorderPointThreshold() {
+    public Integer getReorderPointThreshold() {
         if (reorderPoint != null) {
             return reorderPoint;
         }
         if (product != null && product.getReorderPoint() != null) {
-            return product.getReorderPoint().doubleValue();
+            return product.getReorderPoint().intValue();
         }
         return null;
     }
@@ -573,41 +311,35 @@ public class Inventory extends BaseEntity {
     /**
      * 재고 회전율 계산 (연간 기준)
      */
-    public Double calculateStockTurnoverRate(Double annualUsage) {
-        if (annualUsage == null || annualUsage <= 0 || currentStock == null || currentStock <= 0) {
+    public Double calculateStockTurnoverRate(Integer annualUsage) {
+        if (annualUsage == null || annualUsage <= 0 || quantity == null || quantity <= 0) {
             return 0.0;
         }
-        return annualUsage / currentStock;
+        return annualUsage.doubleValue() / quantity.doubleValue();
     }
 
     /**
-     * 재고 보관 일수 계산
+     * 재고 보관 일수 계산 - 단순화된 버전
      */
     public Integer calculateDaysInStock() {
-        if (lastReceiptDate == null) {
-            return null;
-        }
-        return (int) java.time.temporal.ChronoUnit.DAYS.between(lastReceiptDate.toLocalDate(), LocalDateTime.now().toLocalDate());
+        // lastReceiptDate 필드가 제거되어 단순화
+        return null;
     }
 
     /**
-     * 유효기간 만료 임박 여부 (30일 이내)
+     * 유효기간 만료 임박 여부 - 단순화된 버전
      */
     public boolean isExpiringsoon() {
-        if (expiryDate == null) {
-            return false;
-        }
-        return expiryDate.isBefore(LocalDateTime.now().plusDays(30));
+        // expiryDate 필드가 제거되어 단순화
+        return false;
     }
 
     /**
-     * 유효기간 만료 여부
+     * 유효기간 만료 여부 - 단순화된 버전
      */
     public boolean isExpired() {
-        if (expiryDate == null) {
-            return false;
-        }
-        return expiryDate.isBefore(LocalDateTime.now());
+        // expiryDate 필드가 제거되어 단순화
+        return false;
     }
 
     /**
@@ -620,28 +352,13 @@ public class Inventory extends BaseEntity {
             location.append(warehouse.getWarehouseName());
         }
         
-        if (locationCode != null && !locationCode.equals("DEFAULT")) {
-            if (location.length() > 0) {
-                location.append(" - ");
-            }
-            location.append(locationCode);
-        }
-        
-        if (locationDescription != null) {
-            if (location.length() > 0) {
-                location.append(" (").append(locationDescription).append(")");
-            } else {
-                location.append(locationDescription);
-            }
-        }
-        
+        // locationCode, locationDescription 필드가 제거되어 단순화
         return location.toString();
     }
 
     @PrePersist
     @PreUpdate
     private void updateCalculatedFields() {
-        updateAvailableStock();
         updateStockValue();
         updateStockStatus();
     }

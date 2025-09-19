@@ -1,8 +1,7 @@
 package com.erp.hr.dto;
 
-import com.erp.hr.entity.Position;
 import jakarta.validation.constraints.*;
-import java.math.BigDecimal;
+// import java.math.BigDecimal; // 사용하지 않음
 
 /**
  * 직급 생성 DTO
@@ -18,9 +17,6 @@ public record PositionCreateDto(
         @Size(max = 50, message = "직급명은 50자 이하여야 합니다")
         String name,
         
-        @Size(max = 100, message = "영문 직급명은 100자 이하여야 합니다")
-        String nameEn,
-        
         @Size(max = 500, message = "직급 설명은 500자 이하여야 합니다")
         String description,
         
@@ -30,27 +26,9 @@ public record PositionCreateDto(
         @NotNull(message = "직급 레벨은 필수입니다")
         @Min(value = 1, message = "직급 레벨은 1 이상이어야 합니다")
         @Max(value = 20, message = "직급 레벨은 20 이하여야 합니다")
-        Integer positionLevel,
-        
-        Position.PositionCategory positionCategory,
-        Position.PositionType positionType,
-        
-        @Min(value = 0, message = "최소 기본급은 0 이상이어야 합니다")
-        BigDecimal minSalary,
-        
-        @Min(value = 0, message = "최대 기본급은 0 이상이어야 합니다")
-        BigDecimal maxSalary,
-        
-        @Min(value = 0, message = "정렬 순서는 0 이상이어야 합니다")
-        Integer sortOrder,
+        Integer level,
         
         Boolean isActive,
-        
-        @Size(max = 200, message = "승진 가능 직급은 200자 이하여야 합니다")
-        String promotionTargets,
-        
-        @Size(max = 1000, message = "필요 자격 요건은 1000자 이하여야 합니다")
-        String requirements,
         
         @Size(max = 1000, message = "직무 권한은 1000자 이하여야 합니다")
         String authorities
@@ -65,22 +43,16 @@ public record PositionCreateDto(
         if (companyId == null) {
             throw new IllegalArgumentException("소속 회사는 필수입니다");
         }
-        if (positionLevel == null || positionLevel < 1) {
-            throw new IllegalArgumentException("직급 레벨은 1 이상이어야 합니다");
-        }
         
         // 기본값 설정
         if (isActive == null) {
             isActive = true;
         }
-        if (sortOrder == null) {
-            sortOrder = 0;
+        if (level == null) {
+            level = 1;
         }
         
-        // 급여 범위 검증
-        if (minSalary != null && maxSalary != null && minSalary.compareTo(maxSalary) > 0) {
-            throw new IllegalArgumentException("최소 급여가 최대 급여보다 클 수 없습니다");
-        }
+        // 급여 범위 검증 - minSalary, maxSalary 필드 제거로 인해 비활성화
     }
 }
 

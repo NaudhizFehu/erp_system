@@ -5,7 +5,7 @@ import com.erp.common.dto.DepartmentDto;
 import com.erp.hr.entity.Employee;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.math.BigDecimal;
+// import java.math.BigDecimal; // 사용하지 않음
 
 /**
  * 직원 정보 응답 DTO
@@ -22,7 +22,6 @@ public record EmployeeDto(
         LocalDate birthDate,
         Employee.Gender gender,
         String address,
-        String addressDetail,
         String postalCode,
         CompanyDto company,
         DepartmentDto department,
@@ -31,7 +30,7 @@ public record EmployeeDto(
         LocalDate terminationDate,
         Employee.EmploymentStatus employmentStatus,
         Employee.EmploymentType employmentType,
-        BigDecimal baseSalary,
+        // baseSalary 필드 제거됨
         String bankName,
         String accountNumber,
         String accountHolder,
@@ -65,9 +64,7 @@ public record EmployeeDto(
         if (department == null) {
             throw new IllegalArgumentException("소속 부서는 필수입니다");
         }
-        if (position == null) {
-            throw new IllegalArgumentException("직급은 필수입니다");
-        }
+        // position은 선택적 필드이므로 null 체크 제거
         if (hireDate == null) {
             throw new IllegalArgumentException("입사일은 필수입니다");
         }
@@ -91,16 +88,14 @@ public record EmployeeDto(
             employee.getBirthDate(),
             employee.getGender(),
             employee.getAddress(),
-            employee.getAddressDetail(),
             employee.getPostalCode(),
             employee.getCompany() != null ? CompanyDto.from(employee.getCompany()) : null,
-            employee.getDepartment() != null ? com.erp.common.dto.DepartmentDto.from(employee.getDepartment()) : null,
-            employee.getPosition() != null ? PositionDto.from(employee.getPosition()) : null,
+            employee.getDepartment() != null ? DepartmentDto.from(employee.getDepartment()) : null,
+            employee.getPosition() != null ? com.erp.hr.dto.PositionDto.from(employee.getPosition()) : null,
             employee.getHireDate(),
             employee.getTerminationDate(),
             employee.getEmploymentStatus(),
             employee.getEmploymentType(),
-            employee.getBaseSalary(),
             employee.getBankName(),
             employee.getAccountNumber(),
             employee.getAccountHolder(),

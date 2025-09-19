@@ -123,7 +123,7 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     @Query("SELECT a FROM Account a " +
            "JOIN FETCH a.company c " +
            "LEFT JOIN FETCH a.parentAccount p " +
-           "WHERE (a.accountCode LIKE %:searchTerm% OR a.accountName LIKE %:searchTerm%) " +
+           "WHERE (a.accountCode LIKE %:searchTerm% OR a.name LIKE %:searchTerm%) " +
            "AND a.isDeleted = false")
     Page<Account> searchAccounts(@Param("searchTerm") String searchTerm, Pageable pageable);
 
@@ -134,7 +134,7 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
            "JOIN FETCH a.company c " +
            "LEFT JOIN FETCH a.parentAccount p " +
            "WHERE a.company.id = :companyId " +
-           "AND (a.accountCode LIKE %:searchTerm% OR a.accountName LIKE %:searchTerm%) " +
+           "AND (a.accountCode LIKE %:searchTerm% OR a.name LIKE %:searchTerm%) " +
            "AND a.isDeleted = false")
     Page<Account> searchAccountsByCompany(@Param("companyId") Long companyId, 
                                         @Param("searchTerm") String searchTerm, 

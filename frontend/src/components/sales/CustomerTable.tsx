@@ -101,7 +101,7 @@ const getGradeBadgeVariant = (grade: string) => {
   }
 }
 
-export default function CustomerTable({
+function CustomerTable({
   customers,
   loading = false,
   selectedCustomers = [],
@@ -435,6 +435,8 @@ export default function CustomerTable({
     </div>
   )
 }
+
+export { CustomerTable }
 
 
 

@@ -336,7 +336,7 @@ const CreateTodoDialog = ({
   )
 }
 
-export default function TodoWidget({
+function TodoWidget({
   todos = [],
   quickActions = [],
   loading = false,
@@ -560,6 +560,8 @@ export default function TodoWidget({
     </Card>
   )
 }
+
+export { TodoWidget }
 
 
 

@@ -3,7 +3,7 @@ package com.erp.hr.dto;
 import com.erp.hr.entity.Employee;
 import jakarta.validation.constraints.*;
 import java.time.LocalDate;
-import java.math.BigDecimal;
+// import java.math.BigDecimal; // 사용하지 않음
 
 /**
  * 직원 수정 DTO
@@ -45,7 +45,7 @@ public record EmployeeUpdateDto(
         Employee.EmploymentType employmentType,
         
         @Min(value = 0, message = "기본급은 0 이상이어야 합니다")
-        BigDecimal baseSalary,
+        // baseSalary 필드 제거됨
         
         @Size(max = 50, message = "은행명은 50자 이하여야 합니다")
         String bankName,

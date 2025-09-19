@@ -81,12 +81,12 @@ function StockStatusBadge({
   isLowStock, 
   isOutOfStock, 
   isOverStock, 
-  currentStock 
+  quantity 
 }: { 
   isLowStock: boolean
   isOutOfStock: boolean
   isOverStock: boolean
-  currentStock: number
+  quantity: number
 }) {
   if (isOutOfStock) {
     return (
@@ -145,7 +145,7 @@ function ProductTypeBadge({ type }: { type: ProductType }) {
   )
 }
 
-export default function ProductTable({
+function ProductTable({
   products,
   selectedProducts,
   onSelectProduct,
@@ -321,7 +321,7 @@ export default function ProductTable({
                   isLowStock={product.isLowStock}
                   isOutOfStock={product.isOutOfStock}
                   isOverStock={product.isOverStock}
-                  currentStock={product.totalStock}
+                  quantity={product.totalStock}
                 />
               </TableCell>
               
@@ -379,6 +379,8 @@ export default function ProductTable({
     </div>
   )
 }
+
+export { ProductTable }
 
 
 

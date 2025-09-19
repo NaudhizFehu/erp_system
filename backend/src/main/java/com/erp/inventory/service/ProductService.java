@@ -64,14 +64,15 @@ public interface ProductService {
     Page<ProductDto.ProductResponseDto> searchProducts(String searchTerm, Pageable pageable);
 
     /**
+     * 상품명으로 검색
+     */
+    List<ProductDto.ProductResponseDto> searchProductsByName(String name);
+
+    /**
      * 가격 범위로 상품 조회
      */
     Page<ProductDto.ProductResponseDto> getProductsByPriceRange(BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable);
 
-    /**
-     * 재고 부족 상품 조회
-     */
-    List<ProductDto.ProductResponseDto> getLowStockProducts();
 
     /**
      * 상품 삭제 (소프트 삭제)
@@ -126,7 +127,7 @@ public interface ProductService {
     List<ProductDto.ProductSummaryDto> getLowStockProducts(Long companyId);
     
     /**
-     * 재고 없는 상품 조회
+     * 회사별 재고 없음 상품 조회
      */
     List<ProductDto.ProductSummaryDto> getOutOfStockProducts(Long companyId);
     

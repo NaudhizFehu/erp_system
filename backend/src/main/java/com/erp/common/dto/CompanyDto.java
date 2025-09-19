@@ -1,8 +1,7 @@
 package com.erp.common.dto;
 
 import com.erp.common.entity.Company;
-import java.time.LocalDate;
-import java.math.BigDecimal;
+// LocalDate, BigDecimal import는 더 이상 사용하지 않으므로 제거됨
 
 /**
  * 회사 정보 DTO
@@ -24,13 +23,9 @@ public record CompanyDto(
     String fax,
     String email,
     String website,
-    LocalDate establishedDate,
-    String status,
-    String companyType,
-    Integer employeeCount,
-    BigDecimal capitalAmount,
-    String description,
-    String logoUrl
+    String status
+    // establishedDate 필드는 실제 DB 스키마에 없으므로 제거됨
+    // companyType, employeeCount, capitalAmount, description, logoUrl 필드들은 실제 DB 스키마에 없으므로 제거됨
 ) {
     /**
      * Company 엔티티를 CompanyDto로 변환
@@ -53,13 +48,9 @@ public record CompanyDto(
             company.getFax(),
             company.getEmail(),
             company.getWebsite(),
-            company.getEstablishedDate(),
-            company.getStatus() != null ? company.getStatus().name() : null,
-            company.getCompanyType() != null ? company.getCompanyType().name() : null,
-            company.getEmployeeCount(),
-            company.getCapitalAmount(),
-            company.getDescription(),
-            company.getLogoUrl()
+            company.getStatus() != null ? company.getStatus().name() : null
+            // establishedDate 필드는 실제 DB 스키마에 없으므로 제거됨
+            // companyType, employeeCount, capitalAmount, description, logoUrl 필드들은 실제 DB 스키마에 없으므로 제거됨
         );
     }
 }

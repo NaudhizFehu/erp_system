@@ -9,25 +9,34 @@ spring:
   
   # 데이터베이스 설정 (PostgreSQL)
   datasource:
-    url: jdbc:postgresql://fehu.kr:5432/cursor_erp_system
-    username: cursor_erp_system
-    password: cursor_erp_system
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/erp_db}
+    username: ${DB_USERNAME:your_username}
+    password: ${DB_PASSWORD:your_password}
     driver-class-name: org.postgresql.Driver
     hikari:
-      maximum-pool-size: 10
-      minimum-idle: 5
+      maximum-pool-size: 5
+      minimum-idle: 2
       idle-timeout: 300000
-      connection-timeout: 20000
+      connection-timeout: 30000
       validation-timeout: 5000
-      # 연결 유지 설정
+      # 연결 유지 설정 (연결 안정성 개선)
       keep-alive-time: 30000
-      max-lifetime: 1800000
+      max-lifetime: 1200000  # 20분으로 단축
       leak-detection-threshold: 60000
+      # 연결 재시도 설정
+      connection-test-query: SELECT 1
+      # 연결 안정성 설정
+      register-mbeans: true
+      # 연결 풀 설정
+      pool-name: ERP-HikariCP
+      # 연결 검증 설정
+      validation-query: SELECT 1
+      validation-query-timeout: 3
   
   # JPA 설정
   jpa:
     hibernate:
-      ddl-auto: none  # DDL 자동 생성 비활성화
+      ddl-auto: none  # DDL 자동 생성 비활성화 (DdlForcer 사용)
       naming:
         physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
     show-sql: true
@@ -84,9 +93,9 @@ logging:
 
 # 서버 설정
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
   servlet:
-    context-path: /
+    context-path: ${SERVER_CONTEXT_PATH:/}
     encoding:
       charset: UTF-8
       enabled: true
@@ -148,9 +157,9 @@ spring:
   
   # 개발용 데이터베이스
   datasource:
-    url: jdbc:postgresql://fehu.kr:5432/cursor_erp_system
-    username: cursor_erp_system
-    password: cursor_erp_system
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/erp_db}
+    username: ${DB_USERNAME:your_username}
+    password: ${DB_PASSWORD:your_password}
   
   jpa:
     hibernate:

@@ -20,8 +20,7 @@ import java.util.List;
 @Table(name = "positions", indexes = {
     @Index(name = "idx_positions_code", columnList = "position_code"),
     @Index(name = "idx_positions_company", columnList = "company_id"),
-    @Index(name = "idx_positions_level", columnList = "position_level"),
-    @Index(name = "idx_positions_category", columnList = "position_category")
+    // position_category 인덱스 제거됨 (DB 스키마에 해당 컬럼이 없음)
 }, uniqueConstraints = {
     @UniqueConstraint(name = "uk_positions_company_code", columnNames = {"company_id", "position_code"})
 })
@@ -48,12 +47,7 @@ public class Position extends BaseEntity {
     @Column(name = "name", nullable = false, length = 50)
     private String name;
 
-    /**
-     * 직급명 (영문)
-     */
-    @Size(max = 100, message = "영문 직급명은 100자 이하여야 합니다")
-    @Column(name = "name_en", length = 100)
-    private String nameEn;
+    // nameEn 필드 제거됨 (데이터베이스 스키마에 없음)
 
     /**
      * 직급 설명
@@ -63,6 +57,15 @@ public class Position extends BaseEntity {
     private String description;
 
     /**
+     * 직급 레벨 (1: 최고위, 숫자가 클수록 하위직급)
+     */
+    @NotNull(message = "직급 레벨은 필수입니다")
+    @Min(value = 1, message = "직급 레벨은 1 이상이어야 합니다")
+    @Max(value = 20, message = "직급 레벨은 20 이하여야 합니다")
+    @Column(name = "level", nullable = false)
+    private Integer level = 1;
+
+    /**
      * 소속 회사
      */
     @NotNull(message = "소속 회사는 필수입니다")
@@ -70,49 +73,15 @@ public class Position extends BaseEntity {
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 
-    /**
-     * 직급 레벨 (1: 최고위, 숫자가 클수록 하위직급)
-     */
-    @NotNull(message = "직급 레벨은 필수입니다")
-    @Min(value = 1, message = "직급 레벨은 1 이상이어야 합니다")
-    @Max(value = 20, message = "직급 레벨은 20 이하여야 합니다")
-    @Column(name = "position_level", nullable = false)
-    private Integer positionLevel;
+    // Department 참조 제거됨
 
-    /**
-     * 직급 분류
-     */
-    @Enumerated(EnumType.STRING)
-    @Column(name = "position_category", length = 20)
-    private PositionCategory positionCategory;
+    // position_category 필드 제거됨 (DB 스키마에 해당 컬럼이 없음)
 
-    /**
-     * 직급 유형
-     */
-    @Enumerated(EnumType.STRING)
-    @Column(name = "position_type", length = 20)
-    private PositionType positionType;
+    // positionType 필드 제거됨 (DB 스키마에 해당 컬럼이 없음)
 
-    /**
-     * 최소 기본급
-     */
-    @Min(value = 0, message = "최소 기본급은 0 이상이어야 합니다")
-    @Column(name = "min_salary", precision = 12, scale = 2)
-    private BigDecimal minSalary;
+    // min_salary, max_salary 필드들이 데이터베이스에 존재하지 않아 제거됨
 
-    /**
-     * 최대 기본급
-     */
-    @Min(value = 0, message = "최대 기본급은 0 이상이어야 합니다")
-    @Column(name = "max_salary", precision = 12, scale = 2)
-    private BigDecimal maxSalary;
-
-    /**
-     * 정렬 순서
-     */
-    @Min(value = 0, message = "정렬 순서는 0 이상이어야 합니다")
-    @Column(name = "sort_order")
-    private Integer sortOrder = 0;
+    // sort_order 필드 제거됨 (DB 스키마에 해당 컬럼이 없음)
 
     /**
      * 사용 여부
@@ -121,26 +90,8 @@ public class Position extends BaseEntity {
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 
-    /**
-     * 승진 가능 직급들 (다음 단계 직급)
-     */
-    @Size(max = 200, message = "승진 가능 직급은 200자 이하여야 합니다")
-    @Column(name = "promotion_targets", length = 200)
-    private String promotionTargets;
+    // promotion_targets, requirements 필드 제거됨 (DB 스키마에 해당 컬럼이 없음)
 
-    /**
-     * 필요 자격 요건
-     */
-    @Size(max = 1000, message = "필요 자격 요건은 1000자 이하여야 합니다")
-    @Column(name = "requirements", length = 1000)
-    private String requirements;
-
-    /**
-     * 직무 권한
-     */
-    @Size(max = 1000, message = "직무 권한은 1000자 이하여야 합니다")
-    @Column(name = "authorities", length = 1000)
-    private String authorities;
 
     /**
      * 해당 직급의 직원들
@@ -148,46 +99,9 @@ public class Position extends BaseEntity {
     @OneToMany(mappedBy = "position", fetch = FetchType.LAZY)
     private List<Employee> employees;
 
-    /**
-     * 직급 분류 열거형
-     */
-    public enum PositionCategory {
-        EXECUTIVE("임원"),
-        MANAGEMENT("관리직"),
-        SENIOR("선임"),
-        JUNIOR("주니어"),
-        INTERN("인턴");
+    // PositionCategory enum 제거됨 (DB 스키마에 position_category 컬럼이 없음)
 
-        private final String description;
-
-        PositionCategory(String description) {
-            this.description = description;
-        }
-
-        public String getDescription() {
-            return description;
-        }
-    }
-
-    /**
-     * 직급 유형 열거형
-     */
-    public enum PositionType {
-        PERMANENT("정규직"),
-        CONTRACT("계약직"),
-        TEMPORARY("임시직"),
-        CONSULTANT("컨설턴트");
-
-        private final String description;
-
-        PositionType(String description) {
-            this.description = description;
-        }
-
-        public String getDescription() {
-            return description;
-        }
-    }
+    // PositionType enum 제거됨 (DB 스키마에 position_type 컬럼이 없음)
 
     /**
      * 직급이 활성 상태인지 확인
@@ -200,25 +114,10 @@ public class Position extends BaseEntity {
      * 급여 범위 검증
      */
     public boolean isValidSalaryRange(BigDecimal salary) {
-        if (salary == null) {
-            return true; // null은 허용
-        }
-        
-        boolean aboveMin = minSalary == null || salary.compareTo(minSalary) >= 0;
-        boolean belowMax = maxSalary == null || salary.compareTo(maxSalary) <= 0;
-        
-        return aboveMin && belowMax;
+        return true; // minSalary, maxSalary 필드가 제거되어 항상 유효
     }
 
-    /**
-     * 승진 가능 직급 목록 반환
-     */
-    public String[] getPromotionTargetArray() {
-        if (promotionTargets == null || promotionTargets.trim().isEmpty()) {
-            return new String[0];
-        }
-        return promotionTargets.split(",");
-    }
+    // getPromotionTargetArray 메서드 제거됨 (promotionTargets 필드가 제거됨)
 
     /**
      * 해당 직급의 직원 수 반환
@@ -230,9 +129,7 @@ public class Position extends BaseEntity {
     @PrePersist
     @PreUpdate
     private void validateSalaryRange() {
-        if (minSalary != null && maxSalary != null && 
-            minSalary.compareTo(maxSalary) > 0) {
-            throw new IllegalArgumentException("최소 급여가 최대 급여보다 클 수 없습니다");
-        }
+        // minSalary, maxSalary 필드가 제거되어 검증 로직 제거
     }
+
 }

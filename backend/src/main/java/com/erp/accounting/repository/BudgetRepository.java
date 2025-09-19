@@ -160,7 +160,7 @@ public interface BudgetRepository extends JpaRepository<Budget, Long> {
            "JOIN FETCH b.company c " +
            "JOIN FETCH b.account a " +
            "LEFT JOIN FETCH b.responsiblePerson rp " +
-           "WHERE (a.accountName LIKE %:searchTerm% " +
+           "WHERE (a.name LIKE %:searchTerm% " +
            "OR b.description LIKE %:searchTerm%) " +
            "AND b.isDeleted = false")
     Page<Budget> searchBudgets(@Param("searchTerm") String searchTerm, Pageable pageable);
@@ -173,7 +173,7 @@ public interface BudgetRepository extends JpaRepository<Budget, Long> {
            "JOIN FETCH b.account a " +
            "LEFT JOIN FETCH b.responsiblePerson rp " +
            "WHERE b.company.id = :companyId " +
-           "AND (a.accountName LIKE %:searchTerm% " +
+           "AND (a.name LIKE %:searchTerm% " +
            "OR b.description LIKE %:searchTerm%) " +
            "AND b.isDeleted = false")
     Page<Budget> searchBudgetsByCompany(@Param("companyId") Long companyId,

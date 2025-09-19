@@ -304,7 +304,7 @@ const getAvailableWidgets = (userRole: string): Partial<WidgetConfig>[] => {
   return baseWidgets
 }
 
-export default function DashboardCustomizer({
+function DashboardCustomizer({
   config,
   open,
   onOpenChange,
@@ -613,4 +613,6 @@ export default function DashboardCustomizer({
     </Dialog>
   )
 }
+
+export { DashboardCustomizer }
 

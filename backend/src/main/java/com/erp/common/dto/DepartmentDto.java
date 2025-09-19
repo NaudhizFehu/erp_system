@@ -1,6 +1,6 @@
 package com.erp.common.dto;
 
-import com.erp.common.entity.Department;
+import com.erp.hr.entity.Department;
 import java.time.LocalDateTime;
 import java.math.BigDecimal;
 import java.util.List;
@@ -54,7 +54,7 @@ public record DepartmentDto(
     /**
      * Department 엔티티를 DepartmentDto로 변환
      */
-    public static DepartmentDto from(com.erp.common.entity.Department department) {
+    public static DepartmentDto from(com.erp.hr.entity.Department department) {
         if (department == null) return null;
         
         return new DepartmentDto(
@@ -69,8 +69,8 @@ public record DepartmentDto(
             null, // manager - 순환 참조 방지를 위해 null로 설정
             department.getLevel(),
             department.getSortOrder(),
-            null, // departmentType - 엔티티에 없는 필드
-            null, // status - 엔티티에 없는 필드  
+            department.getDepartmentType(),
+            department.getStatus(),
             null, // costCenterCode - 엔티티에 없는 필드
             null, // phone - 엔티티에 없는 필드
             null, // fax - 엔티티에 없는 필드
@@ -82,4 +82,47 @@ public record DepartmentDto(
             department.getUpdatedAt()
         );
     }
+
+    /**
+     * 부서 생성 DTO
+     */
+    public record DepartmentCreateDto(
+            String departmentCode,
+            String name,
+            String nameEn,
+            String description,
+            Long companyId,
+            Long parentDepartmentId,
+            Integer level,
+            Integer sortOrder,
+            Department.DepartmentType departmentType,
+            Department.DepartmentStatus status
+    ) {
+        public DepartmentCreateDto {
+            if (departmentCode == null || departmentCode.trim().isEmpty()) {
+                throw new IllegalArgumentException("부서 코드는 필수입니다");
+            }
+            if (name == null || name.trim().isEmpty()) {
+                throw new IllegalArgumentException("부서명은 필수입니다");
+            }
+            if (companyId == null) {
+                throw new IllegalArgumentException("소속 회사는 필수입니다");
+            }
+        }
+    }
+
+    /**
+     * 부서 수정 DTO
+     */
+    public record DepartmentUpdateDto(
+            String departmentCode,
+            String name,
+            String nameEn,
+            String description,
+            Long parentDepartmentId,
+            Integer level,
+            Integer sortOrder,
+            Department.DepartmentType departmentType,
+            Department.DepartmentStatus status
+    ) {}
 }

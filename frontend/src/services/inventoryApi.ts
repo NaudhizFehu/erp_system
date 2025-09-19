@@ -520,7 +520,7 @@ export const categoryApi = {
    * 분류 목록 조회 (계층구조)
    */
   async getCategories(companyId: number): Promise<ApiResponse<Category[]>> {
-    const response = await apiClient.get(`/categories/companies/${companyId}`)
+    const response = await apiClient.get(`/products/categories/companies/${companyId}`)
     return response.data
   },
 

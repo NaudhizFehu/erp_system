@@ -193,7 +193,7 @@ interface ProductFormProps {
   isLoading?: boolean
 }
 
-export default function ProductForm({
+function ProductForm({
   isOpen,
   onClose,
   onSubmit,
@@ -1292,6 +1292,8 @@ export default function ProductForm({
     </Dialog>
   )
 }
+
+export { ProductForm }
 
 
 

@@ -1,0 +1,556 @@
+# ERP 프로젝트 개발 규칙
+
+# 프로젝트 개요
+백엔드: Java Spring Boot 3 + WAR 배포
+프론트엔드: React + TypeScript
+파일 경로와 확장자로 백엔드/프론트엔드 컨텍스트 자동 구분
+
+# 프로젝트 구조
+```
+project-root/
+├── backend/
+│   ├── src/main/java/
+│   │   ├── controller/
+│   │   ├── service/
+│   │   ├── repository/
+│   │   ├── entity/
+│   │   ├── dto/
+│   │   └── exception/
+│   └── src/main/resources/
+└── frontend/
+    ├── src/
+    │   ├── components/
+    │   ├── pages/
+    │   ├── services/
+    │   ├── types/
+    │   └── utils/
+    └── public/
+```
+
+# 백엔드 - Java Spring Boot
+
+## AI 역할
+- 시니어 Java 개발자 역할
+- SOLID, DRY, KISS, YAGNI 원칙 준수
+- OWASP 보안 가이드라인 준수
+- 문제를 단계별로 분해하여 접근
+
+## 기술 스택
+- Spring Boot 3, Java 17, Maven
+- 패키징: WAR (외부 톰캣 배포)
+- 의존성: Spring Web, Spring Data JPA, Lombok, PostgreSQL Driver
+- spring-boot-starter-tomcat은 scope=provided
+
+## WAR 배포 설정
+```xml
+<packaging>war</packaging>
+<dependency>
+  <groupId>org.springframework.boot</groupId>
+  <artifactId>spring-boot-starter-tomcat</artifactId>
+  <scope>provided</scope>
+</dependency>
+```
+
+SpringBootServletInitializer 상속 필수:
+```java
+@SpringBootApplication
+public class ErpApplication extends SpringBootServletInitializer {
+  @Override
+  protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
+    return builder.sources(ErpApplication.class);
+  }
+}
+```
+
+## 아키텍처 설계 원칙
+- 모든 요청/응답은 @RestController에서만 처리
+- DB 접근은 반드시 ServiceImpl → Repository 경로 사용
+- Controller는 Repository 직접 호출 금지 (예외적 상황만 허용)
+- Controller ↔ Service 간 데이터 전달은 DTO만 사용
+- Entity는 DB 입출력 전용
+
+## 엔티티 (Entity)
+- @Entity 어노테이션 필수
+- 기본적으로 Lombok @Data 사용
+- PK: @Id + @GeneratedValue(strategy = GenerationType.IDENTITY)
+- 연관관계는 기본 FetchType.LAZY
+- @NotBlank, @Email, @Size 등 Bean Validation 적극 활용
+
+## 레포지토리 (Repository)
+- @Repository + interface 구조
+- JpaRepository<Entity, ID> 상속
+- @Query 사용 시 JPQL 우선
+- N+1 방지: @EntityGraph(attributePaths={"연관엔티티"}) 활용
+- 다중 Join 결과는 DTO 프로젝션으로 반환
+
+## 서비스 (Service)
+- Service는 interface, 구현은 ServiceImpl
+- @Service 어노테이션 필수
+- 의존성 주입: 필드 @Autowired 방식 (명시적 요청 시 제외)
+- 반환 타입은 DTO 권장 (Entity 반환은 최소화)
+- 존재 여부 확인: repository.findById(id).orElseThrow() 패턴
+- 다중 DB 작업: @Transactional 또는 transactionTemplate 필수
+
+## DTO (Data Transfer Object)
+- Java 17 record 타입 기본 사용
+- compact canonical constructor에서 입력값 검증 (null, blank, 길이 제한)
+
+## RestController
+- 클래스 단위: @RestController
+- API Prefix: @RequestMapping("/api/리소스명")
+- HTTP 메서드: @GetMapping, @PostMapping, @PutMapping, @DeleteMapping
+- 리소스 기반 URL (/users/{id}), 동사형 URL 금지 (/create, /update)
+- 반환 타입: ResponseEntity<ApiResponse>
+- 메서드 로직: try..catch 블록 필수
+- 에러 처리: 전역 GlobalExceptionHandler 활용
+
+# 프론트엔드 - React + TypeScript
+
+## AI 역할
+- TypeScript, React, Next.js 14 전문가
+- 함수형/선언형 프로그래밍 지향
+- 모듈화 우선, 불필요한 상태 최소화
+
+## 기술 스택
+- Next.js 14 App Router
+- React Query (TanStack Query) + Axios
+- TailwindCSS + Shadcn UI + Radix UI
+- Zod 폼 검증
+
+## 코딩 원칙
+- 디렉토리명: 소문자-대시 (components/auth-form)
+- Named Export 권장
+- RORO(Receive Object, Return Object) 패턴
+- 가드절(early return) 적극 활용
+- 예상 가능한 오류는 return value로 처리, try/catch는 예외 상황만
+- 사용자 친화적 에러 메시지 (한국어)
+
+## 구현 규칙
+- 함수형 컴포넌트만 사용 (function 키워드)
+- RSC(React Server Component) 최대 활용
+- use client, useEffect, setState 최소화
+- 이미지: WebP + Lazy Loading
+- API 응답 타입은 백엔드 DTO와 동일한 인터페이스 정의
+- 개발/운영/로컬 환경이 모두 동일할 수 있도록 인증 항상 활성화
+
+# 공통 규칙
+
+## API 통신
+- 백엔드: RESTful + 표준 ApiResponse
+- 프론트엔드: React Query 기반 API 호출
+- DTO ↔ TypeScript 인터페이스 네이밍 일관성
+- CORS 환경 적절 설정
+
+## 에러 처리
+- 백엔드: GlobalExceptionHandler → ApiResponse 반환 (한국어 메시지)
+- 프론트엔드: React Query error boundary + errorMessages 상수
+- 사용자 메시지는 항상 한국어로 제공
+
+# 코드 스타일
+
+## 백엔드 (Java)
+- Google Java Style Guide 준수
+- Spotless + Checkstyle + SpotBugs 적용
+- 모든 PR은 `mvn spotless:apply verify` 통과 필수
+- @SuppressWarnings 사용 시 사유 주석 필수
+
+Maven 플러그인 설정:
+```xml
+<plugin>
+  <groupId>com.diffplug.spotless</groupId>
+  <artifactId>spotless-maven-plugin</artifactId>
+  <configuration>
+    <java>
+      <googleJavaFormat/>
+      <removeUnusedImports/>
+    </java>
+  </configuration>
+</plugin>
+```
+
+## 프론트엔드 (TypeScript)
+- ESLint + Prettier 통합
+- 절대경로 import 및 정렬
+- 컴포넌트 파일 당 1개 export 권장
+
+ESLint 설정:
+```json
+{
+  "extends": ["next/core-web-vitals", "eslint:recommended", "@typescript-eslint/recommended"],
+  "rules": {
+    "@typescript-eslint/consistent-type-imports": "error",
+    "import/order": ["error", {
+      "groups": ["builtin", "external", "internal", ["parent", "sibling", "index"]],
+      "newlines-between": "always",
+      "alphabetize": { "order": "asc", "caseInsensitive": true }
+    }]
+  }
+}
+```
+
+# 테스트 전략
+
+## 백엔드
+- 단위 테스트: JUnit 5 + Mockito
+- 통합 테스트: Testcontainers (PostgreSQL) + @SpringBootTest
+- 커버리지: JaCoCo 80% 이상
+
+JaCoCo 설정:
+```xml
+<plugin>
+  <groupId>org.jacoco</groupId>
+  <artifactId>jacoco-maven-plugin</artifactId>
+  <configuration>
+    <rules>
+      <rule>
+        <element>CLASS</element>
+        <limits>
+          <limit>
+            <counter>BRANCH</counter>
+            <value>COVEREDRATIO</value>
+            <minimum>0.80</minimum>
+          </limit>
+        </limits>
+      </rule>
+    </rules>
+  </configuration>
+</plugin>
+```
+
+## 프론트엔드
+- 단위/컴포넌트: Vitest + React Testing Library
+- E2E: Playwright
+- 커버리지: 80% 목표
+
+# 로그 & 관찰성
+
+## 백엔드
+- Logback JSON 로깅 + MDC (Correlation ID)
+- 레벨: Controller/Service/Repository = INFO, 외부연동 = DEBUG
+- 감사 로그: 별도 AUDIT 로거 사용
+
+Correlation ID 필터:
+```java
+@Component
+public class CorrelationIdFilter implements Filter {
+  private static final String CID = "cid";
+  
+  public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) {
+    try {
+      var http = (HttpServletRequest) req;
+      var id = Optional.ofNullable(http.getHeader("X-Correlation-Id"))
+        .orElse(UUID.randomUUID().toString());
+      MDC.put(CID, id);
+      chain.doFilter(req, res);
+    } finally { 
+      MDC.remove(CID); 
+    }
+  }
+}
+```
+
+## 프론트엔드
+- 콘솔 에러는 사용자에게 노출하지 않음
+- Sentry 등 APM 연동 (DSN 제공 시)
+
+# 보안 (OWASP 기반)
+
+## 백엔드
+- Spring Security 기본 활성화
+- HTTP 보안 헤더: HSTS, X-Content-Type-Options, X-Frame-Options, CSP
+- 입력 검증: DTO + Bean Validation + ControllerAdvice
+- 비밀정보: .env/KMS/Secret Manager, Git 커밋 금지
+- 의존성 보안 스캔: OWASP Dependency-Check
+
+Security 설정:
+```java
+@Configuration
+@EnableWebSecurity
+class SecurityConfig {
+  @Bean
+  SecurityFilterChain filter(HttpSecurity http) throws Exception {
+    return http
+      .csrf(csrf -> csrf.disable())
+      .headers(h -> h
+        .xssProtection(x -> x.block(true))
+        .contentTypeOptions(c -> {})
+        .frameOptions(f -> f.sameOrigin())
+        .httpStrictTransportSecurity(hsts -> hsts
+          .includeSubDomains(true).preload(true).maxAgeInDays(365)))
+      .authorizeHttpRequests(auth -> auth
+        .requestMatchers("/actuator/health", "/swagger-ui/**").permitAll()
+        .anyRequest().authenticated())
+      .httpBasic(Customizer.withDefaults())
+      .build();
+  }
+}
+```
+
+## 프론트엔드
+- CSP 적용, dangerouslySetInnerHTML 금지
+- 토큰: HTTPOnly/Secure/SameSite 쿠키 권장
+- 에러 상세는 로깅만, 사용자에겐 요약 메시지
+
+# 다국어 (i18n)
+
+## 백엔드
+- messages.properties (기본), messages_ko.properties, messages_en.properties
+- AcceptHeaderLocaleResolver, 기본 로케일: ko-KR
+- Bean Validation 메시지는 메시지 코드로 연결
+
+Locale 설정:
+```java
+@Configuration
+class LocaleConfig {
+  @Bean
+  LocaleResolver localeResolver() {
+    var resolver = new AcceptHeaderLocaleResolver();
+    resolver.setDefaultLocale(Locale.KOREA);
+    return resolver;
+  }
+}
+```
+
+## 프론트엔드
+- next-intl 또는 next-i18next 사용
+- 키 네이밍: domain.page.action.message
+- Zod 에러 한글화
+- 모든 사용자 노출 텍스트는 i18n 키 사용
+
+# CI/CD 파이프라인
+
+## 브랜치 전략
+- main (배포), develop (통합), feature/*
+- 필수 체크: 빌드, 테스트, 정적분석, 포매팅, 보안 스캔
+
+## GitLab CI/CD 설정 (.gitlab-ci.yml)
+
+### 전체 파이프라인
+```yaml
+stages:
+  - test
+  - build
+  - security
+  - deploy
+
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+  MAVEN_CLI_OPTS: "--batch-mode --errors --fail-at-end --show-version"
+
+cache:
+  paths:
+    - .m2/repository/
+    - frontend/node_modules/
+
+# 백엔드 테스트
+backend-test:
+  stage: test
+  image: maven:3.9.4-openjdk-17
+  script:
+    - cd backend
+    - mvn $MAVEN_CLI_OPTS spotless:apply verify
+  artifacts:
+    reports:
+      junit:
+        - backend/target/surefire-reports/TEST-*.xml
+        - backend/target/failsafe-reports/TEST-*.xml
+      coverage_report:
+        coverage_format: jacoco
+        path: backend/target/site/jacoco/jacoco.xml
+  coverage: '/Total.*?([0-9]{1,3})%/'
+
+# 프론트엔드 테스트
+frontend-test:
+  stage: test
+  image: node:20-alpine
+  script:
+    - cd frontend
+    - npm ci
+    - npm run lint
+    - npm run test -- --coverage --reporter=junit --outputFile=./test-results.xml
+  artifacts:
+    reports:
+      junit: frontend/test-results.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: frontend/coverage/cobertura-coverage.xml
+  coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
+
+# 백엔드 빌드 (WAR)
+backend-build:
+  stage: build
+  image: maven:3.9.4-openjdk-17
+  script:
+    - cd backend
+    - mvn $MAVEN_CLI_OPTS clean package -DskipTests
+  artifacts:
+    paths:
+      - backend/target/*.war
+    expire_in: 1 week
+  only:
+    - main
+    - develop
+
+# 프론트엔드 빌드
+frontend-build:
+  stage: build
+  image: node:20-alpine
+  script:
+    - cd frontend
+    - npm ci
+    - npm run build
+  artifacts:
+    paths:
+      - frontend/dist/
+      - frontend/out/
+    expire_in: 1 week
+  only:
+    - main
+    - develop
+
+# 보안 스캔
+security-scan:
+  stage: security
+  image: maven:3.9.4-openjdk-17
+  script:
+    - cd backend
+    - mvn org.owasp:dependency-check-maven:check -DfailBuildOnCVSS=7
+  artifacts:
+    reports:
+      dependency_scanning: backend/target/dependency-check-report.json
+    paths:
+      - backend/target/dependency-check-report.html
+    expire_in: 1 week
+  allow_failure: true
+
+# 백엔드 배포 (WAR)
+deploy-backend:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache openssh-client sshpass
+  script:
+    - echo "WAR 파일을 톰캣 서버에 배포"
+    - sshpass -p "$TOMCAT_PASSWORD" scp -o StrictHostKeyChecking=no backend/target/*.war $TOMCAT_USER@$TOMCAT_HOST:/opt/tomcat/webapps/
+    - sshpass -p "$TOMCAT_PASSWORD" ssh -o StrictHostKeyChecking=no $TOMCAT_USER@$TOMCAT_HOST "sudo systemctl restart tomcat"
+  only:
+    - main
+  when: manual
+
+# 프론트엔드 배포
+deploy-frontend:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache openssh-client sshpass rsync
+  script:
+    - echo "정적 파일을 웹서버에 배포"
+    - sshpass -p "$WEB_PASSWORD" rsync -avz --delete -e "ssh -o StrictHostKeyChecking=no" frontend/dist/ $WEB_USER@$WEB_HOST:/var/www/html/
+  only:
+    - main
+  when: manual
+```
+
+### 간단 버전 (개발 초기용)
+```yaml
+stages:
+  - test
+  - build
+
+# 백엔드 테스트 & 빌드
+backend:
+  stage: test
+  image: maven:3.9.4-openjdk-17
+  script:
+    - cd backend
+    - mvn spotless:apply verify
+    - mvn package -DskipTests
+  artifacts:
+    paths:
+      - backend/target/*.war
+
+# 프론트엔드 테스트 & 빌드
+frontend:
+  stage: test
+  image: node:20-alpine
+  script:
+    - cd frontend
+    - npm ci
+    - npm run lint
+    - npm run test
+    - npm run build
+  artifacts:
+    paths:
+      - frontend/dist/
+```
+
+# 운영 규칙
+
+## PR 체크리스트
+- [ ] 백엔드: `mvn spotless:apply verify` 통과 (Spotless/Checkstyle/SpotBugs/JaCoCo 80%↑)
+- [ ] 프론트엔드: `npm run lint && npm run test -- --coverage` (80%↑)
+- [ ] 보안: 비밀정보 커밋 금지, 신규 의존성 보안 스캔 확인
+- [ ] 로그: 민감정보 마스킹, 감사 로그 필요 시 추가
+- [ ] i18n: 사용자 노출 문자열 모두 키 사용, 한국어 메시지 확인
+
+## 브랜치/머지 규칙
+- 기능 개발: feature/*
+- 머지 조건: PR + 리뷰 1명 이상 + CI 통과
+
+## 릴리즈 규칙
+- main 머지 시 태그 vMAJOR.MINOR.PATCH 생성
+- 백엔드: WAR 아티팩트 생성/보관
+- 배포: 외부 톰캣 또는 컨테이너 톰캣
+- DB 마이그레이션: Flyway/Liquibase 태그 및 순서 준수
+
+# 코드 주석 예시
+
+## Java
+```java
+/**
+ * ERP 시스템의 주문 관리 서비스
+ * 주문 생성, 수정, 취소 등의 비즈니스 로직을 처리합니다
+ */
+@Service
+public class OrderServiceImpl implements OrderService {
+  /**
+   * 새로운 주문을 생성합니다
+   * @param orderDto 주문 정보
+   * @return 생성된 주문 정보
+   * @throws IllegalArgumentException 주문 정보가 유효하지 않은 경우
+   */
+  @Transactional
+  public OrderDto createOrder(OrderCreateDto orderDto) {
+    // 비즈니스 로직 구현
+  }
+}
+```
+
+## TypeScript
+```typescript
+/**
+ * 주문 관리 페이지
+ * 주문 목록 조회, 검색, 필터링 기능을 제공합니다
+ */
+function OrderManagement() {
+  const [orders, setOrders] = useState<Order[]>([])
+  
+  async function handleSearch(searchTerm: string) {
+    if (!searchTerm?.trim()) return
+    
+    try {
+      const res = await orderService.searchOrders({ q: searchTerm })
+      setOrders(res.data)
+    } catch {
+      toast.error('주문 검색 중 오류가 발생했습니다')
+    }
+  }
+  
+  return (
+    <div className="order-management">
+      <SearchBox onSearch={handleSearch} placeholder="주문번호 또는 고객명으로 검색" />
+      <OrderList orders={orders} />
+    </div>
+  )
+}
+```

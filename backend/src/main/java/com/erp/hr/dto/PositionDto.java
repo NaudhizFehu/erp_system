@@ -3,7 +3,7 @@ package com.erp.hr.dto;
 import com.erp.common.dto.CompanyDto;
 import com.erp.hr.entity.Position;
 import java.time.LocalDateTime;
-import java.math.BigDecimal;
+// import java.math.BigDecimal; // 사용하지 않음
 
 /**
  * 직급 정보 응답 DTO
@@ -13,18 +13,10 @@ public record PositionDto(
         Long id,
         String positionCode,
         String name,
-        String nameEn,
         String description,
         CompanyDto company,
-        Integer positionLevel,
-        Position.PositionCategory positionCategory,
-        Position.PositionType positionType,
-        BigDecimal minSalary,
-        BigDecimal maxSalary,
-        Integer sortOrder,
+        Integer level,
         Boolean isActive,
-        String promotionTargets,
-        String requirements,
         String authorities,
         Integer employeeCount,
         LocalDateTime createdAt,
@@ -40,9 +32,6 @@ public record PositionDto(
         if (company == null) {
             throw new IllegalArgumentException("소속 회사는 필수입니다");
         }
-        if (positionLevel == null || positionLevel < 1) {
-            throw new IllegalArgumentException("직급 레벨은 1 이상이어야 합니다");
-        }
         if (isActive == null) {
             throw new IllegalArgumentException("사용 여부는 필수입니다");
         }
@@ -56,20 +45,12 @@ public record PositionDto(
             position.getId(),
             position.getPositionCode(),
             position.getName(),
-            position.getNameEn(),
             position.getDescription(),
             position.getCompany() != null ? CompanyDto.from(position.getCompany()) : null,
-            position.getPositionLevel(),
-            position.getPositionCategory(),
-            position.getPositionType(),
-            position.getMinSalary(),
-            position.getMaxSalary(),
-            position.getSortOrder(),
+            position.getLevel(),
             position.getIsActive(),
-            position.getPromotionTargets(),
-            position.getRequirements(),
-            position.getAuthorities(),
-            position.getEmployeeCount(),
+            null, // authorities 필드 제거됨
+            null, // employeeCount 필드는 Position 엔티티에 없으므로 null로 설정
             position.getCreatedAt(),
             position.getUpdatedAt()
         );

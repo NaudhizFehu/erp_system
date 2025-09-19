@@ -113,15 +113,9 @@ public class PositionServiceImpl implements PositionService {
         throw new UnsupportedOperationException("구현 예정");
     }
     
-    @Override
-    public List<PositionDto> getPositionsByCategory(com.erp.hr.entity.Position.PositionCategory category) {
-        throw new UnsupportedOperationException("구현 예정");
-    }
+    // getPositionsByCategory 메서드 제거됨 (positionCategory 필드가 DB 스키마에 없음)
     
-    @Override
-    public List<PositionDto> getPositionsByType(com.erp.hr.entity.Position.PositionType type) {
-        throw new UnsupportedOperationException("구현 예정");
-    }
+    // getPositionsByType 메서드 제거됨 (positionType 필드가 DB 스키마에 없음)
     
     @Override
     public Page<PositionDto> searchPositionsByCompany(Long companyId, String searchTerm, Pageable pageable) {

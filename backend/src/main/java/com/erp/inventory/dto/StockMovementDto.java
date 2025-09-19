@@ -258,10 +258,10 @@ public class StockMovementDto {
                     movement.getReferenceNumber(),
                     movement.getReferenceType(),
                     movement.getBusinessPartner(),
-                    movement.getLotNumber(),
-                    movement.getSerialNumber(),
-                    movement.getExpiryDate(),
-                    movement.getManufactureDate(),
+                    null, // lotNumber - 제거된 필드
+                    null, // serialNumber - 제거된 필드
+                    null, // expiryDate - 제거된 필드
+                    null, // manufactureDate - 제거된 필드
                     movement.getReason(),
                     movement.getDescription(),
                     movement.getProcessedBy() != null ? movement.getProcessedBy().getId() : null,
@@ -273,7 +273,7 @@ public class StockMovementDto {
                     movement.getCancelReason(),
                     movement.getCancelledAt(),
                     movement.getAttachmentPath(),
-                    movement.getMetadata(),
+                    null, // metadata - 제거된 필드
                     movement.getCreatedAt(),
                     movement.getUpdatedAt(),
                     movement.isInbound(),

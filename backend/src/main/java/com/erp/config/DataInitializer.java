@@ -1,21 +1,20 @@
 package com.erp.config;
 
 import com.erp.common.entity.Company;
-import com.erp.common.entity.Department;
 import com.erp.common.entity.User;
+import com.erp.hr.entity.Department;
 import com.erp.common.repository.CompanyRepository;
-import com.erp.common.repository.DepartmentRepository;
+import com.erp.hr.repository.DepartmentRepository;
 import com.erp.common.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 
-import java.time.LocalDate;
+// LocalDate import는 더 이상 사용하지 않으므로 제거됨
 import java.time.LocalDateTime;
 
 /**
@@ -70,9 +69,7 @@ public class DataInitializer {
             company.setEmail("info@abc.com");
             company.setWebsite("https://abc.com");
             company.setBusinessType("IT");
-            company.setEmployeeCount(120);
-            company.setEstablishedDate(LocalDate.of(2020, 1, 1));
-            company.setDescription("혁신적인 IT 솔루션을 제공하는 기업");
+            // setEmployeeCount, setDescription, setEstablishedDate 메서드들은 해당 필드들이 실제 DB 스키마에 없으므로 제거됨
             company.setStatus(Company.CompanyStatus.ACTIVE);
             company.setCreatedBy(1L);
             company.setUpdatedBy(1L);

@@ -49,6 +49,36 @@ git clone <repository-url>
 cd cursor-erp-system
 ```
 
+### 2. 환경변수 설정
+
+#### 백엔드 환경변수
+`backend/src/main/resources/application-dev.yml.example` 파일을 참고하여 실제 설정 파일을 생성하세요:
+
+```bash
+# 개발 환경 설정 파일 생성
+cp backend/src/main/resources/application-dev.yml.example backend/src/main/resources/application-dev.yml
+```
+
+주요 환경변수:
+- `DB_URL`: 데이터베이스 연결 URL
+- `DB_USERNAME`: 데이터베이스 사용자명
+- `DB_PASSWORD`: 데이터베이스 비밀번호
+- `JWT_SECRET`: JWT 토큰 시크릿 키
+- `SERVER_PORT`: 서버 포트 (기본값: 8080)
+
+#### 프론트엔드 환경변수
+프론트엔드용 환경변수 파일을 생성하세요:
+
+```bash
+# 프론트엔드 환경변수 파일 생성
+touch frontend/.env.development
+```
+
+주요 환경변수:
+- `VITE_API_BASE_URL`: 백엔드 API URL (기본값: http://localhost:8080)
+- `VITE_API_TIMEOUT`: API 요청 타임아웃 (기본값: 10000)
+- `VITE_APP_ENV`: 애플리케이션 환경 (development/production)
+
 ### 2. 데이터베이스 설정
 
 Docker Compose를 사용하여 PostgreSQL 데이터베이스를 실행합니다:

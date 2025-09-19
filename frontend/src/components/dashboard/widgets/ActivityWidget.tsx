@@ -230,7 +230,7 @@ const NotificationItem = ({
   )
 }
 
-export default function ActivityWidget({
+function ActivityWidget({
   activities = [],
   notifications = [],
   loading = false,
@@ -448,6 +448,8 @@ export default function ActivityWidget({
     </Card>
   )
 }
+
+export { ActivityWidget }
 
 
 

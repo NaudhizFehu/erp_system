@@ -20,13 +20,23 @@ import java.util.Optional;
 public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
     /**
+     * ID로 직원 조회 (연관 엔티티 포함)
+     */
+    @Query("SELECT e FROM Employee e " +
+           "JOIN FETCH e.company c " +
+           "JOIN FETCH e.department d " +
+           "LEFT JOIN FETCH e.position p " +
+           "WHERE e.id = :id")
+    Optional<Employee> findByIdWithDetails(@Param("id") Long id);
+
+    /**
      * 사번으로 직원 조회
      */
     @Query("SELECT e FROM Employee e " +
            "JOIN FETCH e.company c " +
            "JOIN FETCH e.department d " +
-           "JOIN FETCH e.position p " +
-           "WHERE e.employeeNumber = :employeeNumber AND e.isDeleted = false")
+           "LEFT JOIN FETCH e.position p " +
+           "WHERE e.employeeNumber = :employeeNumber")
     Optional<Employee> findByEmployeeNumber(@Param("employeeNumber") String employeeNumber);
 
     /**
@@ -36,7 +46,7 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
            "JOIN FETCH e.company c " +
            "JOIN FETCH e.department d " +
            "JOIN FETCH e.position p " +
-           "WHERE e.email = :email AND e.isDeleted = false")
+           "WHERE e.email = :email")
     Optional<Employee> findByEmail(@Param("email") String email);
 
     /**
@@ -346,6 +356,6 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
            "JOIN FETCH e.company c " +
            "JOIN FETCH e.department d " +
            "JOIN FETCH e.position p " +
-           "WHERE e.company.id = :companyId AND e.name LIKE %:name% AND e.isDeleted = false")
+           "WHERE e.company.id = :companyId AND LOWER(e.name) LIKE LOWER(CONCAT('%', :name, '%')) AND e.isDeleted = false")
     List<Employee> findByCompanyIdAndNameContainingIgnoreCase(@Param("companyId") Long companyId, @Param("name") String name);
 }

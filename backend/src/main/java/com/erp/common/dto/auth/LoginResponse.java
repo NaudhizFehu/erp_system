@@ -128,7 +128,7 @@ public record LoginResponse(
         /**
          * Department 엔티티로부터 DepartmentInfo 생성
          */
-        public static DepartmentInfo from(com.erp.common.entity.Department department) {
+        public static DepartmentInfo from(com.erp.hr.entity.Department department) {
             return new DepartmentInfo(
                 department.getId(),
                 department.getName(),

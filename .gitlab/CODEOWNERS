@@ -1,0 +1,47 @@
+# GitLab CODEOWNERS 파일
+# 이 파일은 코드 리뷰어를 자동으로 지정합니다
+
+# 전체 프로젝트 소유자
+* @erp-dev-team
+
+# 백엔드 관련 파일들
+/backend/ @erp-backend-team
+/backend/src/main/java/ @erp-backend-team
+/backend/pom.xml @erp-backend-team
+/backend/src/main/resources/ @erp-backend-team
+
+# 프론트엔드 관련 파일들
+/frontend/ @erp-frontend-team
+/frontend/src/ @erp-frontend-team
+/frontend/package.json @erp-frontend-team
+/frontend/package-lock.json @erp-frontend-team
+
+# 설정 파일들
+/.cursorrules @erp-dev-team
+/.gitignore @erp-dev-team
+/README.md @erp-dev-team
+/PROJECT_STRUCTURE.md @erp-dev-team
+/API_DOCUMENTATION.md @erp-dev-team
+
+# GitLab CI/CD 파이프라인
+/.gitlab-ci.yml @erp-devops-team
+/.gitlab/ @erp-devops-team
+/.gitlab/merge_request_templates/ @erp-devops-team
+/.gitlab/issue_templates/ @erp-devops-team
+
+# Docker 관련
+/docker-compose.yml @erp-devops-team
+/Dockerfile @erp-devops-team
+
+# 데이터베이스 관련
+/backend/database/ @erp-backend-team
+/backend/src/main/resources/db/ @erp-backend-team
+
+# 보안 관련
+/backend/src/main/resources/security/ @erp-security-team
+/backend/src/main/java/com/erp/config/SecurityConfig.java @erp-security-team
+
+# 문서화
+/docs/ @erp-dev-team
+*.md @erp-dev-team
+

@@ -221,6 +221,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             "/favicon.ico"
         };
         
+        // /api/auth/me는 토큰이 있을 때만 처리, 없으면 401 반환
+        if ("/api/auth/me".equals(path)) {
+            return false; // 필터 적용
+        }
+        
         for (String publicPath : publicPaths) {
             if (path.startsWith(publicPath)) {
                 log.debug("공개 경로로 JWT 필터 제외: {}", path);

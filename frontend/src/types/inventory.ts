@@ -234,6 +234,7 @@ export interface Product {
   updatedAt: string
   
   // 재고 관련 정보
+  quantity: number
   totalStock: number
   availableStock: number
   reservedStock: number
@@ -318,7 +319,7 @@ export interface Inventory {
   locationCode: string
   locationDescription?: string
   fullLocation: string
-  currentStock: number
+  quantity: number
   availableStock: number
   reservedStock: number
   orderedStock: number
@@ -669,7 +670,7 @@ export interface InventoryAlert {
   productName: string
   warehouseId: number
   warehouseName: string
-  currentStock: number
+  quantity: number
   threshold?: number
   expiryDate?: string
   severity: 'HIGH' | 'MEDIUM' | 'LOW'

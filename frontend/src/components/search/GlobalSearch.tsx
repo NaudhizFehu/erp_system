@@ -57,17 +57,31 @@ function GlobalSearch() {
     }
   }, [])
 
-  // 인기 검색어 및 빠른 카테고리
+  // 인기 검색어 (실제 데이터 기반)
   const popularSearches = [
-    '김철수', '노트북', '주문', '고객', '재고'
+    '김관리', '노트북', 'ABC 기업', '인사부', '무선마우스'
   ]
 
+  // 빠른 검색 카테고리 (실제 데이터에 맞게 개선)
   const quickCategories: SearchSuggestion[] = [
-    { id: 'cat-1', text: '직원 검색', type: 'category', category: 'employee', icon: 'Users' },
-    { id: 'cat-2', text: '상품 검색', type: 'category', category: 'product', icon: 'Package' },
-    { id: 'cat-3', text: '주문 검색', type: 'category', category: 'order', icon: 'ShoppingCart' },
-    { id: 'cat-4', text: '고객 검색', type: 'category', category: 'customer', icon: 'Building2' },
-    { id: 'cat-5', text: '부서 검색', type: 'category', category: 'department', icon: 'FolderOpen' }
+    { id: 'cat-1', text: '모든 직원', type: 'category', category: 'employee', icon: 'Users' },
+    { id: 'cat-2', text: '모든 상품', type: 'category', category: 'product', icon: 'Package' },
+    { id: 'cat-3', text: '모든 고객', type: 'category', category: 'customer', icon: 'Building2' },
+    { id: 'cat-4', text: '모든 부서', type: 'category', category: 'department', icon: 'FolderOpen' },
+    { id: 'cat-5', text: '회사 정보', type: 'category', category: 'company', icon: 'Building2' }
+  ]
+
+  // 실제 데이터 기반 검색 제안
+  const dataBasedSuggestions: SearchSuggestion[] = [
+    { id: 'emp-1', text: '김관리', type: 'popular', icon: 'Users' },
+    { id: 'emp-2', text: '이영업', type: 'popular', icon: 'Users' },
+    { id: 'emp-3', text: '박개발', type: 'popular', icon: 'Users' },
+    { id: 'prod-1', text: '노트북', type: 'popular', icon: 'Package' },
+    { id: 'prod-2', text: '무선마우스', type: 'popular', icon: 'Package' },
+    { id: 'cust-1', text: 'ABC 기업', type: 'popular', icon: 'Building2' },
+    { id: 'cust-2', text: '홍길동', type: 'popular', icon: 'Building2' },
+    { id: 'dept-1', text: '인사부', type: 'popular', icon: 'FolderOpen' },
+    { id: 'dept-2', text: '영업부', type: 'popular', icon: 'FolderOpen' }
   ]
 
   /**
@@ -86,18 +100,125 @@ function GlobalSearch() {
       // 실제 API 호출 (axios 인스턴스 사용으로 인증 토큰 자동 추가)
       const response = await api.get(`/search?q=${encodeURIComponent(term)}&companyId=1`)
       console.log('📡 응답 데이터:', response)
+      console.log('📡 응답 타입:', typeof response)
+      console.log('📡 응답 구조:', Object.keys(response || {}))
       
       // axios 응답 인터셉터에서 response.data만 반환하므로
       // response 자체가 {success: true, data: [...], message: '...'} 형태입니다
       if (response && response.success) {
         console.log('✅ 검색 성공, 결과:', response.data)
-        setResults(response.data || [])
+        console.log('✅ 결과 타입:', typeof response.data)
+        console.log('✅ 결과 길이:', response.data?.length || 0)
+        
+        // 검색 결과가 배열인지 확인
+        const searchResults = Array.isArray(response.data) ? response.data : []
+        setResults(searchResults)
+        
+        // 각 결과의 구조 확인
+        searchResults.forEach((result, index) => {
+          console.log(`✅ 결과 ${index}:`, result)
+        })
       } else {
         console.error('❌ 검색 API 오류:', response?.message || '알 수 없는 오류')
+        console.error('❌ 응답 구조:', response)
         setResults([])
       }
     } catch (error) {
       console.error('💥 검색 오류:', error)
+      console.error('💥 오류 상세:', error.response?.data)
+      console.error('💥 오류 상태:', error.response?.status)
+      setResults([])
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  /**
+   * 카테고리별 검색 실행
+   */
+  const performCategorySearch = async (category: string, term: string = '') => {
+    setIsLoading(true)
+    
+    try {
+      console.log('🔍 카테고리 검색 시작:', category, term)
+      
+      let response
+      if (category === 'employee') {
+        response = await api.get(`/employees/company/1?page=0&size=100`)
+      } else if (category === 'product') {
+        response = await api.get(`/products/companies/1?page=0&size=100`)
+      } else if (category === 'customer') {
+        response = await api.get(`/sales/customers/company/1?page=0&size=100`)
+      } else if (category === 'department') {
+        // 부서 목록 조회 API 사용
+        response = await api.get(`/departments/company/1?page=0&size=100`)
+      } else if (category === 'company') {
+        response = await api.get(`/companies?page=0&size=100`)
+      } else {
+        // 기본 전역 검색
+        response = await api.get(`/search?q=${encodeURIComponent(term)}&companyId=1`)
+      }
+      
+      console.log('📡 카테고리 검색 응답:', response)
+      
+      if (response && response.success) {
+        const data = response.data?.content || response.data || []
+        console.log('✅ 카테고리 검색 성공, 결과:', data)
+        
+        // 카테고리별 데이터를 검색 결과 형식으로 변환
+        const searchResults = data.map((item: any) => {
+          if (category === 'employee') {
+            return {
+              id: item.id.toString(),
+              title: item.name,
+              description: `${item.department?.name || '부서미지정'} - ${item.position?.name || '직급미지정'}`,
+              type: 'employee',
+              url: `/hr/employees/${item.id}`
+            }
+          } else if (category === 'product') {
+            return {
+              id: item.id.toString(),
+              title: item.productName,
+              description: `상품 - ${item.category?.name || '카테고리미지정'}`,
+              type: 'product',
+              url: `/inventory/products/${item.id}`
+            }
+          } else if (category === 'customer') {
+            return {
+              id: item.id.toString(),
+              title: item.customerName,
+              description: item.customerType === 'CORPORATE' ? '법인' : '개인',
+              type: 'customer',
+              url: `/sales/customers/${item.id}`
+            }
+          } else if (category === 'department') {
+            return {
+              id: item.id.toString(),
+              title: item.name,
+              description: item.description || '부서 설명',
+              type: 'department',
+              url: `/hr/departments/${item.id}`
+            }
+          } else if (category === 'company') {
+            return {
+              id: item.id.toString(),
+              title: item.name,
+              description: `${item.businessType || '업종미지정'} - ${item.address || '주소미지정'}`,
+              type: 'company',
+              url: `/companies/${item.id}`
+            }
+          }
+          return item
+        })
+        
+        setResults(searchResults)
+        console.log('✅ 변환된 검색 결과:', searchResults)
+      } else {
+        console.error('❌ 카테고리 검색 API 오류:', response?.message || '알 수 없는 오류')
+        setResults([])
+      }
+    } catch (error) {
+      console.error('💥 카테고리 검색 오류:', error)
       console.error('💥 오류 상세:', error.response?.data)
       setResults([])
     } finally {
@@ -134,10 +255,30 @@ function GlobalSearch() {
    */
   const handleSuggestionSelect = (suggestion: SearchSuggestion) => {
     if (suggestion.type === 'category') {
-      // 카테고리 선택 시 해당 카테고리로 검색
-      const categoryTerm = suggestion.text.replace(' 검색', '')
+      // 카테고리 선택 시 해당 모듈의 모든 데이터를 조회
+      const categoryTerm = suggestion.text.replace('모든 ', '')
       setSearchTerm(categoryTerm)
-      performSearch(categoryTerm)
+      
+      // 특별한 카테고리 검색 로직
+      if (suggestion.category === 'employee') {
+        // 직원 카테고리: 모든 직원 조회
+        performCategorySearch('employee', '')
+      } else if (suggestion.category === 'product') {
+        // 상품 카테고리: 모든 상품 조회
+        performCategorySearch('product', '')
+      } else if (suggestion.category === 'customer') {
+        // 고객 카테고리: 모든 고객 조회
+        performCategorySearch('customer', '')
+      } else if (suggestion.category === 'department') {
+        // 부서 카테고리: 모든 부서 조회
+        performCategorySearch('department', '')
+      } else if (suggestion.category === 'company') {
+        // 회사 카테고리: 회사 정보 조회
+        performCategorySearch('company', '')
+      } else {
+        // 기본 검색
+        performSearch(categoryTerm)
+      }
       saveRecentSearch(categoryTerm)
     } else {
       // 최근 검색어나 인기 검색어 선택 시
@@ -195,19 +336,19 @@ function GlobalSearch() {
   const getTypeInfo = (type: SearchResult['type']) => {
     switch (type) {
       case 'employee':
-        return { label: '직원', color: 'text-blue-600' }
+        return { label: '직원', color: 'text-blue-600', bgColor: 'bg-blue-50', icon: 'Users' }
       case 'product':
-        return { label: '상품', color: 'text-green-600' }
+        return { label: '상품', color: 'text-green-600', bgColor: 'bg-green-50', icon: 'Package' }
       case 'order':
-        return { label: '주문', color: 'text-purple-600' }
+        return { label: '주문', color: 'text-purple-600', bgColor: 'bg-purple-50', icon: 'ShoppingCart' }
       case 'customer':
-        return { label: '고객', color: 'text-orange-600' }
+        return { label: '고객', color: 'text-orange-600', bgColor: 'bg-orange-50', icon: 'Building2' }
       case 'department':
-        return { label: '부서', color: 'text-gray-600' }
+        return { label: '부서', color: 'text-gray-600', bgColor: 'bg-gray-50', icon: 'FolderOpen' }
       case 'company':
-        return { label: '회사', color: 'text-indigo-600' }
+        return { label: '회사', color: 'text-indigo-600', bgColor: 'bg-indigo-50', icon: 'Building2' }
       default:
-        return { label: '기타', color: 'text-gray-600' }
+        return { label: '기타', color: 'text-gray-600', bgColor: 'bg-gray-50', icon: 'Search' }
     }
   }
 
@@ -289,25 +430,53 @@ function GlobalSearch() {
             ) : searchTerm.trim() ? (
               // 검색어가 있을 때는 검색 결과 표시
               results.length === 0 ? (
-                <div className="p-4 text-center text-muted-foreground">
-                  검색 결과가 없습니다.
+                <div className="p-6 text-center">
+                  <Search className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                  <p className="text-sm text-muted-foreground mb-2">
+                    "{searchTerm}"에 대한 검색 결과가 없습니다.
+                  </p>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    다른 검색어를 시도해보세요.
+                  </p>
+                  <div className="text-xs text-muted-foreground">
+                    <p className="mb-1">💡 추천 검색어:</p>
+                    <div className="flex flex-wrap gap-1 justify-center">
+                      {dataBasedSuggestions.slice(0, 4).map((suggestion) => (
+                        <button
+                          key={suggestion.id}
+                          onClick={() => handleSuggestionSelect(suggestion)}
+                          className="px-2 py-1 bg-muted hover:bg-accent rounded text-xs transition-colors"
+                        >
+                          {suggestion.text}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <div>
-                  {results.map((result) => {
+                  <div className="px-3 py-2 border-b border-border bg-muted/30">
+                    <p className="text-xs font-medium text-muted-foreground">
+                      "{searchTerm}" 검색 결과 ({results.length}개)
+                    </p>
+                  </div>
+                  {results.map((result, index) => {
                     const typeInfo = getTypeInfo(result.type)
                     return (
                       <div
-                        key={result.id}
+                        key={`${result.type}-${result.id}-${index}`}
                         onClick={() => handleSelect(result)}
-                        className="flex items-start space-x-3 p-3 cursor-pointer hover:bg-accent transition-colors"
+                        className="flex items-start space-x-3 p-3 cursor-pointer hover:bg-accent transition-colors border-b border-border last:border-b-0"
                       >
+                        <div className={`flex-shrink-0 w-8 h-8 rounded-full ${typeInfo.bgColor} flex items-center justify-center`}>
+                          {renderIcon(typeInfo.icon)}
+                        </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center space-x-2 mb-1">
                             <h4 className="text-sm font-medium truncate">
                               {result.title}
                             </h4>
-                            <span className={`text-xs px-2 py-0.5 rounded-full bg-muted ${typeInfo.color}`}>
+                            <span className={`text-xs px-2 py-0.5 rounded-full ${typeInfo.bgColor} ${typeInfo.color}`}>
                               {typeInfo.label}
                             </span>
                           </div>
@@ -366,6 +535,23 @@ function GlobalSearch() {
                   ))}
                 </div>
 
+                {/* 실제 데이터 기반 제안 */}
+                <div>
+                  <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                    추천 검색어
+                  </div>
+                  {dataBasedSuggestions.map((suggestion) => (
+                    <div
+                      key={suggestion.id}
+                      onClick={() => handleSuggestionSelect(suggestion)}
+                      className="flex items-center space-x-2 p-2 cursor-pointer hover:bg-accent transition-colors"
+                    >
+                      {renderIcon(suggestion.icon)}
+                      <span className="text-sm">{suggestion.text}</span>
+                    </div>
+                  ))}
+                </div>
+
                 {/* 인기 검색어 */}
                 <div>
                   <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
@@ -395,4 +581,4 @@ function GlobalSearch() {
   )
 }
 
-export default GlobalSearch
+export { GlobalSearch }

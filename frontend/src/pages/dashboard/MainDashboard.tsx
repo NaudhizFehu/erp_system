@@ -45,11 +45,11 @@ import toast from 'react-hot-toast'
 import { useRouter } from 'next/router'
 
 // 컴포넌트 임포트
-import OverviewWidget from '@/components/dashboard/widgets/OverviewWidget'
-import RevenueChart from '@/components/dashboard/charts/RevenueChart'
-import ActivityWidget from '@/components/dashboard/widgets/ActivityWidget'
-import TodoWidget from '@/components/dashboard/widgets/TodoWidget'
-import LoadingSpinner from '@/components/common/LoadingSpinner'
+import { OverviewWidget } from '@/components/dashboard/widgets/OverviewWidget'
+import { RevenueChart } from '@/components/dashboard/charts/RevenueChart'
+import { ActivityWidget } from '@/components/dashboard/widgets/ActivityWidget'
+import { TodoWidget } from '@/components/dashboard/widgets/TodoWidget'
+import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 
 // 훅과 타입 임포트
 import {

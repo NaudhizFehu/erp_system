@@ -160,7 +160,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
            "WHERE (t.transactionNumber LIKE %:searchTerm% " +
            "OR t.description LIKE %:searchTerm% " +
            "OR t.memo LIKE %:searchTerm% " +
-           "OR a.accountName LIKE %:searchTerm%) " +
+           "OR a.name LIKE %:searchTerm%) " +
            "AND t.isDeleted = false")
     Page<Transaction> searchTransactions(@Param("searchTerm") String searchTerm, Pageable pageable);
 
@@ -175,7 +175,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
            "AND (t.transactionNumber LIKE %:searchTerm% " +
            "OR t.description LIKE %:searchTerm% " +
            "OR t.memo LIKE %:searchTerm% " +
-           "OR a.accountName LIKE %:searchTerm%) " +
+           "OR a.name LIKE %:searchTerm%) " +
            "AND t.isDeleted = false")
     Page<Transaction> searchTransactionsByCompany(@Param("companyId") Long companyId,
                                                 @Param("searchTerm") String searchTerm,
@@ -300,13 +300,13 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     /**
      * 계정과목별 거래 건수 통계
      */
-    @Query("SELECT a.accountName, COUNT(t) " +
+    @Query("SELECT a.name, COUNT(t) " +
            "FROM Transaction t " +
            "JOIN t.account a " +
            "WHERE t.company.id = :companyId " +
            "AND t.transactionDate BETWEEN :startDate AND :endDate " +
            "AND t.isDeleted = false " +
-           "GROUP BY a.id, a.accountName " +
+           "GROUP BY a.id, a.name " +
            "ORDER BY COUNT(t) DESC")
     List<Object[]> getTransactionCountByAccount(@Param("companyId") Long companyId,
                                                @Param("startDate") LocalDate startDate,
@@ -345,7 +345,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     /**
      * 시산표 데이터 조회
      */
-    @Query("SELECT a.accountCode, a.accountName, a.accountType, " +
+    @Query("SELECT a.accountCode, a.name, a.accountType, " +
            "COALESCE(SUM(t.debitAmount), 0), COALESCE(SUM(t.creditAmount), 0) " +
            "FROM Account a " +
            "LEFT JOIN Transaction t ON t.account = a " +
@@ -354,7 +354,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
            "AND t.isDeleted = false " +
            "WHERE a.company.id = :companyId AND a.trackBalance = true " +
            "AND a.isDeleted = false " +
-           "GROUP BY a.id, a.accountCode, a.accountName, a.accountType " +
+           "GROUP BY a.id, a.accountCode, a.name, a.accountType " +
            "ORDER BY a.accountType, a.sortOrder, a.accountCode")
     List<Object[]> getTrialBalanceData(@Param("companyId") Long companyId,
                                       @Param("startDate") LocalDate startDate,

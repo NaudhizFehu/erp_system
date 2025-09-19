@@ -4,6 +4,7 @@ import com.erp.common.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -128,24 +129,28 @@ public interface UserRepository extends JpaRepository<User, Long> {
     /**
      * 마지막 로그인 시간 업데이트
      */
+    @Modifying
     @Query("UPDATE User u SET u.lastLoginAt = :loginTime WHERE u.id = :userId")
     void updateLastLoginAt(@Param("userId") Long userId, @Param("loginTime") LocalDateTime loginTime);
 
     /**
      * 비밀번호 변경 시간 업데이트
      */
+    @Modifying
     @Query("UPDATE User u SET u.passwordChangedAt = :changeTime WHERE u.id = :userId")
     void updatePasswordChangedAt(@Param("userId") Long userId, @Param("changeTime") LocalDateTime changeTime);
 
     /**
      * 계정 잠금 상태 변경
      */
+    @Modifying
     @Query("UPDATE User u SET u.isLocked = :isLocked WHERE u.id = :userId")
     void updateAccountLockStatus(@Param("userId") Long userId, @Param("isLocked") Boolean isLocked);
 
     /**
      * 계정 활성화 상태 변경
      */
+    @Modifying
     @Query("UPDATE User u SET u.isActive = :isActive WHERE u.id = :userId")
     void updateAccountActiveStatus(@Param("userId") Long userId, @Param("isActive") Boolean isActive);
 

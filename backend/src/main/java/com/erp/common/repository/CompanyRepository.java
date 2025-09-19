@@ -51,11 +51,7 @@ public interface CompanyRepository extends JpaRepository<Company, Long> {
     @Query("SELECT c FROM Company c WHERE c.status = :status AND c.isDeleted = false")
     List<Company> findByStatus(@Param("status") Company.CompanyStatus status);
 
-    /**
-     * 회사 유형별 조회
-     */
-    @Query("SELECT c FROM Company c WHERE c.companyType = :companyType AND c.isDeleted = false")
-    List<Company> findByCompanyType(@Param("companyType") Company.CompanyType companyType);
+    // findByCompanyType 메서드는 companyType 필드가 실제 DB 스키마에 없으므로 제거됨
 
     /**
      * 회사명 또는 사업자등록번호로 검색 (페이징)
@@ -102,25 +98,10 @@ public interface CompanyRepository extends JpaRepository<Company, Long> {
     @Query("SELECT c FROM Company c WHERE c.isDeleted = false")
     Page<Company> findAllActive(Pageable pageable);
 
-    /**
-     * 설립일 범위로 회사 조회
-     */
-    @Query("SELECT c FROM Company c WHERE c.establishedDate BETWEEN :startDate AND :endDate AND c.isDeleted = false")
-    List<Company> findByEstablishedDateBetween(@Param("startDate") java.time.LocalDate startDate, 
-                                              @Param("endDate") java.time.LocalDate endDate);
+    // findByEstablishedDateBetween 메서드는 establishedDate 필드가 실제 DB 스키마에 없으므로 제거됨
 
-    /**
-     * 직원 수 범위로 회사 조회
-     */
-    @Query("SELECT c FROM Company c WHERE c.employeeCount BETWEEN :minCount AND :maxCount AND c.isDeleted = false")
-    List<Company> findByEmployeeCountBetween(@Param("minCount") Integer minCount, @Param("maxCount") Integer maxCount);
-
-    /**
-     * 자본금 범위로 회사 조회
-     */
-    @Query("SELECT c FROM Company c WHERE c.capitalAmount BETWEEN :minAmount AND :maxAmount AND c.isDeleted = false")
-    List<Company> findByCapitalAmountBetween(@Param("minAmount") java.math.BigDecimal minAmount, 
-                                           @Param("maxAmount") java.math.BigDecimal maxAmount);
+    // findByEmployeeCountBetween, findByCapitalAmountBetween 메서드들은 
+    // employeeCount, capitalAmount 필드들이 실제 DB 스키마에 없으므로 제거됨
 
     /**
      * 업종별 회사 조회
@@ -140,11 +121,7 @@ public interface CompanyRepository extends JpaRepository<Company, Long> {
     @Query("SELECT c.status, COUNT(c) FROM Company c WHERE c.isDeleted = false GROUP BY c.status")
     List<Object[]> getCompanyCountByStatus();
 
-    /**
-     * 회사 통계 조회 - 유형별 개수
-     */
-    @Query("SELECT c.companyType, COUNT(c) FROM Company c WHERE c.isDeleted = false GROUP BY c.companyType")
-    List<Object[]> getCompanyCountByType();
+    // getCompanyCountByType 메서드는 companyType 필드가 실제 DB 스키마에 없으므로 제거됨
 }
 
 

@@ -277,7 +277,7 @@ function NotificationDropdown() {
   )
 }
 
-export default NotificationDropdown
+export { NotificationDropdown }
 
 
 

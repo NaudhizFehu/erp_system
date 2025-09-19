@@ -1,6 +1,6 @@
 import { ReactNode } from 'react'
-import Sidebar from './Sidebar'
-import Header from './Header'
+import { Sidebar } from './Sidebar'
+import { Header } from './Header'
 
 interface LayoutProps {
   children: ReactNode
@@ -30,7 +30,7 @@ function Layout({ children }: LayoutProps) {
   )
 }
 
-export default Layout
+export { Layout }
 
 
 

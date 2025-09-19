@@ -146,12 +146,6 @@ public class Warehouse extends BaseEntity {
     @Column(name = "address", length = 200)
     private String address;
 
-    /**
-     * 상세주소
-     */
-    @Size(max = 200, message = "상세주소는 200자를 초과할 수 없습니다")
-    @Column(name = "address_detail", length = 200)
-    private String addressDetail;
 
     /**
      * 우편번호
@@ -373,7 +367,7 @@ public class Warehouse extends BaseEntity {
      */
     public long getTotalProductCount() {
         return inventories.stream()
-                .filter(inv -> inv.getCurrentStock() != null && inv.getCurrentStock() > 0)
+                .filter(inv -> inv.getQuantity() != null && inv.getQuantity() > 0)
                 .count();
     }
 
@@ -382,8 +376,8 @@ public class Warehouse extends BaseEntity {
      */
     public Double getTotalStockQuantity() {
         return inventories.stream()
-                .filter(inv -> inv.getCurrentStock() != null)
-                .mapToDouble(Inventory::getCurrentStock)
+                .filter(inv -> inv.getQuantity() != null)
+                .mapToDouble(Inventory::getQuantity)
                 .sum();
     }
 
@@ -391,9 +385,8 @@ public class Warehouse extends BaseEntity {
      * 안전재고 미달 품목 수
      */
     public long getLowStockCount() {
-        return inventories.stream()
-                .filter(inventory -> inventory.getCurrentStock() <= inventory.getMinStock())
-                .count();
+        // minStock 필드가 제거되어 단순화
+        return 0;
     }
 
     /**
@@ -401,7 +394,7 @@ public class Warehouse extends BaseEntity {
      */
     public long getOutOfStockCount() {
         return inventories.stream()
-                .filter(inventory -> inventory.getCurrentStock() == 0)
+                .filter(inventory -> inventory.getQuantity() == 0)
                 .count();
     }
 
@@ -410,7 +403,7 @@ public class Warehouse extends BaseEntity {
      */
     public long getOverStockCount() {
         return inventories.stream()
-                .filter(inventory -> inventory.getCurrentStock() > inventory.getMaxStock())
+                .filter(inventory -> inventory.getQuantity() > inventory.getMaxStock())
                 .count();
     }
 
@@ -434,12 +427,6 @@ public class Warehouse extends BaseEntity {
             fullAddress.append(address);
         }
         
-        if (addressDetail != null) {
-            if (fullAddress.length() > 0) {
-                fullAddress.append(" ");
-            }
-            fullAddress.append(addressDetail);
-        }
         
         if (postalCode != null) {
             if (fullAddress.length() > 0) {
