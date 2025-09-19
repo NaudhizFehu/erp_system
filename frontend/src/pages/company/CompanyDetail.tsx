@@ -288,7 +288,7 @@ function CompanyDetail() {
   )
 }
 
-export default CompanyDetail
+export { CompanyDetail }
 
 
 

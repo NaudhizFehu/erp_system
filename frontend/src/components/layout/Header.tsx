@@ -9,8 +9,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import NotificationDropdown from '@/components/notification/NotificationDropdown'
-import GlobalSearch from '@/components/search/GlobalSearch'
+import { NotificationDropdown } from '@/components/notification/NotificationDropdown'
+import { GlobalSearch } from '@/components/search/GlobalSearch'
 
 /**
  * 헤더 컴포넌트

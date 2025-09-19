@@ -285,7 +285,7 @@ const QuickStatsCards = ({
   )
 }
 
-export default function MainDashboard({
+function MainDashboard({
   companyId,
   userId,
   userRole,
@@ -616,4 +616,6 @@ export default function MainDashboard({
     </div>
   )
 }
+
+export { MainDashboard }
 

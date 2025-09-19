@@ -324,4 +324,4 @@ function EmployeeDetail() {
   )
 }
 
-export default EmployeeDetail
+export { EmployeeDetail }

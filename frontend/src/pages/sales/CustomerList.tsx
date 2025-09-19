@@ -214,4 +214,4 @@ function CustomerList() {
   )
 }
 
-export default CustomerList
+export { CustomerList }

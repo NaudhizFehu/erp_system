@@ -194,7 +194,7 @@ function EmployeeList() {
   )
 }
 
-export default EmployeeList
+export { EmployeeList }
 
 
 

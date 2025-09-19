@@ -253,7 +253,7 @@ function EmployeeForm() {
   )
 }
 
-export default EmployeeForm
+export { EmployeeForm }
 
 
 

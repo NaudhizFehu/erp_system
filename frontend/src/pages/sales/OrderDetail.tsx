@@ -332,4 +332,4 @@ function OrderDetail() {
   )
 }
 
-export default OrderDetail
+export { OrderDetail }
