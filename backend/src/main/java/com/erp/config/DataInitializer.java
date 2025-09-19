@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
  * 애플리케이션 시작 시 기본 데이터를 생성합니다
  */
 @Slf4j
-// @Component  // data.sql 사용으로 비활성화
+@Component  // 개발용 테스트 계정 자동 생성
 @RequiredArgsConstructor
 public class DataInitializer {
 
@@ -132,6 +132,9 @@ public class DataInitializer {
 
     @Transactional
     private void createUsers() {
+        // 기존 사용자 비밀번호 업데이트 (개발용)
+        updateExistingUserPasswords();
+        
         if (userRepository.count() == 0) {
             Company company = companyRepository.findByCompanyCode("COMP001")
                 .orElseThrow(() -> new RuntimeException("회사를 찾을 수 없습니다"));
@@ -182,6 +185,30 @@ public class DataInitializer {
             userRepository.save(user);
 
             log.info("사용자 데이터 생성 완료: admin, user");
+        }
+    }
+
+    /**
+     * 기존 사용자 비밀번호를 개발용 비밀번호로 업데이트
+     */
+    @Transactional
+    private void updateExistingUserPasswords() {
+        try {
+            // admin 사용자 비밀번호 업데이트
+            userRepository.findByUsername("admin").ifPresent(admin -> {
+                admin.setPassword(passwordEncoder.encode("admin123"));
+                userRepository.save(admin);
+                log.info("✅ admin 사용자 비밀번호 업데이트 완료");
+            });
+
+            // user 사용자 비밀번호 업데이트
+            userRepository.findByUsername("user").ifPresent(user -> {
+                user.setPassword(passwordEncoder.encode("user123"));
+                userRepository.save(user);
+                log.info("✅ user 사용자 비밀번호 업데이트 완료");
+            });
+        } catch (Exception e) {
+            log.warn("사용자 비밀번호 업데이트 중 오류 발생: {}", e.getMessage());
         }
     }
 }
