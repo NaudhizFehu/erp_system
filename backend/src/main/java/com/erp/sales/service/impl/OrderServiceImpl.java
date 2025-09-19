@@ -3,13 +3,11 @@ package com.erp.sales.service.impl;
 import com.erp.common.entity.Company;
 import com.erp.sales.entity.Customer;
 import com.erp.sales.entity.Order;
-import com.erp.sales.entity.Quote;
 import com.erp.sales.dto.OrderDto;
 import com.erp.sales.repository.OrderRepository;
 import com.erp.sales.service.OrderService;
 import com.erp.common.repository.CompanyRepository;
 import com.erp.sales.repository.CustomerRepository;
-import com.erp.sales.repository.QuoteRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -39,8 +37,6 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private CustomerRepository customerRepository;
 
-    @Autowired
-    private QuoteRepository quoteRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -74,18 +70,12 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new IllegalArgumentException("고객을 찾을 수 없습니다: " + createDto.customerId()));
 
         // 견적 조회 (선택사항)
-        Quote quote = null;
-        if (createDto.quoteId() != null) {
-            quote = quoteRepository.findById(createDto.quoteId())
-                    .orElseThrow(() -> new IllegalArgumentException("견적을 찾을 수 없습니다: " + createDto.quoteId()));
-        }
 
         // 주문 생성
         Order order = new Order();
         order.setOrderNumber(createDto.orderNumber());
         order.setCompany(company);
         order.setCustomer(customer);
-        order.setQuote(quote);
         order.setOrderDate(createDto.orderDate());
         order.setDeliveryDate(createDto.deliveryDate());
         order.setOrderStatus(createDto.orderStatus());
@@ -182,19 +172,6 @@ public class OrderServiceImpl implements OrderService {
                 .toList();
     }
 
-    @Override
-    public OrderDto.OrderResponseDto createOrderFromQuote(Long quoteId) {
-        log.info("견적으로부터 주문 생성 요청: quoteId={}", quoteId);
-
-        Quote quote = quoteRepository.findById(quoteId)
-                .orElseThrow(() -> new IllegalArgumentException("견적을 찾을 수 없습니다: " + quoteId));
-
-        Order order = Order.fromQuote(quote);
-        Order savedOrder = orderRepository.save(order);
-        
-        log.info("견적으로부터 주문 생성 완료: id={}, orderNumber={}", savedOrder.getId(), savedOrder.getOrderNumber());
-        return OrderDto.OrderResponseDto.from(savedOrder);
-    }
 
     @Override
     public OrderDto.OrderResponseDto confirmOrder(Long id) {

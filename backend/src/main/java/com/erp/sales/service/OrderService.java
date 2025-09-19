@@ -63,7 +63,6 @@ public interface OrderService {
     /**
      * 견적으로부터 주문 생성
      */
-    OrderDto.OrderResponseDto createOrderFromQuote(Long quoteId);
 
     /**
      * 주문 확정

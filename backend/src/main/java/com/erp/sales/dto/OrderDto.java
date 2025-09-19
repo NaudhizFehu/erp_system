@@ -30,8 +30,6 @@ public class OrderDto {
             @NotNull(message = "고객 ID는 필수입니다")
             Long customerId,
 
-            Long quoteId,
-
             @NotNull(message = "주문일자는 필수입니다")
             LocalDate orderDate,
 
@@ -103,7 +101,6 @@ public class OrderDto {
             Long customerId,
             String customerCode,
             String customerName,
-            Long quoteId,
             LocalDate orderDate,
             LocalDate deliveryDate,
             Order.OrderStatus orderStatus,
@@ -129,7 +126,6 @@ public class OrderDto {
                     order.getCustomer() != null ? order.getCustomer().getId() : null,
                     order.getCustomer() != null ? order.getCustomer().getCustomerCode() : null,
                     order.getCustomer() != null ? order.getCustomer().getCustomerName() : null,
-                    order.getQuote() != null ? order.getQuote().getId() : null,
                     order.getOrderDate(),
                     order.getDeliveryDate(),
                     order.getOrderStatus(),
