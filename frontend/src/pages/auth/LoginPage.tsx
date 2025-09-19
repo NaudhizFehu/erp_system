@@ -189,7 +189,7 @@ export function LoginPage() {
               </h3>
               <div className="text-xs text-blue-700 space-y-1">
                 <p><strong>관리자:</strong> admin / admin123</p>
-                <p><strong>사용자:</strong> user / admin123</p>
+                <p><strong>사용자:</strong> user / user123</p>
               </div>
             </div>
           </CardContent>
