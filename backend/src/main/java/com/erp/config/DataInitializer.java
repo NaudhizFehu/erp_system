@@ -3,9 +3,13 @@ package com.erp.config;
 import com.erp.common.entity.Company;
 import com.erp.common.entity.User;
 import com.erp.hr.entity.Department;
+import com.erp.inventory.entity.Product;
+import com.erp.inventory.entity.ProductCategory;
 import com.erp.common.repository.CompanyRepository;
 import com.erp.hr.repository.DepartmentRepository;
 import com.erp.common.repository.UserRepository;
+import com.erp.inventory.repository.ProductRepository;
+import com.erp.inventory.repository.ProductCategoryRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -13,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
 
 // LocalDate import는 더 이상 사용하지 않으므로 제거됨
 import java.time.LocalDateTime;
@@ -29,6 +34,8 @@ public class DataInitializer {
     private final CompanyRepository companyRepository;
     private final DepartmentRepository departmentRepository;
     private final UserRepository userRepository;
+    private final ProductRepository productRepository;
+    private final ProductCategoryRepository productCategoryRepository;
     private final PasswordEncoder passwordEncoder;
 
     @EventListener(ApplicationReadyEvent.class)
@@ -48,6 +55,10 @@ public class DataInitializer {
             
             // 사용자 데이터 생성
             createUsers();
+            
+            // 상품 카테고리 및 상품 데이터 생성
+            createProductCategories();
+            createProducts();
 
             log.info("초기 데이터 초기화 완료");
         } catch (Exception e) {
@@ -209,6 +220,183 @@ public class DataInitializer {
             });
         } catch (Exception e) {
             log.warn("사용자 비밀번호 업데이트 중 오류 발생: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * 상품 카테고리 데이터 생성
+     */
+    @Transactional
+    private void createProductCategories() {
+        if (productCategoryRepository.count() == 0) {
+            // 전자제품 카테고리
+            ProductCategory electronics = new ProductCategory();
+            electronics.setCategoryCode("ELECTRONICS");
+            electronics.setName("전자제품");
+            electronics.setDescription("전자제품 카테고리");
+            electronics.setIsActive(true);
+            electronics.setCreatedBy(1L);
+            electronics.setUpdatedBy(1L);
+            electronics.setIsDeleted(false);
+            productCategoryRepository.save(electronics);
+
+            // 컴퓨터 카테고리
+            ProductCategory computer = new ProductCategory();
+            computer.setCategoryCode("COMPUTER");
+            computer.setName("컴퓨터");
+            computer.setDescription("컴퓨터 및 주변기기");
+            computer.setParentCategory(electronics);
+            computer.setIsActive(true);
+            computer.setCreatedBy(1L);
+            computer.setUpdatedBy(1L);
+            computer.setIsDeleted(false);
+            productCategoryRepository.save(computer);
+
+            // 사무용품 카테고리
+            ProductCategory office = new ProductCategory();
+            office.setCategoryCode("OFFICE");
+            office.setName("사무용품");
+            office.setDescription("사무용품 및 소모품");
+            office.setIsActive(true);
+            office.setCreatedBy(1L);
+            office.setUpdatedBy(1L);
+            office.setIsDeleted(false);
+            productCategoryRepository.save(office);
+
+            log.info("상품 카테고리 데이터 생성 완료: 전자제품, 컴퓨터, 사무용품");
+        }
+    }
+
+    /**
+     * 상품 데이터 생성
+     */
+    @Transactional
+    private void createProducts() {
+        if (productRepository.count() == 0) {
+            Company company = companyRepository.findByCompanyCode("COMP001")
+                .orElseThrow(() -> new RuntimeException("회사를 찾을 수 없습니다"));
+
+            ProductCategory computerCategory = productCategoryRepository.findByCategoryCode("COMPUTER")
+                .orElseThrow(() -> new RuntimeException("컴퓨터 카테고리를 찾을 수 없습니다"));
+
+            ProductCategory officeCategory = productCategoryRepository.findByCategoryCode("OFFICE")
+                .orElseThrow(() -> new RuntimeException("사무용품 카테고리를 찾을 수 없습니다"));
+
+            // 노트북
+            Product laptop = new Product();
+            laptop.setProductCode("LAPTOP001");
+            laptop.setProductName("노트북");
+            laptop.setDescription("고성능 노트북");
+            laptop.setCategory(computerCategory);
+            laptop.setCompany(company);
+            laptop.setSellingPrice(new java.math.BigDecimal("1500000"));
+            laptop.setMinStock(new java.math.BigDecimal("10"));
+            laptop.setMaxStock(new java.math.BigDecimal("100"));
+            laptop.setBaseUnit("대");
+            laptop.setManufacturer("삼성");
+            laptop.setBrand("Samsung");
+            laptop.setProductStatus(Product.ProductStatus.ACTIVE);
+            laptop.setCreatedBy(1L);
+            laptop.setUpdatedBy(1L);
+            laptop.setIsDeleted(false);
+            productRepository.save(laptop);
+
+            // 무선마우스
+            Product mouse = new Product();
+            mouse.setProductCode("MOUSE001");
+            mouse.setProductName("무선마우스");
+            mouse.setDescription("블루투스 무선마우스");
+            mouse.setCategory(computerCategory);
+            mouse.setCompany(company);
+            mouse.setSellingPrice(new java.math.BigDecimal("50000"));
+            mouse.setMinStock(new java.math.BigDecimal("50"));
+            mouse.setMaxStock(new java.math.BigDecimal("500"));
+            mouse.setBaseUnit("개");
+            mouse.setManufacturer("로지텍");
+            mouse.setBrand("Logitech");
+            mouse.setProductStatus(Product.ProductStatus.ACTIVE);
+            mouse.setCreatedBy(1L);
+            mouse.setUpdatedBy(1L);
+            mouse.setIsDeleted(false);
+            productRepository.save(mouse);
+
+            // 볼펜
+            Product pen = new Product();
+            pen.setProductCode("PEN001");
+            pen.setProductName("볼펜");
+            pen.setDescription("검은색 볼펜");
+            pen.setCategory(officeCategory);
+            pen.setCompany(company);
+            pen.setSellingPrice(new java.math.BigDecimal("1000"));
+            pen.setMinStock(new java.math.BigDecimal("100"));
+            pen.setMaxStock(new java.math.BigDecimal("2000"));
+            pen.setBaseUnit("자루");
+            pen.setManufacturer("모나미");
+            pen.setBrand("Monami");
+            pen.setProductStatus(Product.ProductStatus.ACTIVE);
+            pen.setCreatedBy(1L);
+            pen.setUpdatedBy(1L);
+            pen.setIsDeleted(false);
+            productRepository.save(pen);
+
+            // 키보드
+            Product keyboard = new Product();
+            keyboard.setProductCode("KEYBOARD001");
+            keyboard.setProductName("키보드");
+            keyboard.setDescription("기계식 키보드");
+            keyboard.setCategory(computerCategory);
+            keyboard.setCompany(company);
+            keyboard.setSellingPrice(new java.math.BigDecimal("150000"));
+            keyboard.setMinStock(new java.math.BigDecimal("5"));
+            keyboard.setMaxStock(new java.math.BigDecimal("50"));
+            keyboard.setBaseUnit("개");
+            keyboard.setManufacturer("체리");
+            keyboard.setBrand("Cherry");
+            keyboard.setProductStatus(Product.ProductStatus.ACTIVE);
+            keyboard.setCreatedBy(1L);
+            keyboard.setUpdatedBy(1L);
+            keyboard.setIsDeleted(false);
+            productRepository.save(keyboard);
+
+            // 모니터
+            Product monitor = new Product();
+            monitor.setProductCode("MONITOR001");
+            monitor.setProductName("모니터");
+            monitor.setDescription("27인치 4K 모니터");
+            monitor.setCategory(computerCategory);
+            monitor.setCompany(company);
+            monitor.setSellingPrice(new java.math.BigDecimal("500000"));
+            monitor.setMinStock(new java.math.BigDecimal("3"));
+            monitor.setMaxStock(new java.math.BigDecimal("30"));
+            monitor.setBaseUnit("대");
+            monitor.setManufacturer("LG");
+            monitor.setBrand("LG");
+            monitor.setProductStatus(Product.ProductStatus.ACTIVE);
+            monitor.setCreatedBy(1L);
+            monitor.setUpdatedBy(1L);
+            monitor.setIsDeleted(false);
+            productRepository.save(monitor);
+
+            // A4용지
+            Product paper = new Product();
+            paper.setProductCode("PAPER001");
+            paper.setProductName("A4용지");
+            paper.setDescription("복사용 A4용지");
+            paper.setCategory(officeCategory);
+            paper.setCompany(company);
+            paper.setSellingPrice(new java.math.BigDecimal("5000"));
+            paper.setMinStock(new java.math.BigDecimal("50"));
+            paper.setMaxStock(new java.math.BigDecimal("1000"));
+            paper.setBaseUnit("박스");
+            paper.setManufacturer("한솔");
+            paper.setBrand("Hansol");
+            paper.setProductStatus(Product.ProductStatus.ACTIVE);
+            paper.setCreatedBy(1L);
+            paper.setUpdatedBy(1L);
+            paper.setIsDeleted(false);
+            productRepository.save(paper);
+
+            log.info("상품 데이터 생성 완료: 노트북, 무선마우스, 볼펜, 키보드, 모니터, A4용지");
         }
     }
 }
