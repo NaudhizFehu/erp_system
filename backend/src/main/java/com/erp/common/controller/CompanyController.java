@@ -36,7 +36,7 @@ public class CompanyController {
      * 전체 회사 목록 조회 (페이징)
      */
     @GetMapping
-    // @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")  // 개발/테스트용으로 임시 비활성화
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
     @Operation(summary = "회사 목록 조회", description = "등록된 모든 회사 목록을 조회합니다")
     public ResponseEntity<ApiResponse<Page<Company>>> getAllCompanies(
             @PageableDefault(size = 20) Pageable pageable) {

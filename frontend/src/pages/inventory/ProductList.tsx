@@ -22,7 +22,7 @@ function ProductList() {
   )
 }
 
-export default ProductList
+export { ProductList }
 
 
 

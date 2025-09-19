@@ -232,7 +232,7 @@ function CompanyList() {
   )
 }
 
-export default CompanyList
+export { CompanyList }
 
 
 

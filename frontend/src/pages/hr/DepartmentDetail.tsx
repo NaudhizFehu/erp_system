@@ -257,4 +257,4 @@ function DepartmentDetail() {
   )
 }
 
-export default DepartmentDetail
+export { DepartmentDetail }

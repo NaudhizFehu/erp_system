@@ -284,4 +284,4 @@ function CustomerDetail() {
   )
 }
 
-export default CustomerDetail
+export { CustomerDetail }

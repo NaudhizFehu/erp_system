@@ -195,11 +195,11 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PUT, "/api/users/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "MANAGER")
                 .requestMatchers(HttpMethod.GET, "/api/users/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "MANAGER", "USER")
                 
-                // 회사 관리 엔드포인트 (개발/테스트용으로 임시 공개)
-                .requestMatchers("/api/companies/**").permitAll()
+                // 회사 관리 엔드포인트
+                .requestMatchers("/api/companies/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "MANAGER", "USER")
                 
-                // 부서 관리 엔드포인트 (개발/테스트용으로 임시 공개)
-                .requestMatchers("/api/departments/**").permitAll()
+                // 부서 관리 엔드포인트
+                .requestMatchers("/api/departments/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "MANAGER", "USER")
                 
                 // 공통코드 관리 엔드포인트
                 .requestMatchers(HttpMethod.POST, "/api/codes").hasAnyRole("SUPER_ADMIN", "ADMIN")
@@ -217,15 +217,15 @@ public class SecurityConfig {
                 .requestMatchers("/api/inventory/stock/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "MANAGER", "USER")
                 .requestMatchers("/api/inventory/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "MANAGER", "USER")
                 
-                // 상품 관리 모듈 (개발/테스트용으로 임시 공개)
-                .requestMatchers("/api/products/**").permitAll()
+                // 상품 관리 모듈
+                .requestMatchers("/api/products/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "MANAGER", "USER")
                 
                 // 인사관리 모듈
                 .requestMatchers("/api/hr/employees/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "MANAGER", "USER")
                 .requestMatchers("/api/employees/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "MANAGER", "USER")
                 
-                // 영업관리 모듈 (개발/테스트용으로 임시 공개)
-                .requestMatchers("/api/sales/**").permitAll()
+                // 영업관리 모듈
+                .requestMatchers("/api/sales/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "MANAGER", "USER")
                 
                 // 회계관리 모듈
                 .requestMatchers("/api/accounting/reports/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "MANAGER")

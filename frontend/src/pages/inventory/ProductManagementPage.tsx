@@ -70,7 +70,7 @@ interface ProductManagementPageProps {
   companyId: number
 }
 
-export default function ProductManagementPage({ companyId }: ProductManagementPageProps) {
+function ProductManagementPage({ companyId }: ProductManagementPageProps) {
   const [selectedTab, setSelectedTab] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
@@ -597,4 +597,6 @@ export default function ProductManagementPage({ companyId }: ProductManagementPa
     </div>
   )
 }
+
+export { ProductManagementPage }
 

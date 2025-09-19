@@ -230,4 +230,4 @@ function AccountList() {
   )
 }
 
-export default AccountList
+export { AccountList }

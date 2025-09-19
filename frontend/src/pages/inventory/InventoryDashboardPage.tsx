@@ -220,4 +220,4 @@ function InventoryDashboardPage({ companyId }: InventoryDashboardPageProps) {
   )
 }
 
-export default InventoryDashboardPage
+export { InventoryDashboardPage }
