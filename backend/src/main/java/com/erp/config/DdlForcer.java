@@ -67,6 +67,7 @@ public class DdlForcer {
     private void dropExistingTables() {
             log.info("기존 테이블 삭제 중...");
             String[] dropTables = {
+                "DROP TABLE IF EXISTS notifications CASCADE",
                 "DROP TABLE IF EXISTS stock_movements CASCADE",
                 "DROP TABLE IF EXISTS inventories CASCADE", 
                 "DROP TABLE IF EXISTS orders CASCADE",
@@ -458,6 +459,25 @@ public class DdlForcer {
                 "FOREIGN KEY (company_id) REFERENCES companies(id), " +
                 "FOREIGN KEY (product_id) REFERENCES products(id), " +
                 "FOREIGN KEY (warehouse_id) REFERENCES warehouses(id)" +
+                ")",
+                
+                "CREATE TABLE IF NOT EXISTS notifications (" +
+                "id BIGSERIAL PRIMARY KEY, " +
+                "user_id BIGINT NOT NULL, " +
+                "title VARCHAR(200) NOT NULL, " +
+                "message VARCHAR(1000) NOT NULL, " +
+                "type VARCHAR(20) NOT NULL, " +
+                "is_read BOOLEAN NOT NULL DEFAULT FALSE, " +
+                "action_url VARCHAR(500), " +
+                "read_at TIMESTAMP, " +
+                "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, " +
+                "updated_at TIMESTAMP, " +
+                "created_by BIGINT, " +
+                "updated_by BIGINT, " +
+                "is_deleted BOOLEAN NOT NULL DEFAULT FALSE, " +
+                "deleted_at TIMESTAMP, " +
+                "deleted_by BIGINT, " +
+                "FOREIGN KEY (user_id) REFERENCES users(id)" +
                 ")"
             };
             
@@ -763,7 +783,8 @@ public class DdlForcer {
             "COMMENT ON TABLE orders IS '주문 정보 테이블'",
             "COMMENT ON TABLE inventories IS '재고 정보 테이블'",
             "COMMENT ON TABLE warehouses IS '창고 정보 테이블'",
-            "COMMENT ON TABLE stock_movements IS '재고 이동 이력 테이블'"
+            "COMMENT ON TABLE stock_movements IS '재고 이동 이력 테이블'",
+            "COMMENT ON TABLE notifications IS '알림 정보 테이블'"
         };
 
         for (String comment : tableComments) {
@@ -894,7 +915,17 @@ public class DdlForcer {
             "COMMENT ON COLUMN warehouses.name IS '창고명'",
             "COMMENT ON COLUMN warehouses.location IS '창고 위치'",
             "COMMENT ON COLUMN warehouses.capacity IS '창고 용량'",
-            "COMMENT ON COLUMN warehouses.warehouse_type IS '창고 유형'"
+            "COMMENT ON COLUMN warehouses.warehouse_type IS '창고 유형'",
+
+            // notifications 테이블
+            "COMMENT ON COLUMN notifications.id IS '알림 고유 ID'",
+            "COMMENT ON COLUMN notifications.user_id IS '사용자 ID'",
+            "COMMENT ON COLUMN notifications.title IS '알림 제목'",
+            "COMMENT ON COLUMN notifications.message IS '알림 메시지'",
+            "COMMENT ON COLUMN notifications.type IS '알림 타입'",
+            "COMMENT ON COLUMN notifications.is_read IS '읽음 여부'",
+            "COMMENT ON COLUMN notifications.action_url IS '액션 URL'",
+            "COMMENT ON COLUMN notifications.read_at IS '읽은 시간'"
         };
 
         for (String comment : columnComments) {

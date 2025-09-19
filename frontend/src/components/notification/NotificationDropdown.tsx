@@ -1,5 +1,6 @@
 import { Bell, Check, X } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -10,100 +11,100 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
-
-/**
- * 알림 타입 정의
- */
-interface Notification {
-  id: string
-  title: string
-  message: string
-  type: 'info' | 'warning' | 'error' | 'success'
-  timestamp: Date
-  isRead: boolean
-  actionUrl?: string
-}
+import { notificationService, type Notification } from '@/services/notificationService'
+import { useNotifications } from '@/contexts/NotificationContext'
+import { useAuth } from '@/contexts/AuthContext'
 
 /**
  * 알림 드롭다운 컴포넌트
  * 헤더에서 사용되는 알림 기능을 제공합니다
  */
 function NotificationDropdown() {
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: '1',
-      title: '새로운 주문',
-      message: '고객 "김철수"님이 새로운 주문을 생성했습니다.',
-      type: 'info',
-      timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30분 전
-      isRead: false,
-      actionUrl: '/orders'
-    },
-    {
-      id: '2',
-      title: '재고 부족 알림',
-      message: '상품 "노트북"의 재고가 부족합니다. (현재: 5개)',
-      type: 'warning',
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2시간 전
-      isRead: false,
-      actionUrl: '/inventory'
-    },
-    {
-      id: '3',
-      title: '시스템 업데이트',
-      message: 'ERP 시스템이 성공적으로 업데이트되었습니다.',
-      type: 'success',
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1일 전
-      isRead: true,
-    },
-    {
-      id: '4',
-      title: '결제 오류',
-      message: '결제 처리 중 오류가 발생했습니다. 확인이 필요합니다.',
-      type: 'error',
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2일 전
-      isRead: true,
-      actionUrl: '/payments'
-    }
-  ])
+  const navigate = useNavigate()
+  const { isAuthenticated } = useAuth()
+  const { unreadCount, refreshNotifications, markAsRead, markAllAsRead } = useNotifications()
+  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [loading, setLoading] = useState(false)
+  const [open, setOpen] = useState(false)
 
-  const unreadCount = notifications.filter(n => !n.isRead).length
+  // 로그인하지 않은 경우 컴포넌트 렌더링하지 않음
+  if (!isAuthenticated) {
+    return null
+  }
+
+  /**
+   * 알림 목록 로드 (읽지 않은 알림만)
+   */
+  const loadNotifications = async () => {
+    try {
+      setLoading(true)
+      const unreadNotifications = await notificationService.getUnreadNotifications()
+      setNotifications(unreadNotifications)
+      // unreadCount는 전역 상태에서 관리되므로 로컬에서 설정하지 않음
+    } catch (error) {
+      console.error('알림 목록 로드 실패:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // 전역 상태의 unreadCount 사용 (폴링으로 자동 갱신됨)
+
+  // 드롭다운이 열릴 때 알림 목록 로드
+  const handleOpenChange = (isOpen: boolean) => {
+    setOpen(isOpen)
+    if (isOpen) {
+      loadNotifications()
+    }
+  }
 
   /**
    * 알림 읽음 처리
    */
-  const markAsRead = (id: string) => {
-    setNotifications(prev => 
-      prev.map(notification => 
-        notification.id === id 
-          ? { ...notification, isRead: true }
-          : notification
-      )
-    )
+  const handleMarkAsRead = async (id: number) => {
+    try {
+      await markAsRead(id)
+      // 읽은 알림을 바로 제거
+      setNotifications(prev => prev.filter(notification => notification.id !== id))
+    } catch (error) {
+      console.error('알림 읽음 처리 실패:', error)
+    }
   }
 
   /**
    * 모든 알림 읽음 처리
    */
-  const markAllAsRead = () => {
-    setNotifications(prev => 
-      prev.map(notification => ({ ...notification, isRead: true }))
-    )
+  const handleMarkAllAsRead = async () => {
+    try {
+      await markAllAsRead()
+      // 모든 알림을 제거
+      setNotifications([])
+    } catch (error) {
+      console.error('모든 알림 읽음 처리 실패:', error)
+    }
   }
 
   /**
    * 알림 삭제
    */
-  const deleteNotification = (id: string) => {
-    setNotifications(prev => prev.filter(notification => notification.id !== id))
+  const deleteNotification = async (id: number) => {
+    try {
+      await notificationService.deleteNotification(id)
+      // 로컬 상태 업데이트
+      setNotifications(prev => prev.filter(notification => notification.id !== id))
+      // unreadCount는 전역 상태에서 자동으로 갱신됨
+    } catch (error) {
+      console.error('알림 삭제 실패:', error)
+    }
   }
 
   /**
    * 시간 포맷팅
    */
-  const formatTime = (timestamp: Date) => {
+  const formatTime = (timestamp: string) => {
     const now = new Date()
-    const diff = now.getTime() - timestamp.getTime()
+    const date = new Date(timestamp)
+    const diff = now.getTime() - date.getTime()
     
     if (diff < 1000 * 60) {
       return '방금 전'
@@ -121,13 +122,13 @@ function NotificationDropdown() {
    */
   const getTypeColor = (type: Notification['type']) => {
     switch (type) {
-      case 'info':
+      case 'INFO':
         return 'bg-blue-100 text-blue-800'
-      case 'warning':
+      case 'WARNING':
         return 'bg-yellow-100 text-yellow-800'
-      case 'error':
+      case 'ERROR':
         return 'bg-red-100 text-red-800'
-      case 'success':
+      case 'SUCCESS':
         return 'bg-green-100 text-green-800'
       default:
         return 'bg-gray-100 text-gray-800'
@@ -135,7 +136,7 @@ function NotificationDropdown() {
   }
 
   return (
-    <DropdownMenu>
+    <DropdownMenu onOpenChange={handleOpenChange}>
       <DropdownMenuTrigger asChild>
         <Button 
           variant="ghost" 
@@ -166,7 +167,7 @@ function NotificationDropdown() {
             <Button 
               variant="ghost" 
               size="sm" 
-              onClick={markAllAsRead}
+              onClick={handleMarkAllAsRead}
               className="text-xs"
             >
               모두 읽음
@@ -177,19 +178,24 @@ function NotificationDropdown() {
         <DropdownMenuSeparator />
         
         <div className="max-h-96 overflow-y-auto">
-          {notifications.length === 0 ? (
+          {loading ? (
+            <div className="p-4 text-center text-muted-foreground">
+              <p>알림을 불러오는 중...</p>
+            </div>
+          ) : notifications.length === 0 ? (
             <div className="p-4 text-center text-muted-foreground">
               <Bell className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p>알림이 없습니다</p>
+              <p>읽지 않은 알림이 없습니다</p>
             </div>
           ) : (
             notifications.map((notification) => (
               <DropdownMenuItem 
                 key={notification.id}
                 className={`p-4 ${!notification.isRead ? 'bg-muted/50' : ''}`}
-                onSelect={() => {
+                onSelect={(e) => e.preventDefault()}
+                onClick={() => {
                   if (!notification.isRead) {
-                    markAsRead(notification.id)
+                    handleMarkAsRead(notification.id)
                   }
                   if (notification.actionUrl) {
                     // 실제로는 라우터를 사용하여 페이지 이동
@@ -234,7 +240,7 @@ function NotificationDropdown() {
                     
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-muted-foreground">
-                        {formatTime(notification.timestamp)}
+                        {formatTime(notification.createdAt)}
                       </span>
                       {!notification.isRead && (
                         <Button
@@ -243,7 +249,7 @@ function NotificationDropdown() {
                           className="h-6 px-2 text-xs"
                           onClick={(e) => {
                             e.stopPropagation()
-                            markAsRead(notification.id)
+                            handleMarkAsRead(notification.id)
                           }}
                         >
                           <Check className="h-3 w-3 mr-1" />
@@ -258,20 +264,19 @@ function NotificationDropdown() {
           )}
         </div>
         
-        {notifications.length > 0 && (
-          <>
-            <DropdownMenuSeparator />
-            <div className="p-2">
-              <Button 
-                variant="ghost" 
-                className="w-full text-sm"
-                onClick={() => console.log('View all notifications')}
-              >
-                모든 알림 보기
-              </Button>
-            </div>
-          </>
-        )}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem 
+          className="p-2 cursor-pointer"
+          onSelect={() => {
+            console.log('모든 알림 보기 메뉴 아이템 선택됨')
+            navigate('/notifications')
+            console.log('페이지 이동 시도: /notifications')
+          }}
+        >
+          <div className="w-full text-sm text-center">
+            모든 알림 보기
+          </div>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )

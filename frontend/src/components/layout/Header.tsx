@@ -1,5 +1,6 @@
 import { User, LogOut } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
+import { useNotifications } from '@/contexts/NotificationContext'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -18,6 +19,7 @@ import { GlobalSearch } from '@/components/search/GlobalSearch'
  */
 function Header() {
   const { user, logout } = useAuth()
+  const { unreadCount } = useNotifications()
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-16 items-center justify-between px-6">
@@ -28,8 +30,8 @@ function Header() {
 
         {/* 우측 액션 영역 */}
         <div className="flex items-center space-x-4 flex-shrink-0">
-          {/* 알림 */}
-          <NotificationDropdown />
+          {/* 알림 (로그인된 경우에만 표시) */}
+          {user && <NotificationDropdown />}
 
           {/* 사용자 프로필 드롭다운 */}
           <DropdownMenu>

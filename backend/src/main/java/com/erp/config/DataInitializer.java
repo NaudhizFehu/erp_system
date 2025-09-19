@@ -14,6 +14,8 @@ import com.erp.sales.entity.Customer;
 import com.erp.sales.repository.CustomerRepository;
 import com.erp.sales.entity.Order;
 import com.erp.sales.repository.OrderRepository;
+import com.erp.common.service.NotificationService;
+import com.erp.common.entity.Notification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -42,6 +44,7 @@ public class DataInitializer {
     private final ProductCategoryRepository productCategoryRepository;
     private final CustomerRepository customerRepository;
     private final OrderRepository orderRepository;
+    private final NotificationService notificationService;
     private final PasswordEncoder passwordEncoder;
 
     @EventListener(ApplicationReadyEvent.class)
@@ -70,6 +73,9 @@ public class DataInitializer {
             
             // 주문 데이터 생성
             createOrders();
+            
+            // 테스트 알림 생성
+            createTestNotifications();
 
             log.info("초기 데이터 초기화 완료");
         } catch (Exception e) {
@@ -636,6 +642,62 @@ public class DataInitializer {
             }
 
             log.info("주문 데이터 생성 완료: {}개", orderNumbers.length);
+        }
+    }
+
+    /**
+     * 테스트용 알림 생성
+     */
+    private void createTestNotifications() {
+        try {
+            log.info("테스트 알림 생성 시작");
+
+            // admin 사용자 조회
+            User adminUser = userRepository.findByUsername("admin")
+                    .orElseThrow(() -> new RuntimeException("admin 사용자를 찾을 수 없습니다"));
+
+            // 테스트 알림들 생성
+            String[] titles = {
+                "새로운 주문",
+                "재고 부족 알림", 
+                "시스템 업데이트",
+                "결제 오류"
+            };
+
+            String[] messages = {
+                "고객 '김철수'님이 새로운 주문을 생성했습니다.",
+                "상품 '노트북'의 재고가 부족합니다. (현재: 5개)",
+                "ERP 시스템이 성공적으로 업데이트되었습니다.",
+                "결제 처리 중 오류가 발생했습니다. 확인이 필요합니다."
+            };
+
+            Notification.NotificationType[] types = {
+                Notification.NotificationType.INFO,
+                Notification.NotificationType.WARNING,
+                Notification.NotificationType.SUCCESS,
+                Notification.NotificationType.ERROR
+            };
+
+            String[] actionUrls = {
+                "/orders",
+                "/inventory",
+                null,
+                "/payments"
+            };
+
+            for (int i = 0; i < titles.length; i++) {
+                notificationService.createNotification(
+                    adminUser,
+                    titles[i],
+                    messages[i],
+                    types[i],
+                    actionUrls[i]
+                );
+            }
+
+            log.info("테스트 알림 생성 완료: {}개", titles.length);
+        } catch (Exception e) {
+            log.error("테스트 알림 생성 실패: {}", e.getMessage(), e);
         }
     }
 }
