@@ -38,12 +38,16 @@ public class CompanyController {
     @GetMapping
     @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
     @Operation(summary = "회사 목록 조회", description = "등록된 모든 회사 목록을 조회합니다")
-    public ResponseEntity<ApiResponse<Page<Company>>> getAllCompanies(
+    public ResponseEntity<ApiResponse<Page<CompanyDto>>> getAllCompanies(
             @PageableDefault(size = 20) Pageable pageable) {
         try {
             log.info("회사 목록 조회 요청: page={}, size={}", pageable.getPageNumber(), pageable.getPageSize());
             Page<Company> companies = companyRepository.findAllActive(pageable);
-            return ResponseEntity.ok(ApiResponse.success("회사 목록 조회 완료", companies));
+            
+            // Company 엔티티를 CompanyDto로 변환
+            Page<CompanyDto> companyDtos = companies.map(CompanyDto::from);
+            
+            return ResponseEntity.ok(ApiResponse.success("회사 목록 조회 완료", companyDtos));
         } catch (Exception e) {
             log.error("회사 목록 조회 실패: {}", e.getMessage(), e);
             return ResponseEntity.badRequest()
