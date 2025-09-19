@@ -284,8 +284,26 @@ public class DataInitializer {
     @Transactional
     private void createProducts() {
         if (productRepository.count() == 0) {
+            // 회사가 없으면 생성
             Company company = companyRepository.findByCompanyCode("COMP001")
-                .orElseThrow(() -> new RuntimeException("회사를 찾을 수 없습니다"));
+                .orElseGet(() -> {
+                    log.warn("회사가 없어서 새로 생성합니다");
+                    Company newCompany = new Company();
+                    newCompany.setCompanyCode("COMP001");
+                    newCompany.setName("ABC 기업");
+                    newCompany.setBusinessNumber("123-45-67890");
+                    newCompany.setCeoName("김철수");
+                    newCompany.setAddress("서울시 강남구 테헤란로 123");
+                    newCompany.setPhone("02-1234-5678");
+                    newCompany.setEmail("info@abc.com");
+                    newCompany.setWebsite("https://abc.com");
+                    newCompany.setBusinessType("IT");
+                    newCompany.setStatus(Company.CompanyStatus.ACTIVE);
+                    newCompany.setCreatedBy(1L);
+                    newCompany.setUpdatedBy(1L);
+                    newCompany.setIsDeleted(false);
+                    return companyRepository.save(newCompany);
+                });
 
             ProductCategory computerCategory = productCategoryRepository.findByCategoryCode("COMPUTER")
                 .orElseThrow(() -> new RuntimeException("컴퓨터 카테고리를 찾을 수 없습니다"));
@@ -470,8 +488,26 @@ public class DataInitializer {
     @Transactional
     private void createCustomers() {
         if (customerRepository.count() == 0) {
+            // 회사가 없으면 생성
             Company company = companyRepository.findByCompanyCode("COMP001")
-                .orElseThrow(() -> new RuntimeException("회사를 찾을 수 없습니다"));
+                .orElseGet(() -> {
+                    log.warn("회사가 없어서 새로 생성합니다");
+                    Company newCompany = new Company();
+                    newCompany.setCompanyCode("COMP001");
+                    newCompany.setName("ABC 기업");
+                    newCompany.setBusinessNumber("123-45-67890");
+                    newCompany.setCeoName("김철수");
+                    newCompany.setAddress("서울시 강남구 테헤란로 123");
+                    newCompany.setPhone("02-1234-5678");
+                    newCompany.setEmail("info@abc.com");
+                    newCompany.setWebsite("https://abc.com");
+                    newCompany.setBusinessType("IT");
+                    newCompany.setStatus(Company.CompanyStatus.ACTIVE);
+                    newCompany.setCreatedBy(1L);
+                    newCompany.setUpdatedBy(1L);
+                    newCompany.setIsDeleted(false);
+                    return companyRepository.save(newCompany);
+                });
 
             String[] customerNames = {
                 "삼성전자", "LG전자", "현대자동차", "SK하이닉스", "네이버",
@@ -525,8 +561,26 @@ public class DataInitializer {
     @Transactional
     private void createOrders() {
         if (orderRepository.count() == 0) {
+            // 회사가 없으면 생성
             Company company = companyRepository.findByCompanyCode("COMP001")
-                .orElseThrow(() -> new RuntimeException("회사를 찾을 수 없습니다"));
+                .orElseGet(() -> {
+                    log.warn("회사가 없어서 새로 생성합니다");
+                    Company newCompany = new Company();
+                    newCompany.setCompanyCode("COMP001");
+                    newCompany.setName("ABC 기업");
+                    newCompany.setBusinessNumber("123-45-67890");
+                    newCompany.setCeoName("김철수");
+                    newCompany.setAddress("서울시 강남구 테헤란로 123");
+                    newCompany.setPhone("02-1234-5678");
+                    newCompany.setEmail("info@abc.com");
+                    newCompany.setWebsite("https://abc.com");
+                    newCompany.setBusinessType("IT");
+                    newCompany.setStatus(Company.CompanyStatus.ACTIVE);
+                    newCompany.setCreatedBy(1L);
+                    newCompany.setUpdatedBy(1L);
+                    newCompany.setIsDeleted(false);
+                    return companyRepository.save(newCompany);
+                });
 
             // 고객 목록 가져오기
             List<Customer> customers = customerRepository.findByCompanyId(company.getId());
