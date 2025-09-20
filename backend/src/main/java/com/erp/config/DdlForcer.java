@@ -167,6 +167,8 @@ public class DdlForcer {
                 "email VARCHAR(100) UNIQUE NOT NULL, " +
                 "full_name VARCHAR(100) NOT NULL, " +
                 "phone VARCHAR(20), " +
+                "phone_number VARCHAR(20), " +
+                "position VARCHAR(100), " +
                 "role VARCHAR(20) NOT NULL DEFAULT 'USER', " +
                 "is_active BOOLEAN NOT NULL DEFAULT TRUE, " +
                 "is_locked BOOLEAN NOT NULL DEFAULT FALSE, " +

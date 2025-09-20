@@ -8,12 +8,21 @@ import { authApi, tokenUtils } from '@/services/authApi'
 import type { AuthState, LoginRequest, UserInfo } from '@/types/auth'
 import toast from 'react-hot-toast'
 
+// AuthContext 타입 정의
+interface AuthContextType extends AuthState {
+  login: (credentials: LoginRequest) => Promise<void>
+  logout: () => Promise<void>
+  updateUser: (user: UserInfo) => void
+  refreshAuth: () => Promise<void>
+}
+
 // 액션 타입 정의
 type AuthAction =
   | { type: 'LOGIN_START' }
   | { type: 'LOGIN_SUCCESS'; payload: { user: UserInfo; accessToken: string; refreshToken: string } }
   | { type: 'LOGIN_FAILURE' }
   | { type: 'LOGOUT' }
+  | { type: 'UPDATE_USER'; payload: { user: UserInfo } }
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_USER'; payload: UserInfo | null }
 
@@ -60,6 +69,12 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
         accessToken: null,
         refreshToken: null,
         isLoading: false
+      }
+    
+    case 'UPDATE_USER':
+      return {
+        ...state,
+        user: action.payload.user
       }
     
     case 'SET_LOADING':
@@ -203,6 +218,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }
 
+  // 사용자 정보 업데이트 함수
+  const updateUser = (user: UserInfo): void => {
+    dispatch({ type: 'UPDATE_USER', payload: { user } })
+  }
+
   // 인증 갱신 함수
   const refreshAuth = async (): Promise<void> => {
     const refreshToken = tokenUtils.getRefreshToken()
@@ -236,6 +256,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     ...state,
     login,
     logout,
+    updateUser,
     refreshAuth
   }
 

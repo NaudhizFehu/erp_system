@@ -20,6 +20,7 @@ import { CompanyList } from '@/pages/company/CompanyList'
 import { CompanyDetail } from '@/pages/company/CompanyDetail'
 import { NotificationListPage } from '@/pages/notifications/NotificationListPage'
 import { NotificationTestPage } from '@/pages/notifications/NotificationTestPage'
+import { UserProfilePage } from '@/pages/profile/UserProfilePage'
 
 /**
  * 메인 애플리케이션 컴포넌트
@@ -67,6 +68,9 @@ function App() {
                 {/* 알림관리 */}
                 <Route path="/notifications" element={<NotificationListPage />} />
                 <Route path="/notifications/test" element={<NotificationTestPage />} />
+                
+                {/* 사용자 프로필 */}
+                <Route path="/profile" element={<UserProfilePage />} />
               </Routes>
             </Layout>
           </ProtectedRoute>
