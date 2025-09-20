@@ -66,6 +66,19 @@ public class User extends BaseEntity {
     private String phone;
 
     /**
+     * 전화번호 (추가 필드)
+     */
+    @Column(name = "phone_number", length = 20)
+    private String phoneNumber;
+
+    /**
+     * 직급/직책
+     */
+    @Size(max = 100, message = "직급은 100자 이하여야 합니다")
+    @Column(name = "position", length = 100)
+    private String position;
+
+    /**
      * 사용자 역할
      */
     @NotNull(message = "사용자 역할은 필수입니다")
