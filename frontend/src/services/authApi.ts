@@ -48,7 +48,11 @@ export const authApi = {
    * 현재 사용자 정보 조회
    */
   getCurrentUser: async (): Promise<UserInfo> => {
+    console.log('현재 사용자 정보 조회 API 호출:', `${AUTH_BASE_URL}/me`)
     const response = await api.get<UserInfo>(`${AUTH_BASE_URL}/me`)
+    console.log('현재 사용자 정보 조회 API 응답:', response)
+    console.log('현재 사용자 정보:', response.data)
+    console.log('현재 사용자 정보 상세:', JSON.stringify(response.data, null, 2))
     return response.data
   },
 

@@ -3,10 +3,14 @@ package com.erp.config;
 import com.erp.common.entity.Company;
 import com.erp.common.entity.User;
 import com.erp.hr.entity.Department;
+import com.erp.hr.entity.Position;
+import com.erp.hr.entity.Employee;
 import com.erp.inventory.entity.Product;
 import com.erp.inventory.entity.ProductCategory;
 import com.erp.common.repository.CompanyRepository;
 import com.erp.hr.repository.DepartmentRepository;
+import com.erp.hr.repository.PositionRepository;
+import com.erp.hr.repository.EmployeeRepository;
 import com.erp.common.repository.UserRepository;
 import com.erp.inventory.repository.ProductRepository;
 import com.erp.inventory.repository.ProductCategoryRepository;
@@ -25,8 +29,10 @@ import org.springframework.context.event.EventListener;
 import java.util.List;
 import org.springframework.stereotype.Component;
 
-// LocalDate import는 더 이상 사용하지 않으므로 제거됨
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * 초기 데이터 초기화 컴포넌트
@@ -39,6 +45,8 @@ public class DataInitializer {
 
     private final CompanyRepository companyRepository;
     private final DepartmentRepository departmentRepository;
+    private final PositionRepository positionRepository;
+    private final EmployeeRepository employeeRepository;
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final ProductCategoryRepository productCategoryRepository;
@@ -61,8 +69,14 @@ public class DataInitializer {
             // 부서 데이터 생성
             createDepartments();
             
+            // 직급 데이터 생성
+            createPositions();
+            
             // 사용자 데이터 생성
             createUsers();
+            
+            // 직원 데이터 생성
+            createEmployees();
             
             // 상품 카테고리 및 상품 데이터 생성
             createProductCategories();
@@ -86,76 +100,314 @@ public class DataInitializer {
 
     @Transactional
     private void createCompany() {
-        if (companyRepository.count() == 0) {
-            Company company = new Company();
-            company.setCompanyCode("COMP001");
-            company.setName("ABC 기업");
-            company.setBusinessNumber("123-45-67890");
-            company.setCeoName("김철수");
-            company.setAddress("서울시 강남구 테헤란로 123");
-            company.setPhone("02-1234-5678");
-            company.setEmail("info@abc.com");
-            company.setWebsite("https://abc.com");
-            company.setBusinessType("IT");
-            // setEmployeeCount, setDescription, setEstablishedDate 메서드들은 해당 필드들이 실제 DB 스키마에 없으므로 제거됨
-            company.setStatus(Company.CompanyStatus.ACTIVE);
-            company.setCreatedBy(1L);
-            company.setUpdatedBy(1L);
-            company.setIsDeleted(false);
+        // 3개 회사가 모두 존재하는지 확인
+        boolean hasAbcCorp = companyRepository.findByCompanyCode("ABC_CORP").isPresent();
+        boolean hasXyzGroup = companyRepository.findByCompanyCode("XYZ_GROUP").isPresent();
+        boolean hasDefCorp = companyRepository.findByCompanyCode("DEF_CORP").isPresent();
+        
+        if (!hasAbcCorp || !hasXyzGroup || !hasDefCorp) {
+            log.info("회사 데이터 생성 시작");
+            
+            // ABC기업 (IT 회사)
+            Company abcCompany = new Company();
+            abcCompany.setCompanyCode("ABC_CORP");
+            abcCompany.setName("ABC기업");
+            abcCompany.setBusinessNumber("123-45-67890");
+            abcCompany.setCeoName("김대표");
+            abcCompany.setAddress("서울시 강남구 테헤란로 123");
+            abcCompany.setPhone("02-1234-5678");
+            abcCompany.setEmail("info@abc.com");
+            abcCompany.setWebsite("https://www.abc.com");
+            abcCompany.setBusinessType("IT 서비스");
+            abcCompany.setStatus(Company.CompanyStatus.ACTIVE);
+            abcCompany.setCreatedBy(1L);
+            abcCompany.setUpdatedBy(1L);
+            abcCompany.setIsDeleted(false);
 
-            companyRepository.save(company);
-            log.info("회사 데이터 생성 완료: {}", company.getName());
+            // XYZ그룹 (제조업)
+            Company xyzCompany = new Company();
+            xyzCompany.setCompanyCode("XYZ_GROUP");
+            xyzCompany.setName("XYZ그룹");
+            xyzCompany.setBusinessNumber("234-56-78901");
+            xyzCompany.setCeoName("이사장");
+            xyzCompany.setAddress("경기도 성남시 분당구 판교역로 456");
+            xyzCompany.setPhone("031-234-5678");
+            xyzCompany.setEmail("info@xyz.com");
+            xyzCompany.setWebsite("https://www.xyz.com");
+            xyzCompany.setBusinessType("제조업");
+            xyzCompany.setStatus(Company.CompanyStatus.ACTIVE);
+            xyzCompany.setCreatedBy(1L);
+            xyzCompany.setUpdatedBy(1L);
+            xyzCompany.setIsDeleted(false);
+
+            // DEF코퍼레이션 (서비스업)
+            Company defCompany = new Company();
+            defCompany.setCompanyCode("DEF_CORP");
+            defCompany.setName("DEF코퍼레이션");
+            defCompany.setBusinessNumber("345-67-89012");
+            defCompany.setCeoName("박대표");
+            defCompany.setAddress("서울시 서초구 서초대로 789");
+            defCompany.setPhone("02-345-6789");
+            defCompany.setEmail("info@def.com");
+            defCompany.setWebsite("https://www.def.com");
+            defCompany.setBusinessType("서비스업");
+            defCompany.setStatus(Company.CompanyStatus.ACTIVE);
+            defCompany.setCreatedBy(1L);
+            defCompany.setUpdatedBy(1L);
+            defCompany.setIsDeleted(false);
+
+            // 회사 저장
+            abcCompany = companyRepository.save(abcCompany);
+            xyzCompany = companyRepository.save(xyzCompany);
+            defCompany = companyRepository.save(defCompany);
+
+            log.info("✅ 회사 데이터 생성 완료:");
+            log.info("   - ABC기업 (ID: {}) - IT 서비스", abcCompany.getId());
+            log.info("   - XYZ그룹 (ID: {}) - 제조업", xyzCompany.getId());
+            log.info("   - DEF코퍼레이션 (ID: {}) - 서비스업", defCompany.getId());
+            
+            // 저장 후 실제로 조회되는지 확인
+            try {
+                Company savedAbc = companyRepository.findByCompanyCode("ABC_CORP")
+                    .orElseThrow(() -> new RuntimeException("ABC기업 저장 후 조회 실패"));
+                Company savedXyz = companyRepository.findByCompanyCode("XYZ_GROUP")
+                    .orElseThrow(() -> new RuntimeException("XYZ그룹 저장 후 조회 실패"));
+                Company savedDef = companyRepository.findByCompanyCode("DEF_CORP")
+                    .orElseThrow(() -> new RuntimeException("DEF코퍼레이션 저장 후 조회 실패"));
+                
+                log.info("✅ 회사 데이터 저장 확인 완료:");
+                log.info("   - ABC기업 조회 성공 (ID: {})", savedAbc.getId());
+                log.info("   - XYZ그룹 조회 성공 (ID: {})", savedXyz.getId());
+                log.info("   - DEF코퍼레이션 조회 성공 (ID: {})", savedDef.getId());
+            } catch (Exception e) {
+                log.error("회사 데이터 저장 확인 실패: {}", e.getMessage(), e);
+                throw new RuntimeException("회사 데이터 저장 확인 실패: " + e.getMessage(), e);
+            }
+        } else {
+            log.info("3개 회사 데이터가 모두 존재합니다. 건너뜀.");
+            
+            // 기존 회사 데이터 확인
+            try {
+                Company abcCompany = companyRepository.findByCompanyCode("ABC_CORP")
+                    .orElseThrow(() -> new RuntimeException("ABC기업을 찾을 수 없습니다"));
+                Company xyzCompany = companyRepository.findByCompanyCode("XYZ_GROUP")
+                    .orElseThrow(() -> new RuntimeException("XYZ그룹을 찾을 수 없습니다"));
+                Company defCompany = companyRepository.findByCompanyCode("DEF_CORP")
+                    .orElseThrow(() -> new RuntimeException("DEF코퍼레이션을 찾을 수 없습니다"));
+                
+                log.info("✅ 기존 회사 데이터 확인 완료:");
+                log.info("   - ABC기업 (ID: {})", abcCompany.getId());
+                log.info("   - XYZ그룹 (ID: {})", xyzCompany.getId());
+                log.info("   - DEF코퍼레이션 (ID: {})", defCompany.getId());
+            } catch (Exception e) {
+                log.error("기존 회사 데이터 확인 실패: {}", e.getMessage(), e);
+                throw new RuntimeException("기존 회사 데이터 확인 실패: " + e.getMessage(), e);
+            }
         }
     }
 
     @Transactional
     private void createDepartments() {
-        if (departmentRepository.count() == 0) {
-            Company company = companyRepository.findById(1L)
-                .orElseThrow(() -> new RuntimeException("회사를 찾을 수 없습니다"));
-
-            // 개발팀
-            Department devDept = new Department();
-            devDept.setDepartmentCode("DEPT001");
-            devDept.setName("개발팀");
-            devDept.setDescription("소프트웨어 개발을 담당하는 부서");
-            devDept.setCompany(company);
-            devDept.setStatus(Department.DepartmentStatus.ACTIVE);
-            devDept.setLevel(1);
-            devDept.setCreatedBy(1L);
-            devDept.setUpdatedBy(1L);
-            devDept.setIsDeleted(false);
-
-            // 마케팅팀
-            Department mktDept = new Department();
-            mktDept.setDepartmentCode("DEPT002");
-            mktDept.setName("마케팅팀");
-            mktDept.setDescription("마케팅 및 홍보를 담당하는 부서");
-            mktDept.setCompany(company);
-            mktDept.setStatus(Department.DepartmentStatus.ACTIVE);
-            mktDept.setLevel(1);
-            mktDept.setCreatedBy(1L);
-            mktDept.setUpdatedBy(1L);
-            mktDept.setIsDeleted(false);
-
-            // 인사팀
-            Department hrDept = new Department();
-            hrDept.setDepartmentCode("DEPT003");
-            hrDept.setName("인사팀");
-            hrDept.setDescription("인사 관리를 담당하는 부서");
-            hrDept.setCompany(company);
-            hrDept.setStatus(Department.DepartmentStatus.ACTIVE);
-            hrDept.setLevel(1);
-            hrDept.setCreatedBy(1L);
-            hrDept.setUpdatedBy(1L);
-            hrDept.setIsDeleted(false);
-
-            departmentRepository.save(devDept);
-            departmentRepository.save(mktDept);
-            departmentRepository.save(hrDept);
-
-            log.info("부서 데이터 생성 완료: 개발팀, 마케팅팀, 인사팀");
+        // 기존 부서 데이터 확인 및 삭제
+        long existingCount = departmentRepository.count();
+        log.info("기존 부서 개수: {}", existingCount);
+        
+        if (existingCount > 0) {
+            // 기존 부서 데이터 조회하여 코드 확인
+            List<Department> existingDepts = departmentRepository.findAll();
+            log.info("기존 부서 목록:");
+            for (Department dept : existingDepts) {
+                log.info("  - ID: {}, 코드: {}, 이름: {}", dept.getId(), dept.getDepartmentCode(), dept.getName());
+            }
+            
+            // DEPT001이 없으면 기존 데이터 삭제 후 재생성
+            boolean hasDept001 = existingDepts.stream()
+                .anyMatch(dept -> "DEPT001".equals(dept.getDepartmentCode()));
+            
+            if (!hasDept001) {
+                log.warn("DEPT001 부서가 없습니다. 기존 부서 데이터를 삭제하고 재생성합니다.");
+                departmentRepository.deleteAll();
+                existingCount = 0;
+            }
         }
+        
+        if (existingCount == 0) {
+            try {
+                log.info("부서 생성 시작 - 3개 회사 조회 중...");
+                
+                // 3개 회사 조회
+                log.info("ABC기업 조회 중...");
+                Company abcCompany = companyRepository.findByCompanyCode("ABC_CORP")
+                    .orElseThrow(() -> new RuntimeException("ABC기업을 찾을 수 없습니다"));
+                log.info("ABC기업 조회 성공 (ID: {})", abcCompany.getId());
+                
+                log.info("XYZ그룹 조회 중...");
+                Company xyzCompany = companyRepository.findByCompanyCode("XYZ_GROUP")
+                    .orElseThrow(() -> new RuntimeException("XYZ그룹을 찾을 수 없습니다"));
+                log.info("XYZ그룹 조회 성공 (ID: {})", xyzCompany.getId());
+                
+                log.info("DEF코퍼레이션 조회 중...");
+                Company defCompany = companyRepository.findByCompanyCode("DEF_CORP")
+                    .orElseThrow(() -> new RuntimeException("DEF코퍼레이션을 찾을 수 없습니다"));
+                log.info("DEF코퍼레이션 조회 성공 (ID: {})", defCompany.getId());
+
+                log.info("부서 생성 시작 - 3개 회사별 부서 생성");
+
+                // ABC기업 부서들 (IT 회사)
+                Department abcDevDept = createDepartment("ABC_DEV", "개발팀", "소프트웨어 개발을 담당하는 부서", abcCompany, 1);
+                Department abcMktDept = createDepartment("ABC_MKT", "마케팅팀", "마케팅 및 홍보를 담당하는 부서", abcCompany, 2);
+                Department abcHrDept = createDepartment("ABC_HR", "인사팀", "인사 관리를 담당하는 부서", abcCompany, 3);
+                Department abcSalesDept = createDepartment("ABC_SALES", "영업팀", "영업 및 고객관리를 담당하는 부서", abcCompany, 4);
+
+                // XYZ그룹 부서들 (제조업)
+                Department xyzProdDept = createDepartment("XYZ_PROD", "생산팀", "제품 생산을 담당하는 부서", xyzCompany, 1);
+                Department xyzQcDept = createDepartment("XYZ_QC", "품질관리팀", "품질 관리 및 검사를 담당하는 부서", xyzCompany, 2);
+                Department xyzSalesDept = createDepartment("XYZ_SALES", "영업팀", "제품 영업을 담당하는 부서", xyzCompany, 3);
+                Department xyzFinanceDept = createDepartment("XYZ_FIN", "재무팀", "재무 및 회계를 담당하는 부서", xyzCompany, 4);
+                Department xyzHrDept = createDepartment("XYZ_HR", "인사팀", "인사 관리를 담당하는 부서", xyzCompany, 5);
+
+                // DEF코퍼레이션 부서들 (서비스업)
+                Department defCsDept = createDepartment("DEF_CS", "고객서비스팀", "고객 서비스를 담당하는 부서", defCompany, 1);
+                Department defMktDept = createDepartment("DEF_MKT", "마케팅팀", "마케팅 및 홍보를 담당하는 부서", defCompany, 2);
+                Department defDevDept = createDepartment("DEF_DEV", "개발팀", "서비스 개발을 담당하는 부서", defCompany, 3);
+                Department defHrDept = createDepartment("DEF_HR", "인사팀", "인사 관리를 담당하는 부서", defCompany, 4);
+                Department defFinanceDept = createDepartment("DEF_FIN", "재무팀", "재무 및 회계를 담당하는 부서", defCompany, 5);
+
+                // 부서 저장
+                List<Department> departments = Arrays.asList(
+                    abcDevDept, abcMktDept, abcHrDept, abcSalesDept,
+                    xyzProdDept, xyzQcDept, xyzSalesDept, xyzFinanceDept, xyzHrDept,
+                    defCsDept, defMktDept, defDevDept, defHrDept, defFinanceDept
+                );
+
+                departmentRepository.saveAll(departments);
+
+                log.info("✅ 부서 데이터 생성 완료 (총 {}개):", departments.size());
+                log.info("   ABC기업: 개발팀, 마케팅팀, 인사팀, 영업팀");
+                log.info("   XYZ그룹: 생산팀, 품질관리팀, 영업팀, 재무팀, 인사팀");
+                log.info("   DEF코퍼레이션: 고객서비스팀, 마케팅팀, 개발팀, 인사팀, 재무팀");
+                
+            } catch (Exception e) {
+                log.error("부서 생성 중 오류 발생: {}", e.getMessage(), e);
+                throw new RuntimeException("부서 생성 실패: " + e.getMessage(), e);
+            }
+        } else {
+            log.info("부서 데이터가 이미 존재합니다. 건너뜀.");
+        }
+    }
+
+    /**
+     * 부서 생성 헬퍼 메서드
+     */
+    private Department createDepartment(String code, String name, String description, Company company, int level) {
+        Department department = new Department();
+        department.setDepartmentCode(code);
+        department.setName(name);
+        department.setDescription(description);
+        department.setCompany(company);
+        department.setStatus(Department.DepartmentStatus.ACTIVE);
+        department.setLevel(level);
+        department.setCreatedBy(1L);
+        department.setUpdatedBy(1L);
+        department.setIsDeleted(false);
+        return department;
+    }
+
+    @Transactional
+    private void createPositions() {
+        // 기존 직급 데이터 확인 및 삭제
+        long existingCount = positionRepository.count();
+        log.info("기존 직급 개수: {}", existingCount);
+        
+        if (existingCount > 0) {
+            // 기존 직급 데이터 조회하여 코드 확인
+            List<Position> existingPositions = positionRepository.findAll();
+            log.info("기존 직급 목록:");
+            for (Position pos : existingPositions) {
+                log.info("  - ID: {}, 코드: {}, 이름: {}", pos.getId(), pos.getPositionCode(), pos.getName());
+            }
+            
+            // POS001이 없으면 기존 데이터 삭제 후 재생성
+            boolean hasPos001 = existingPositions.stream()
+                .anyMatch(pos -> "POS001".equals(pos.getPositionCode()));
+            
+            if (!hasPos001) {
+                log.warn("POS001 직급이 없습니다. 기존 직급 데이터를 삭제하고 재생성합니다.");
+                positionRepository.deleteAll();
+                existingCount = 0;
+            }
+        }
+        
+        if (existingCount == 0) {
+            try {
+                // 3개 회사 조회
+                Company abcCompany = companyRepository.findByCompanyCode("ABC_CORP")
+                    .orElseThrow(() -> new RuntimeException("ABC기업을 찾을 수 없습니다"));
+                Company xyzCompany = companyRepository.findByCompanyCode("XYZ_GROUP")
+                    .orElseThrow(() -> new RuntimeException("XYZ그룹을 찾을 수 없습니다"));
+                Company defCompany = companyRepository.findByCompanyCode("DEF_CORP")
+                    .orElseThrow(() -> new RuntimeException("DEF코퍼레이션을 찾을 수 없습니다"));
+
+                log.info("직급 생성 시작 - 3개 회사별 직급 생성");
+
+                // 3개 회사별 직급 생성
+                List<Position> positions = new ArrayList<>();
+
+                // ABC기업 직급들
+                positions.add(createPosition("ABC_CEO", "대표이사", "회사의 최고 경영자", abcCompany, 1));
+                positions.add(createPosition("ABC_DIRECTOR", "이사", "회사의 이사", abcCompany, 2));
+                positions.add(createPosition("ABC_MANAGER", "부장", "부서의 부장", abcCompany, 3));
+                positions.add(createPosition("ABC_CHIEF", "과장", "과의 과장", abcCompany, 4));
+                positions.add(createPosition("ABC_DEPUTY", "대리", "과의 대리", abcCompany, 5));
+                positions.add(createPosition("ABC_STAFF", "사원", "일반 사원", abcCompany, 6));
+
+                // XYZ그룹 직급들
+                positions.add(createPosition("XYZ_CEO", "대표이사", "회사의 최고 경영자", xyzCompany, 1));
+                positions.add(createPosition("XYZ_DIRECTOR", "이사", "회사의 이사", xyzCompany, 2));
+                positions.add(createPosition("XYZ_MANAGER", "부장", "부서의 부장", xyzCompany, 3));
+                positions.add(createPosition("XYZ_CHIEF", "과장", "과의 과장", xyzCompany, 4));
+                positions.add(createPosition("XYZ_DEPUTY", "대리", "과의 대리", xyzCompany, 5));
+                positions.add(createPosition("XYZ_STAFF", "사원", "일반 사원", xyzCompany, 6));
+
+                // DEF코퍼레이션 직급들
+                positions.add(createPosition("DEF_CEO", "대표이사", "회사의 최고 경영자", defCompany, 1));
+                positions.add(createPosition("DEF_DIRECTOR", "이사", "회사의 이사", defCompany, 2));
+                positions.add(createPosition("DEF_MANAGER", "부장", "부서의 부장", defCompany, 3));
+                positions.add(createPosition("DEF_CHIEF", "과장", "과의 과장", defCompany, 4));
+                positions.add(createPosition("DEF_DEPUTY", "대리", "과의 대리", defCompany, 5));
+                positions.add(createPosition("DEF_STAFF", "사원", "일반 사원", defCompany, 6));
+
+                positionRepository.saveAll(positions);
+
+                log.info("✅ 직급 데이터 생성 완료 (총 {}개):", positions.size());
+                log.info("   ABC기업: 대표이사, 이사, 부장, 과장, 대리, 사원");
+                log.info("   XYZ그룹: 대표이사, 이사, 부장, 과장, 대리, 사원");
+                log.info("   DEF코퍼레이션: 대표이사, 이사, 부장, 과장, 대리, 사원");
+                
+            } catch (Exception e) {
+                log.error("직급 생성 중 오류 발생: {}", e.getMessage(), e);
+                throw new RuntimeException("직급 생성 실패: " + e.getMessage(), e);
+            }
+        } else {
+            log.info("직급 데이터가 이미 존재합니다. 건너뜀.");
+        }
+    }
+
+    /**
+     * 직급 생성 헬퍼 메서드
+     */
+    private Position createPosition(String code, String name, String description, Company company, int level) {
+        Position position = new Position();
+        position.setPositionCode(code);
+        position.setName(name);
+        position.setDescription(description);
+        position.setCompany(company);
+        position.setLevel(level);
+        position.setIsActive(true);
+        position.setCreatedBy(1L);
+        position.setUpdatedBy(1L);
+        position.setIsDeleted(false);
+        return position;
     }
 
     @Transactional
@@ -163,57 +415,373 @@ public class DataInitializer {
         // 기존 사용자 비밀번호 업데이트 (개발용)
         updateExistingUserPasswords();
         
-        if (userRepository.count() == 0) {
-            Company company = companyRepository.findById(1L)
-                .orElseThrow(() -> new RuntimeException("회사를 찾을 수 없습니다"));
-
-            Department devDept = departmentRepository.findByDepartmentCode("DEPT001")
-                .orElseThrow(() -> new RuntimeException("개발팀을 찾을 수 없습니다"));
-
-            Department hrDept = departmentRepository.findByDepartmentCode("DEPT003")
-                .orElseThrow(() -> new RuntimeException("인사팀을 찾을 수 없습니다"));
-
-            // 관리자 계정
-            User admin = new User();
-            admin.setUsername("admin");
-            admin.setPassword(passwordEncoder.encode("admin123"));
-            admin.setEmail("admin@abc.com");
-            admin.setFullName("관리자");
-            admin.setPhone("02-1234-5678");
-            admin.setRole(User.UserRole.ADMIN);
-            admin.setIsActive(true);
-            admin.setIsLocked(false);
-            admin.setIsPasswordExpired(false);
-            admin.setCompany(company);
-            admin.setDepartment(hrDept);
-            admin.setPasswordChangedAt(LocalDateTime.now());
-            admin.setCreatedBy(1L);
-            admin.setUpdatedBy(1L);
-            admin.setIsDeleted(false);
-
-            // 일반 사용자 계정
-            User user = new User();
-            user.setUsername("user");
-            user.setPassword(passwordEncoder.encode("user123"));
-            user.setEmail("user@abc.com");
-            user.setFullName("일반사용자");
-            user.setPhone("02-2345-6789");
-            user.setRole(User.UserRole.USER);
-            user.setIsActive(true);
-            user.setIsLocked(false);
-            user.setIsPasswordExpired(false);
-            user.setCompany(company);
-            user.setDepartment(devDept);
-            user.setPasswordChangedAt(LocalDateTime.now());
-            user.setCreatedBy(1L);
-            user.setUpdatedBy(1L);
-            user.setIsDeleted(false);
-
-            userRepository.save(admin);
-            userRepository.save(user);
-
-            log.info("사용자 데이터 생성 완료: admin, user");
+        // 기존 사용자 데이터 확인
+        long existingUserCount = userRepository.count();
+        log.info("기존 사용자 개수: {}", existingUserCount);
+        
+        if (existingUserCount > 0) {
+            // 기존 사용자 데이터 조회하여 확인
+            List<User> existingUsers = userRepository.findAll();
+            log.info("기존 사용자 목록:");
+            for (User user : existingUsers) {
+                log.info("  - ID: {}, 사용자명: {}, 역할: {}", user.getId(), user.getUsername(), user.getRole());
+            }
         }
+        
+        if (existingUserCount == 0) {
+            try {
+                // 3개 회사 조회
+                Company abcCompany = companyRepository.findByCompanyCode("ABC_CORP")
+                    .orElseThrow(() -> new RuntimeException("ABC기업을 찾을 수 없습니다"));
+                Company xyzCompany = companyRepository.findByCompanyCode("XYZ_GROUP")
+                    .orElseThrow(() -> new RuntimeException("XYZ그룹을 찾을 수 없습니다"));
+                Company defCompany = companyRepository.findByCompanyCode("DEF_CORP")
+                    .orElseThrow(() -> new RuntimeException("DEF코퍼레이션을 찾을 수 없습니다"));
+
+                log.info("사용자 생성 시작 - 3개 회사별 사용자 생성");
+
+                // 부서 조회
+                Department abcHrDept = departmentRepository.findByDepartmentCode("ABC_HR")
+                    .orElseThrow(() -> new RuntimeException("ABC 인사팀을 찾을 수 없습니다"));
+                Department abcDevDept = departmentRepository.findByDepartmentCode("ABC_DEV")
+                    .orElseThrow(() -> new RuntimeException("ABC 개발팀을 찾을 수 없습니다"));
+                Department xyzHrDept = departmentRepository.findByDepartmentCode("XYZ_HR")
+                    .orElseThrow(() -> new RuntimeException("XYZ 인사팀을 찾을 수 없습니다"));
+                Department defHrDept = departmentRepository.findByDepartmentCode("DEF_HR")
+                    .orElseThrow(() -> new RuntimeException("DEF 인사팀을 찾을 수 없습니다"));
+
+                // 직급 조회
+                Position abcCeoPosition = positionRepository.findByPositionCode("ABC_CEO")
+                    .orElseThrow(() -> new RuntimeException("ABC 대표이사 직급을 찾을 수 없습니다"));
+                Position abcManagerPosition = positionRepository.findByPositionCode("ABC_MANAGER")
+                    .orElseThrow(() -> new RuntimeException("ABC 부장 직급을 찾을 수 없습니다"));
+                Position abcDeputyPosition = positionRepository.findByPositionCode("ABC_DEPUTY")
+                    .orElseThrow(() -> new RuntimeException("ABC 대리 직급을 찾을 수 없습니다"));
+
+                // 사용자 생성
+                List<User> users = new ArrayList<>();
+
+                // ABC기업 사용자들
+                users.add(createUser("admin", "admin123", "admin@abc.com", "관리자", "02-1234-5678", 
+                    User.UserRole.ADMIN, abcCompany, abcHrDept, abcCeoPosition.getName()));
+                users.add(createUser("manager", "manager123", "manager@abc.com", "매니저", "02-3456-7890", 
+                    User.UserRole.MANAGER, abcCompany, abcDevDept, abcManagerPosition.getName()));
+                users.add(createUser("user", "user123", "user@abc.com", "일반사용자", "02-2345-6789", 
+                    User.UserRole.USER, abcCompany, abcDevDept, abcDeputyPosition.getName()));
+
+                // XYZ그룹 사용자들
+                users.add(createUser("xyz_admin", "xyz123", "admin@xyz.com", "XYZ관리자", "031-234-5678", 
+                    User.UserRole.ADMIN, xyzCompany, xyzHrDept, "대표이사"));
+                users.add(createUser("xyz_manager", "xyz123", "manager@xyz.com", "XYZ매니저", "031-234-5679", 
+                    User.UserRole.MANAGER, xyzCompany, xyzHrDept, "부장"));
+
+                // DEF코퍼레이션 사용자들
+                users.add(createUser("def_admin", "def123", "admin@def.com", "DEF관리자", "02-345-6789", 
+                    User.UserRole.ADMIN, defCompany, defHrDept, "대표이사"));
+                users.add(createUser("def_user", "def123", "user@def.com", "DEF사용자", "02-345-6790", 
+                    User.UserRole.USER, defCompany, defHrDept, "사원"));
+
+                userRepository.saveAll(users);
+
+                log.info("✅ 로그인 계정 정보 (총 {}개):", users.size());
+                log.info("   ABC기업: admin/admin123, manager/manager123, user/user123");
+                log.info("   XYZ그룹: xyz_admin/xyz123, xyz_manager/xyz123");
+                log.info("   DEF코퍼레이션: def_admin/def123, def_user/def123");
+                
+            } catch (Exception e) {
+                log.error("사용자 생성 중 오류 발생: {}", e.getMessage(), e);
+                throw new RuntimeException("사용자 생성 실패: " + e.getMessage(), e);
+            }
+        } else {
+            log.info("사용자 데이터가 이미 존재합니다. 건너뜀.");
+        }
+    }
+
+    /**
+     * 사용자 생성 헬퍼 메서드
+     */
+    private User createUser(String username, String password, String email, String fullName, String phone, 
+                           User.UserRole role, Company company, Department department, String position) {
+        User user = new User();
+        user.setUsername(username);
+        user.setPassword(passwordEncoder.encode(password));
+        user.setEmail(email);
+        user.setFullName(fullName);
+        user.setPhone(phone);
+        user.setRole(role);
+        user.setIsActive(true);
+        user.setIsLocked(false);
+        user.setIsPasswordExpired(false);
+        user.setCompany(company);
+        user.setDepartment(department);
+        user.setPosition(position);
+        user.setPasswordChangedAt(LocalDateTime.now());
+        user.setCreatedBy(1L);
+        user.setUpdatedBy(1L);
+        user.setIsDeleted(false);
+        return user;
+    }
+
+    /**
+     * 직원 데이터 생성
+     */
+    @Transactional
+    private void createEmployees() {
+        // 기존 직원 데이터 확인
+        long existingEmployeeCount = employeeRepository.count();
+        log.info("기존 직원 개수: {}", existingEmployeeCount);
+        
+        if (existingEmployeeCount == 0) {
+            try {
+                // 3개 회사 조회
+                Company abcCompany = companyRepository.findByCompanyCode("ABC_CORP")
+                    .orElseThrow(() -> new RuntimeException("ABC기업을 찾을 수 없습니다"));
+                Company xyzCompany = companyRepository.findByCompanyCode("XYZ_GROUP")
+                    .orElseThrow(() -> new RuntimeException("XYZ그룹을 찾을 수 없습니다"));
+                Company defCompany = companyRepository.findByCompanyCode("DEF_CORP")
+                    .orElseThrow(() -> new RuntimeException("DEF코퍼레이션을 찾을 수 없습니다"));
+
+                log.info("직원 데이터 생성 시작 - 3개 회사별 직원 생성");
+
+                // 간단한 직원 데이터 생성 (총 22명)
+                List<Employee> employees = new ArrayList<>();
+                
+                // 부서 및 직급 조회 (간단하게)
+                Department abcDevDept = departmentRepository.findByDepartmentCode("ABC_DEV").orElse(null);
+                Department abcMktDept = departmentRepository.findByDepartmentCode("ABC_MKT").orElse(null);
+                Department abcHrDept = departmentRepository.findByDepartmentCode("ABC_HR").orElse(null);
+                Department abcSalesDept = departmentRepository.findByDepartmentCode("ABC_SALES").orElse(null);
+                
+                Department xyzProdDept = departmentRepository.findByDepartmentCode("XYZ_PROD").orElse(null);
+                Department xyzQcDept = departmentRepository.findByDepartmentCode("XYZ_QC").orElse(null);
+                Department xyzSalesDept = departmentRepository.findByDepartmentCode("XYZ_SALES").orElse(null);
+                Department xyzFinanceDept = departmentRepository.findByDepartmentCode("XYZ_FIN").orElse(null);
+                Department xyzHrDept = departmentRepository.findByDepartmentCode("XYZ_HR").orElse(null);
+                
+                Department defCsDept = departmentRepository.findByDepartmentCode("DEF_CS").orElse(null);
+                Department defMktDept = departmentRepository.findByDepartmentCode("DEF_MKT").orElse(null);
+                Department defDevDept = departmentRepository.findByDepartmentCode("DEF_DEV").orElse(null);
+                Department defHrDept = departmentRepository.findByDepartmentCode("DEF_HR").orElse(null);
+                Department defFinanceDept = departmentRepository.findByDepartmentCode("DEF_FIN").orElse(null);
+
+                Position abcManagerPosition = positionRepository.findByPositionCode("ABC_MANAGER").orElse(null);
+                Position abcChiefPosition = positionRepository.findByPositionCode("ABC_CHIEF").orElse(null);
+                Position abcDeputyPosition = positionRepository.findByPositionCode("ABC_DEPUTY").orElse(null);
+                Position abcStaffPosition = positionRepository.findByPositionCode("ABC_STAFF").orElse(null);
+                
+                Position xyzManagerPosition = positionRepository.findByPositionCode("XYZ_MANAGER").orElse(null);
+                Position xyzChiefPosition = positionRepository.findByPositionCode("XYZ_CHIEF").orElse(null);
+                Position xyzDeputyPosition = positionRepository.findByPositionCode("XYZ_DEPUTY").orElse(null);
+                Position xyzStaffPosition = positionRepository.findByPositionCode("XYZ_STAFF").orElse(null);
+                
+                Position defManagerPosition = positionRepository.findByPositionCode("DEF_MANAGER").orElse(null);
+                Position defChiefPosition = positionRepository.findByPositionCode("DEF_CHIEF").orElse(null);
+                Position defDeputyPosition = positionRepository.findByPositionCode("DEF_DEPUTY").orElse(null);
+                Position defStaffPosition = positionRepository.findByPositionCode("DEF_STAFF").orElse(null);
+
+                // ABC기업 직원들 (8명) - 다양한 상태와 고용 유형
+                if (abcDevDept != null && abcManagerPosition != null) {
+                    employees.add(createEmployee("ABC001", "김개발", "Kim Developer", "dev.manager@abc.com", 
+                        "02-1111-2222", "010-1111-2222", Employee.Gender.MALE, LocalDate.of(1980, 5, 15),
+                        LocalDate.of(2020, 1, 1), abcCompany, abcDevDept, abcManagerPosition, "서울시 강남구", "06292", "컴퓨터공학과", "소프트웨어공학", "10년", "Java, Spring, React",
+                        Employee.EmploymentStatus.ACTIVE, Employee.EmploymentType.FULL_TIME));
+                }
+                if (abcDevDept != null && abcChiefPosition != null) {
+                    employees.add(createEmployee("ABC002", "이프론트", "Lee Frontend", "frontend.chief@abc.com", 
+                        "02-3333-4444", "010-3333-4444", Employee.Gender.FEMALE, LocalDate.of(1985, 8, 20),
+                        LocalDate.of(2021, 3, 1), abcCompany, abcDevDept, abcChiefPosition, "서울시 서초구", "06620", "정보통신공학과", "웹개발", "7년", "React, TypeScript, Node.js",
+                        Employee.EmploymentStatus.ACTIVE, Employee.EmploymentType.PART_TIME));
+                }
+                if (abcDevDept != null && abcDeputyPosition != null) {
+                    employees.add(createEmployee("ABC003", "박백엔드", "Park Backend", "backend.deputy@abc.com", 
+                        "02-5555-6666", "010-5555-6666", Employee.Gender.MALE, LocalDate.of(1990, 12, 10),
+                        LocalDate.of(2022, 6, 1), abcCompany, abcDevDept, abcDeputyPosition, "서울시 마포구", "04042", "컴퓨터과학과", "백엔드개발", "3년", "Java, Spring Boot, PostgreSQL",
+                        Employee.EmploymentStatus.ACTIVE, Employee.EmploymentType.TEMPORARY));
+                }
+                if (abcMktDept != null && abcManagerPosition != null) {
+                    employees.add(createEmployee("ABC004", "최마케팅", "Choi Marketing", "marketing.manager@abc.com", 
+                        "02-7777-8888", "010-7777-8888", Employee.Gender.FEMALE, LocalDate.of(1982, 3, 25),
+                        LocalDate.of(2019, 7, 1), abcCompany, abcMktDept, abcManagerPosition, "서울시 영등포구", "07345", "경영학과", "마케팅", "12년", "마케팅, 브랜딩, 광고",
+                        Employee.EmploymentStatus.INACTIVE, Employee.EmploymentType.FULL_TIME));
+                }
+                if (abcMktDept != null && abcStaffPosition != null) {
+                    employees.add(createEmployee("ABC005", "정마케터", "Jung Marketer", "marketer@abc.com", 
+                        "02-9999-0000", "010-9999-0000", Employee.Gender.MALE, LocalDate.of(1988, 7, 12),
+                        LocalDate.of(2021, 9, 1), abcCompany, abcMktDept, abcStaffPosition, "서울시 송파구", "05572", "광고홍보학과", "디지털마케팅", "5년", "SNS, 콘텐츠마케팅, SEO",
+                        Employee.EmploymentStatus.ACTIVE, Employee.EmploymentType.INTERN));
+                }
+                if (abcHrDept != null && abcManagerPosition != null) {
+                    employees.add(createEmployee("ABC006", "한인사", "Han HR", "hr.manager@abc.com", 
+                        "02-1111-3333", "010-1111-3333", Employee.Gender.FEMALE, LocalDate.of(1983, 11, 8),
+                        LocalDate.of(2018, 4, 1), abcCompany, abcHrDept, abcManagerPosition, "서울시 강동구", "05278", "심리학과", "인사관리", "11년", "HR, 인사관리, 급여관리",
+                        Employee.EmploymentStatus.ACTIVE, Employee.EmploymentType.FULL_TIME));
+                }
+                if (abcSalesDept != null && abcManagerPosition != null) {
+                    employees.add(createEmployee("ABC007", "윤영업", "Yoon Sales", "sales.manager@abc.com", 
+                        "02-2222-4444", "010-2222-4444", Employee.Gender.MALE, LocalDate.of(1985, 2, 18),
+                        LocalDate.of(2020, 8, 1), abcCompany, abcSalesDept, abcManagerPosition, "서울시 서대문구", "03722", "경영학과", "영업관리", "9년", "영업, 고객관리, 계약관리",
+                        Employee.EmploymentStatus.TERMINATED, Employee.EmploymentType.FULL_TIME, LocalDate.of(2024, 1, 15)));
+                }
+                if (abcSalesDept != null && abcStaffPosition != null) {
+                    employees.add(createEmployee("ABC008", "강영업", "Kang Sales", "sales@abc.com", 
+                        "02-3333-5555", "010-3333-5555", Employee.Gender.FEMALE, LocalDate.of(1992, 6, 30),
+                        LocalDate.of(2022, 2, 1), abcCompany, abcSalesDept, abcStaffPosition, "서울시 노원구", "01795", "국제통상학과", "해외영업", "2년", "영업, 영어, 중국어",
+                        Employee.EmploymentStatus.ACTIVE, Employee.EmploymentType.PART_TIME));
+                }
+
+                // XYZ그룹 직원들 (7명) - 다양한 상태와 고용 유형
+                if (xyzProdDept != null && xyzManagerPosition != null) {
+                    employees.add(createEmployee("XYZ001", "김생산", "Kim Production", "prod.manager@xyz.com", 
+                        "031-111-2222", "010-1111-4444", Employee.Gender.MALE, LocalDate.of(1978, 4, 15),
+                        LocalDate.of(2015, 3, 1), xyzCompany, xyzProdDept, xyzManagerPosition, "경기도 성남시", "13494", "기계공학과", "생산관리", "15년", "생산관리, 품질관리, 6시그마",
+                        Employee.EmploymentStatus.ACTIVE, Employee.EmploymentType.FULL_TIME));
+                }
+                if (xyzProdDept != null && xyzChiefPosition != null) {
+                    employees.add(createEmployee("XYZ002", "이생산", "Lee Production", "prod.engineer@xyz.com", 
+                        "031-222-3333", "010-2222-5555", Employee.Gender.MALE, LocalDate.of(1987, 9, 22),
+                        LocalDate.of(2020, 6, 1), xyzCompany, xyzProdDept, xyzChiefPosition, "경기도 수원시", "16229", "산업공학과", "생산기술", "8년", "생산기술, 자동화, 설비관리",
+                        Employee.EmploymentStatus.ACTIVE, Employee.EmploymentType.PART_TIME));
+                }
+                if (xyzQcDept != null && xyzManagerPosition != null) {
+                    employees.add(createEmployee("XYZ003", "박품질", "Park Quality", "qc.manager@xyz.com", 
+                        "031-333-4444", "010-3333-6666", Employee.Gender.FEMALE, LocalDate.of(1981, 12, 5),
+                        LocalDate.of(2017, 1, 1), xyzCompany, xyzQcDept, xyzManagerPosition, "경기도 안양시", "13956", "화학공학과", "품질관리", "13년", "품질관리, ISO, 검사",
+                        Employee.EmploymentStatus.INACTIVE, Employee.EmploymentType.FULL_TIME));
+                }
+                if (xyzSalesDept != null && xyzManagerPosition != null) {
+                    employees.add(createEmployee("XYZ004", "최영업", "Choi Sales", "sales.manager@xyz.com", 
+                        "031-444-5555", "010-4444-7777", Employee.Gender.MALE, LocalDate.of(1984, 7, 18),
+                        LocalDate.of(2019, 5, 1), xyzCompany, xyzSalesDept, xyzManagerPosition, "경기도 부천시", "14558", "경영학과", "영업관리", "10년", "영업, 고객관리, 계약관리",
+                        Employee.EmploymentStatus.ACTIVE, Employee.EmploymentType.FULL_TIME));
+                }
+                if (xyzSalesDept != null && xyzStaffPosition != null) {
+                    employees.add(createEmployee("XYZ005", "정영업", "Jung Sales", "sales@xyz.com", 
+                        "031-555-6666", "010-5555-8888", Employee.Gender.FEMALE, LocalDate.of(1990, 3, 25),
+                        LocalDate.of(2021, 11, 1), xyzCompany, xyzSalesDept, xyzStaffPosition, "경기도 의정부시", "11675", "국제통상학과", "해외영업", "4년", "영업, 영어, 일본어",
+                        Employee.EmploymentStatus.TERMINATED, Employee.EmploymentType.PART_TIME, LocalDate.of(2023, 12, 31)));
+                }
+                if (xyzFinanceDept != null && xyzManagerPosition != null) {
+                    employees.add(createEmployee("XYZ006", "한재무", "Han Finance", "finance.manager@xyz.com", 
+                        "031-666-7777", "010-6666-9999", Employee.Gender.MALE, LocalDate.of(1979, 8, 12),
+                        LocalDate.of(2016, 2, 1), xyzCompany, xyzFinanceDept, xyzManagerPosition, "경기도 고양시", "10439", "회계학과", "재무관리", "14년", "재무관리, 회계, 세무",
+                        Employee.EmploymentStatus.ACTIVE, Employee.EmploymentType.PART_TIME));
+                }
+                if (xyzHrDept != null && xyzManagerPosition != null) {
+                    employees.add(createEmployee("XYZ007", "윤인사", "Yoon HR", "hr.manager@xyz.com", 
+                        "031-777-8888", "010-7777-0000", Employee.Gender.FEMALE, LocalDate.of(1986, 1, 28),
+                        LocalDate.of(2018, 9, 1), xyzCompany, xyzHrDept, xyzManagerPosition, "경기도 용인시", "16890", "심리학과", "인사관리", "9년", "HR, 인사관리, 급여관리",
+                        Employee.EmploymentStatus.ACTIVE, Employee.EmploymentType.INTERN));
+                }
+
+                // DEF코퍼레이션 직원들 (7명) - 다양한 상태와 고용 유형
+                if (defCsDept != null && defManagerPosition != null) {
+                    employees.add(createEmployee("DEF001", "김고객", "Kim Customer", "cs.manager@def.com", 
+                        "02-111-2222", "010-1111-1111", Employee.Gender.FEMALE, LocalDate.of(1983, 5, 10),
+                        LocalDate.of(2017, 3, 1), defCompany, defCsDept, defManagerPosition, "서울시 강서구", "07505", "경영학과", "고객서비스", "12년", "고객서비스, CS, VOC관리",
+                        Employee.EmploymentStatus.ACTIVE, Employee.EmploymentType.FULL_TIME));
+                }
+                if (defCsDept != null && defStaffPosition != null) {
+                    employees.add(createEmployee("DEF002", "이고객", "Lee Customer", "cs@def.com", 
+                        "02-222-3333", "010-2222-2222", Employee.Gender.MALE, LocalDate.of(1991, 11, 20),
+                        LocalDate.of(2022, 7, 1), defCompany, defCsDept, defStaffPosition, "서울시 관악구", "08779", "영어영문학과", "고객상담", "2년", "고객상담, 영어, 일본어",
+                        Employee.EmploymentStatus.ACTIVE, Employee.EmploymentType.INTERN));
+                }
+                if (defMktDept != null && defManagerPosition != null) {
+                    employees.add(createEmployee("DEF003", "박마케팅", "Park Marketing", "marketing.manager@def.com", 
+                        "02-333-4444", "010-3333-3333", Employee.Gender.FEMALE, LocalDate.of(1987, 2, 14),
+                        LocalDate.of(2019, 4, 1), defCompany, defMktDept, defManagerPosition, "서울시 동작구", "06911", "광고홍보학과", "마케팅", "8년", "마케팅, 브랜딩, 이벤트",
+                        Employee.EmploymentStatus.INACTIVE, Employee.EmploymentType.PART_TIME));
+                }
+                if (defDevDept != null && defManagerPosition != null) {
+                    employees.add(createEmployee("DEF004", "최개발", "Choi Developer", "dev.manager@def.com", 
+                        "02-444-5555", "010-4444-4444", Employee.Gender.MALE, LocalDate.of(1985, 8, 7),
+                        LocalDate.of(2020, 1, 1), defCompany, defDevDept, defManagerPosition, "서울시 금천구", "08505", "컴퓨터공학과", "서비스개발", "10년", "Java, Spring, React, Node.js",
+                        Employee.EmploymentStatus.ACTIVE, Employee.EmploymentType.FULL_TIME));
+                }
+                if (defDevDept != null && defStaffPosition != null) {
+                    employees.add(createEmployee("DEF005", "정개발", "Jung Developer", "dev@def.com", 
+                        "02-555-6666", "010-5555-5555", Employee.Gender.FEMALE, LocalDate.of(1993, 4, 3),
+                        LocalDate.of(2021, 8, 1), defCompany, defDevDept, defStaffPosition, "서울시 중랑구", "02188", "정보통신공학과", "프론트엔드", "3년", "React, Vue.js, TypeScript",
+                        Employee.EmploymentStatus.TERMINATED, Employee.EmploymentType.PART_TIME, LocalDate.of(2024, 2, 28)));
+                }
+                if (defHrDept != null && defManagerPosition != null) {
+                    employees.add(createEmployee("DEF006", "한인사", "Han HR", "hr.manager@def.com", 
+                        "02-666-7777", "010-6666-6666", Employee.Gender.MALE, LocalDate.of(1980, 12, 18),
+                        LocalDate.of(2016, 6, 1), defCompany, defHrDept, defManagerPosition, "서울시 성북구", "02805", "심리학과", "인사관리", "13년", "HR, 인사관리, 조직관리",
+                        Employee.EmploymentStatus.ACTIVE, Employee.EmploymentType.PART_TIME));
+                }
+                if (defFinanceDept != null && defManagerPosition != null) {
+                    employees.add(createEmployee("DEF007", "윤재무", "Yoon Finance", "finance.manager@def.com", 
+                        "02-777-8888", "010-7777-7777", Employee.Gender.FEMALE, LocalDate.of(1984, 6, 25),
+                        LocalDate.of(2018, 2, 1), defCompany, defFinanceDept, defManagerPosition, "서울시 은평구", "03375", "회계학과", "재무관리", "11년", "재무관리, 회계, 예산관리",
+                        Employee.EmploymentStatus.ACTIVE, Employee.EmploymentType.FULL_TIME));
+                }
+
+                employeeRepository.saveAll(employees);
+
+                log.info("✅ 직원 데이터 생성 완료 (총 {}명):", employees.size());
+                log.info("   ABC기업: 8명 (개발팀 3명, 마케팅팀 2명, 인사팀 1명, 영업팀 2명)");
+                log.info("   XYZ그룹: 7명 (생산팀 2명, 품질관리팀 1명, 영업팀 2명, 재무팀 1명, 인사팀 1명)");
+                log.info("   DEF코퍼레이션: 7명 (고객서비스팀 2명, 마케팅팀 1명, 개발팀 2명, 인사팀 1명, 재무팀 1명)");
+                
+                
+            } catch (Exception e) {
+                log.error("직원 생성 중 오류 발생: {}", e.getMessage(), e);
+                throw new RuntimeException("직원 생성 실패: " + e.getMessage(), e);
+            }
+        } else {
+            log.info("직원 데이터가 이미 존재합니다. 건너뜀.");
+        }
+    }
+
+    /**
+     * 직원 생성 헬퍼 메서드
+     */
+    private Employee createEmployee(String empNumber, String name, String nameEn, String email, String phone, String mobile,
+                                  Employee.Gender gender, LocalDate birthDate, LocalDate hireDate, Company company, 
+                                  Department department, Position position, String address, String postalCode,
+                                  String education, String major, String career, String skills,
+                                  Employee.EmploymentStatus employmentStatus, Employee.EmploymentType employmentType) {
+        return createEmployee(empNumber, name, nameEn, email, phone, mobile, gender, birthDate, hireDate, 
+                            company, department, position, address, postalCode, education, major, career, skills,
+                            employmentStatus, employmentType, null);
+    }
+
+    /**
+     * 직원 생성 헬퍼 메서드 (퇴사일 포함)
+     */
+    private Employee createEmployee(String empNumber, String name, String nameEn, String email, String phone, String mobile,
+                                  Employee.Gender gender, LocalDate birthDate, LocalDate hireDate, Company company, 
+                                  Department department, Position position, String address, String postalCode,
+                                  String education, String major, String career, String skills,
+                                  Employee.EmploymentStatus employmentStatus, Employee.EmploymentType employmentType,
+                                  LocalDate terminationDate) {
+        Employee employee = new Employee();
+        employee.setEmployeeNumber(empNumber);
+        employee.setName(name);
+        employee.setNameEn(nameEn);
+        employee.setEmail(email);
+        employee.setPhone(phone);
+        employee.setMobile(mobile);
+        employee.setGender(gender);
+        employee.setBirthDate(birthDate);
+        employee.setHireDate(hireDate);
+        employee.setEmploymentStatus(employmentStatus);
+        employee.setEmploymentType(employmentType);
+        employee.setTerminationDate(terminationDate);
+        employee.setCompany(company);
+        employee.setDepartment(department);
+        employee.setPosition(position);
+        employee.setAddress(address);
+        employee.setPostalCode(postalCode);
+        employee.setEducation(education);
+        employee.setMajor(major);
+        employee.setCareer(career);
+        employee.setSkills(skills);
+        employee.setIsDeleted(false);
+        employee.setCreatedBy(1L);
+        employee.setUpdatedBy(1L);
+        return employee;
     }
 
     /**
@@ -227,6 +795,13 @@ public class DataInitializer {
                 admin.setPassword(passwordEncoder.encode("admin123"));
                 userRepository.save(admin);
                 log.info("✅ admin 사용자 비밀번호 업데이트 완료");
+            });
+
+            // manager 사용자 비밀번호 업데이트
+            userRepository.findByUsername("manager").ifPresent(manager -> {
+                manager.setPassword(passwordEncoder.encode("manager123"));
+                userRepository.save(manager);
+                log.info("✅ manager 사용자 비밀번호 업데이트 완료");
             });
 
             // user 사용자 비밀번호 업데이트
@@ -646,7 +1221,7 @@ public class DataInitializer {
     }
 
     /**
-     * 테스트용 알림 생성
+     * 테스트용 알림 생성 (admin과 user 각각 다른 알림)
      */
     private void createTestNotifications() {
         try {
@@ -656,48 +1231,126 @@ public class DataInitializer {
             User adminUser = userRepository.findByUsername("admin")
                     .orElseThrow(() -> new RuntimeException("admin 사용자를 찾을 수 없습니다"));
 
-            // 테스트 알림들 생성
-            String[] titles = {
-                "새로운 주문",
-                "재고 부족 알림", 
-                "시스템 업데이트",
-                "결제 오류"
-            };
+            // user 사용자 조회
+            User normalUser = userRepository.findByUsername("user")
+                    .orElseThrow(() -> new RuntimeException("user 사용자를 찾을 수 없습니다"));
 
-            String[] messages = {
-                "고객 '김철수'님이 새로운 주문을 생성했습니다.",
-                "상품 '노트북'의 재고가 부족합니다. (현재: 5개)",
-                "ERP 시스템이 성공적으로 업데이트되었습니다.",
-                "결제 처리 중 오류가 발생했습니다. 확인이 필요합니다."
-            };
+            // 기존 알림 데이터 삭제 (테스트 환경에서만)
+            deleteExistingNotifications(adminUser.getId());
+            deleteExistingNotifications(normalUser.getId());
 
-            Notification.NotificationType[] types = {
-                Notification.NotificationType.INFO,
-                Notification.NotificationType.WARNING,
-                Notification.NotificationType.SUCCESS,
-                Notification.NotificationType.ERROR
-            };
+            // admin 전용 알림 생성
+            createAdminNotifications(adminUser);
+            
+            // user 전용 알림 생성
+            createUserNotifications(normalUser);
 
-            String[] actionUrls = {
-                "/orders",
-                "/inventory",
-                null,
-                "/payments"
-            };
-
-            for (int i = 0; i < titles.length; i++) {
-                notificationService.createNotification(
-                    adminUser,
-                    titles[i],
-                    messages[i],
-                    types[i],
-                    actionUrls[i]
-                );
-            }
-
-            log.info("테스트 알림 생성 완료: {}개", titles.length);
+            log.info("테스트 알림 생성 완료: admin용 4개, user용 4개");
         } catch (Exception e) {
             log.error("테스트 알림 생성 실패: {}", e.getMessage(), e);
         }
+    }
+
+    /**
+     * 기존 알림 데이터 삭제
+     */
+    private void deleteExistingNotifications(Long userId) {
+        try {
+            // NotificationService를 통해 사용자의 모든 알림 삭제
+            notificationService.deleteAllNotificationsByUser(userId);
+            log.info("사용자 {}의 기존 알림 데이터 삭제 완료", userId);
+        } catch (Exception e) {
+            log.warn("사용자 {}의 기존 알림 데이터 삭제 실패: {}", userId, e.getMessage());
+        }
+    }
+
+    /**
+     * admin 전용 알림 생성
+     */
+    private void createAdminNotifications(User adminUser) {
+        String[] adminTitles = {
+            "관리자 승인 요청",
+            "시스템 보안 경고",
+            "사용자 계정 잠금",
+            "데이터베이스 백업 완료"
+        };
+
+        String[] adminMessages = {
+            "새로운 사용자 '김신입'의 계정 승인이 필요합니다.",
+            "의심스러운 로그인 시도가 감지되었습니다. (IP: 192.168.1.100)",
+            "사용자 'user2'의 계정이 5회 로그인 실패로 잠겼습니다.",
+            "일일 데이터베이스 백업이 성공적으로 완료되었습니다."
+        };
+
+        Notification.NotificationType[] adminTypes = {
+            Notification.NotificationType.INFO,
+            Notification.NotificationType.WARNING,
+            Notification.NotificationType.ERROR,
+            Notification.NotificationType.SUCCESS
+        };
+
+        String[] adminActionUrls = {
+            "/admin/users/approval",
+            "/admin/security/logs",
+            "/admin/users/locked",
+            null
+        };
+
+        for (int i = 0; i < adminTitles.length; i++) {
+            notificationService.createNotification(
+                adminUser,
+                adminTitles[i],
+                adminMessages[i],
+                adminTypes[i],
+                adminActionUrls[i]
+            );
+        }
+
+        log.info("admin 전용 알림 생성 완료: {}개", adminTitles.length);
+    }
+
+    /**
+     * user 전용 알림 생성
+     */
+    private void createUserNotifications(User normalUser) {
+        String[] userTitles = {
+            "새로운 할당 업무",
+            "근무 시간 확인",
+            "휴가 신청 결과",
+            "교육 과정 추천"
+        };
+
+        String[] userMessages = {
+            "새로운 프로젝트 'ERP 시스템 개발'에 할당되었습니다.",
+            "이번 주 근무 시간이 40시간을 초과했습니다. 확인해주세요.",
+            "휴가 신청이 승인되었습니다. (2024-01-15 ~ 2024-01-17)",
+            "새로운 교육 과정 'Spring Boot 고급'이 개설되었습니다."
+        };
+
+        Notification.NotificationType[] userTypes = {
+            Notification.NotificationType.INFO,
+            Notification.NotificationType.WARNING,
+            Notification.NotificationType.SUCCESS,
+            Notification.NotificationType.INFO
+        };
+
+        String[] userActionUrls = {
+            "/projects/current",
+            "/attendance/timesheet",
+            "/hr/vacation/history",
+            "/training/courses"
+        };
+
+        for (int i = 0; i < userTitles.length; i++) {
+            notificationService.createNotification(
+                normalUser,
+                userTitles[i],
+                userMessages[i],
+                userTypes[i],
+                userActionUrls[i]
+            );
+        }
+
+        log.info("user 전용 알림 생성 완료: {}개", userTitles.length);
     }
 }

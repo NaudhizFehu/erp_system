@@ -3,9 +3,11 @@ package com.erp.common.controller;
 import com.erp.common.constants.ErrorCode;
 import com.erp.common.dto.ApiResponse;
 import com.erp.common.dto.auth.*;
+import com.erp.common.dto.UserProfileUpdateDto;
 import com.erp.common.entity.User;
 import com.erp.common.exception.BusinessException;
 import com.erp.common.repository.UserRepository;
+import com.erp.hr.repository.DepartmentRepository;
 import com.erp.common.security.CustomUserDetailsService;
 import com.erp.common.security.JwtAuthenticationFilter;
 import com.erp.common.security.JwtUtils;
@@ -48,6 +50,7 @@ public class AuthController {
 
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
+    private final DepartmentRepository departmentRepository;
     private final CustomUserDetailsService userDetailsService;
     private final JwtUtils jwtUtils;
     private final PasswordEncoder passwordEncoder;
@@ -358,13 +361,148 @@ public class AuthController {
     }
 
     /**
+     * 사용자 프로필 업데이트
+     * 
+     * @param profileUpdate 프로필 업데이트 정보
+     * @return 업데이트 결과
+     */
+    @PutMapping("/profile")
+    public ResponseEntity<ApiResponse<LoginResponse.UserInfo>> updateProfile(@Valid @RequestBody UserProfileUpdateDto profileUpdate) {
+        log.info("사용자 프로필 업데이트 요청");
+        
+        try {
+            // 현재 사용자 정보 가져오기
+            UserPrincipal currentUser = JwtAuthenticationFilter.getCurrentUser();
+            if (currentUser == null) {
+                throw ExceptionUtils.unauthorized();
+            }
+            
+            // 최신 사용자 정보 조회
+            User user = userRepository.findByIdWithCompanyAndDepartment(currentUser.getId())
+                .orElseThrow(() -> ExceptionUtils.userNotFound(currentUser.getId()));
+            
+            // 프로필 정보 업데이트
+            if (profileUpdate.fullName() != null && !profileUpdate.fullName().trim().isEmpty()) {
+                user.setFullName(profileUpdate.fullName().trim());
+            }
+            
+            if (profileUpdate.email() != null && !profileUpdate.email().trim().isEmpty()) {
+                // 이메일 중복 확인 (본인 제외)
+                if (userRepository.existsByEmailAndIdNot(profileUpdate.email(), user.getId())) {
+                    throw new BusinessException(ErrorCode.DUPLICATE_EMAIL, "이미 사용 중인 이메일입니다");
+                }
+                user.setEmail(profileUpdate.email().trim());
+            }
+            
+            if (profileUpdate.phone() != null && !profileUpdate.phone().trim().isEmpty()) {
+                String normalizedPhone = normalizePhoneNumber(profileUpdate.phone().trim());
+                log.info("유선전화번호 업데이트: {} -> {} (정규화: {})", user.getPhone(), profileUpdate.phone().trim(), normalizedPhone);
+                user.setPhone(normalizedPhone);
+            }
+            
+            if (profileUpdate.phoneNumber() != null && !profileUpdate.phoneNumber().trim().isEmpty()) {
+                String normalizedPhoneNumber = normalizePhoneNumber(profileUpdate.phoneNumber().trim());
+                log.info("전화번호 업데이트: {} -> {} (정규화: {})", user.getPhoneNumber(), profileUpdate.phoneNumber().trim(), normalizedPhoneNumber);
+                user.setPhoneNumber(normalizedPhoneNumber);
+            }
+            
+            // 부서 정보 업데이트 (부서명으로 검색)
+            if (profileUpdate.department() != null && !profileUpdate.department().trim().isEmpty()) {
+                departmentRepository.findByName(profileUpdate.department().trim())
+                    .ifPresent(user::setDepartment);
+            }
+            
+            // 직책 정보 업데이트
+            if (profileUpdate.position() != null && !profileUpdate.position().trim().isEmpty()) {
+                user.setPosition(profileUpdate.position().trim());
+            }
+            
+            // 사용자 정보 저장
+            User savedUser = userRepository.save(user);
+            
+            log.info("사용자 프로필 업데이트 완료: userId={}", savedUser.getId());
+            
+            // 업데이트된 사용자 정보 반환
+            LoginResponse.UserInfo userInfo = LoginResponse.UserInfo.from(savedUser);
+            return ResponseEntity.ok(ApiResponse.success("프로필이 성공적으로 업데이트되었습니다", userInfo));
+            
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("프로필 업데이트 중 오류 발생", e);
+            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, "프로필 업데이트 중 오류가 발생했습니다");
+        }
+    }
+
+    /**
+     * 전화번호 정규화 (하이픈 추가)
+     * 지원 형식:
+     * - 휴대폰: 010-1234-5678, 011-123-4567, 016-123-4567, 017-123-4567, 018-123-4567, 019-123-4567
+     * - 지역번호: 02-123-4567, 02-1234-5678, 031-123-4567, 031-1234-5678, 032-123-4567, 033-123-4567, 041-123-4567, 042-123-4567, 043-123-4567, 044-123-4567, 051-123-4567, 052-123-4567, 053-123-4567, 054-123-4567, 055-123-4567, 061-123-4567, 062-123-4567, 063-123-4567, 064-123-4567
+     * - 특수번호: 1588-1234, 1577-1234, 1566-1234, 1544-1234, 1599-1234, 1600-1234, 1800-1234
+     */
+    private String normalizePhoneNumber(String phoneNumber) {
+        if (phoneNumber == null || phoneNumber.trim().isEmpty()) {
+            return phoneNumber;
+        }
+        
+        // 하이픈 제거
+        String digitsOnly = phoneNumber.replaceAll("-", "");
+        
+        // 이미 하이픈이 있는 경우 그대로 반환
+        if (phoneNumber.contains("-")) {
+            return phoneNumber;
+        }
+        
+        // 11자리인 경우 (휴대폰: 01012345678)
+        if (digitsOnly.length() == 11) {
+            String prefix = digitsOnly.substring(0, 3);
+            // 휴대폰 번호 (010, 011, 016, 017, 018, 019)
+            if (prefix.matches("01[016789]")) {
+                return digitsOnly.substring(0, 3) + "-" + digitsOnly.substring(3, 7) + "-" + digitsOnly.substring(7);
+            }
+        }
+        
+        // 10자리인 경우 (지역번호)
+        if (digitsOnly.length() == 10) {
+            String prefix = digitsOnly.substring(0, 2);
+            String prefix3 = digitsOnly.substring(0, 3);
+            
+            // 02 (서울) - 8자리 국번 (02-2345-6789)
+            if ("02".equals(prefix)) {
+                return digitsOnly.substring(0, 2) + "-" + digitsOnly.substring(2, 6) + "-" + digitsOnly.substring(6);
+            }
+            // 3자리 지역번호 (031, 032, 033, 041, 042, 043, 044, 051, 052, 053, 054, 055, 061, 062, 063, 064)
+            else if (prefix3.matches("03[123]|04[1234]|05[12345]|06[1234]")) {
+                return digitsOnly.substring(0, 3) + "-" + digitsOnly.substring(3, 6) + "-" + digitsOnly.substring(6);
+            }
+            // 2자리 지역번호 (기타)
+            else {
+                return digitsOnly.substring(0, 2) + "-" + digitsOnly.substring(2, 5) + "-" + digitsOnly.substring(5);
+            }
+        }
+        
+        // 8자리인 경우 (특수번호: 15881234)
+        if (digitsOnly.length() == 8) {
+            String prefix = digitsOnly.substring(0, 4);
+            // 특수번호 (1588, 1577, 1566, 1544, 1599, 1600, 1800)
+            if (prefix.matches("1588|1577|1566|1544|1599|1600|1800")) {
+                return digitsOnly.substring(0, 4) + "-" + digitsOnly.substring(4);
+            }
+        }
+        
+        // 그 외의 경우 원본 반환
+        return phoneNumber;
+    }
+
+    /**
      * 현재 사용자 정보 조회
      * 
      * @return 현재 사용자 정보
      */
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<LoginResponse.UserInfo>> getCurrentUser() {
-        log.debug("현재 사용자 정보 조회 요청");
+        log.info("현재 사용자 정보 조회 요청");
         
         try {
             // 현재 사용자 정보 가져오기
@@ -378,10 +516,39 @@ public class AuthController {
             User user = userRepository.findByIdWithCompanyAndDepartment(currentUser.getId())
                 .orElseThrow(() -> ExceptionUtils.userNotFound(currentUser.getId()));
             
+            // DepartmentInfo 생성 과정 상세 로그
+            if (user.getDepartment() != null) {
+                log.info("Department 엔티티 정보: id={}, name={}, departmentCode={}", 
+                        user.getDepartment().getId(), 
+                        user.getDepartment().getName(), 
+                        user.getDepartment().getDepartmentCode());
+                
+                // DepartmentInfo.from() 호출 전후 로그
+                try {
+                    LoginResponse.DepartmentInfo deptInfo = LoginResponse.DepartmentInfo.from(user.getDepartment());
+                    log.info("DepartmentInfo 생성 성공: id={}, name={}, departmentCode={}", 
+                            deptInfo.id(), deptInfo.name(), deptInfo.departmentCode());
+                } catch (Exception e) {
+                    log.error("DepartmentInfo 생성 실패: {}", e.getMessage(), e);
+                }
+            } else {
+                log.info("사용자의 department가 null입니다");
+            }
+            
             // 사용자 정보 응답 생성
             LoginResponse.UserInfo userInfo = LoginResponse.UserInfo.from(user);
             
-            log.debug("사용자 정보 조회 성공: userId={}, username={}", user.getId(), user.getUsername());
+            log.info("사용자 정보 조회 성공: userId={}, username={}, department={}, position={}", 
+                    user.getId(), user.getUsername(), 
+                    user.getDepartment() != null ? user.getDepartment().getName() : "null",
+                    user.getPosition());
+            
+            // 반환할 UserInfo 상세 로그
+            log.info("반환할 UserInfo: id={}, username={}, email={}, fullName={}, role={}, position={}, department={}", 
+                    userInfo.id(), userInfo.username(), userInfo.email(), userInfo.fullName(), 
+                    userInfo.role(), userInfo.position(),
+                    userInfo.department() != null ? userInfo.department().name() : "null");
+            
             return ResponseEntity.ok(ApiResponse.success("사용자 정보 조회 완료", userInfo));
             
         } catch (BusinessException e) {

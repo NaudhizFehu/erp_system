@@ -1,6 +1,7 @@
 package com.erp.common.dto.auth;
 
 import com.erp.common.entity.User;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import java.time.LocalDateTime;
 
 /**
@@ -34,12 +35,16 @@ public record LoginResponse(
     /**
      * 사용자 정보 내부 클래스
      */
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     public static record UserInfo(
             Long id,
             String username,
             String email,
             String fullName,
             String role,
+            String position,
+            String phone,
+            String phoneNumber,
             CompanyInfo company,
             DepartmentInfo department,
             LocalDateTime lastLoginAt
@@ -72,6 +77,9 @@ public record LoginResponse(
                 user.getEmail(),
                 user.getFullName(),
                 user.getRole().name(),
+                user.getPosition(),
+                user.getPhone(),
+                user.getPhoneNumber(),
                 user.getCompany() != null ? CompanyInfo.from(user.getCompany()) : null,
                 user.getDepartment() != null ? DepartmentInfo.from(user.getDepartment()) : null,
                 user.getLastLoginAt()
@@ -111,6 +119,7 @@ public record LoginResponse(
     /**
      * 부서 정보 내부 클래스
      */
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     public static record DepartmentInfo(
             Long id,
             String name,
@@ -132,7 +141,7 @@ public record LoginResponse(
             return new DepartmentInfo(
                 department.getId(),
                 department.getName(),
-                department.getDepartmentCode()
+                department.getDepartmentCode() != null ? department.getDepartmentCode() : ""
             );
         }
     }

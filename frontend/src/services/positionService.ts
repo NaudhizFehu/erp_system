@@ -34,8 +34,15 @@ class PositionService {
       const response = await api.get(`${this.baseUrl}?page=0&size=1000`)
       console.log('직급 목록 조회 API 응답:', response)
       
-      // 응답에서 직급 목록 추출
-      const positions = response.data?.data || response.data || []
+      // 응답에서 직급 목록 추출 (Page 객체에서 content 배열 추출)
+      const pageData = response.data?.data || response.data
+      const positions = pageData?.content || []
+      
+      if (!Array.isArray(positions)) {
+        console.error('직급 목록이 배열이 아닙니다:', positions)
+        return []
+      }
+      
       return positions.map((pos: Position) => ({
         id: pos.id,
         name: pos.name
@@ -55,8 +62,15 @@ class PositionService {
       const response = await api.get(`${this.baseUrl}/company/${companyId}?page=0&size=1000`)
       console.log('회사별 직급 목록 조회 API 응답:', response)
       
-      // 응답에서 직급 목록 추출
-      const positions = response.data?.data || response.data || []
+      // 응답에서 직급 목록 추출 (Page 객체에서 content 배열 추출)
+      const pageData = response.data?.data || response.data
+      const positions = pageData?.content || []
+      
+      if (!Array.isArray(positions)) {
+        console.error('회사별 직급 목록이 배열이 아닙니다:', positions)
+        return []
+      }
+      
       return positions.map((pos: Position) => ({
         id: pos.id,
         name: pos.name

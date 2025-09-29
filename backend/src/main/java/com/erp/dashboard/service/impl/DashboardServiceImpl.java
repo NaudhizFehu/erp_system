@@ -14,6 +14,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.Set;
+import java.util.HashSet;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -32,6 +37,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class DashboardServiceImpl implements DashboardService {
+    
+    // 임시: 사용자별 알림 읽음 상태 관리 (실제 구현에서는 DB 사용)
+    private final ConcurrentMap<String, Set<Long>> userReadNotifications = new ConcurrentHashMap<>();
 
     private final CustomerRepository customerRepository;
     private final OrderRepository orderRepository;
@@ -277,13 +285,35 @@ public class DashboardServiceImpl implements DashboardService {
         List<DashboardDto.NotificationDto> notifications = new ArrayList<>();
         LocalDateTime now = LocalDateTime.now();
 
+        // 공통 알림 데이터 (모든 사용자가 동일한 알림을 봄)
         notifications.add(new DashboardDto.NotificationDto(1L, "재고 부족 알림", "노트북 A형의 재고가 10개 이하입니다", "warning", "high", "inventory", now.minusMinutes(10), false, "/inventory/products/1", "재고 확인"));
         notifications.add(new DashboardDto.NotificationDto(2L, "신규 주문", "ABC 회사에서 새 주문을 요청했습니다", "info", "medium", "sales", now.minusMinutes(30), false, "/sales/orders/123", "주문 확인"));
-        notifications.add(new DashboardDto.NotificationDto(3L, "급여 처리 완료", "2023년 12월 급여 처리가 완료되었습니다", "success", "low", "hr", now.minusHours(2), true, "/hr/salary", "급여 내역"));
+        notifications.add(new DashboardDto.NotificationDto(3L, "급여 처리 완료", "2023년 12월 급여 처리가 완료되었습니다", "success", "low", "hr", now.minusHours(2), false, "/hr/salary", "급여 내역"));
         notifications.add(new DashboardDto.NotificationDto(4L, "시스템 점검 예정", "오늘 밤 12시부터 시스템 점검이 예정되어 있습니다", "warning", "high", "system", now.minusHours(4), false, null, null));
-        notifications.add(new DashboardDto.NotificationDto(5L, "월말 결산", "월말 결산 작업을 진행해주세요", "info", "medium", "accounting", now.minusHours(6), true, "/accounting/reports", "결산 보기"));
 
+        // 사용자별 읽음 상태 적용
+        String userKey = "user_" + userId;
+        Set<Long> readNotificationIds = userReadNotifications.getOrDefault(userKey, new HashSet<>());
+        
+        log.info("알림 조회 - userId={}, userKey={}, readNotificationIds={}", userId, userKey, readNotificationIds);
+        
         return notifications.stream()
+                .map(notification -> {
+                    // 사용자별 읽음 상태로 업데이트
+                    boolean isRead = readNotificationIds.contains(notification.id());
+                    return new DashboardDto.NotificationDto(
+                        notification.id(),
+                        notification.title(),
+                        notification.message(),
+                        notification.type(),
+                        notification.priority(),
+                        notification.module(),
+                        notification.createdAt(),
+                        isRead,
+                        notification.actionUrl(),
+                        notification.actionLabel()
+                    );
+                })
                 .filter(n -> !unreadOnly || !n.isRead())
                 .limit(limit)
                 .collect(Collectors.toList());
@@ -425,7 +455,46 @@ public class DashboardServiceImpl implements DashboardService {
     // 나머지 메서드들은 기본 구현으로 처리
     @Override
     public DashboardDto.NotificationStatsDto getNotificationStats(Long userId) {
-        return new DashboardDto.NotificationStatsDto(50L, 12L, 3L, 5L, 4L);
+        log.info("알림 통계 조회: userId={}", userId);
+        
+        // 사용자별 알림 목록 조회
+        List<DashboardDto.NotificationDto> allNotifications = getUserNotifications(userId, false, 100);
+        
+        // 사용자별 읽음 상태 적용
+        String userKey = "user_" + userId;
+        Set<Long> readNotificationIds = userReadNotifications.getOrDefault(userKey, new HashSet<>());
+        
+        long totalNotifications = allNotifications.size();
+        long unreadNotifications = 0;
+        long criticalNotifications = 0;
+        long warningNotifications = 0;
+        long infoNotifications = 0;
+        
+        for (DashboardDto.NotificationDto notification : allNotifications) {
+            boolean isRead = readNotificationIds.contains(notification.id());
+            
+            if (!isRead) {
+                unreadNotifications++;
+            }
+            
+            // 알림 타입별 카운트
+            switch (notification.type()) {
+                case "critical" -> criticalNotifications++;
+                case "warning" -> warningNotifications++;
+                case "info" -> infoNotifications++;
+            }
+        }
+        
+        log.info("알림 통계 계산 완료: userId={}, total={}, unread={}, critical={}, warning={}, info={}", 
+                userId, totalNotifications, unreadNotifications, criticalNotifications, warningNotifications, infoNotifications);
+        
+        return new DashboardDto.NotificationStatsDto(
+                totalNotifications, 
+                unreadNotifications, 
+                criticalNotifications, 
+                warningNotifications, 
+                infoNotifications
+        );
     }
 
     @Override
@@ -442,12 +511,34 @@ public class DashboardServiceImpl implements DashboardService {
     @Transactional
     public void markNotificationAsRead(Long notificationId, Long userId) {
         log.info("알림 읽음 처리: notificationId={}, userId={}", notificationId, userId);
+        
+        // 사용자별 읽음 상태 업데이트
+        String userKey = "user_" + userId;
+        Set<Long> readIds = userReadNotifications.computeIfAbsent(userKey, k -> new HashSet<>());
+        readIds.add(notificationId);
+        
+        log.info("알림 읽음 처리 완료: notificationId={}, userId={}, userKey={}, readIds={}", 
+                notificationId, userId, userKey, readIds);
+        log.info("전체 읽음 상태 맵: {}", userReadNotifications);
     }
 
     @Override
     @Transactional
     public void markAllNotificationsAsRead(Long userId) {
         log.info("모든 알림 읽음 처리: userId={}", userId);
+        
+        // 모든 알림 ID를 사용자별 읽음 상태에 추가
+        String userKey = "user_" + userId;
+        Set<Long> readNotificationIds = userReadNotifications.computeIfAbsent(userKey, k -> new HashSet<>());
+        
+        // 공통 알림 ID들 (1~4)을 모두 읽음 처리
+        for (long i = 1; i <= 4; i++) {
+            readNotificationIds.add(i);
+        }
+        
+        log.info("모든 알림 읽음 처리 완료: userId={}, userKey={}, readIds={}", 
+                userId, userKey, readNotificationIds);
+        log.info("전체 읽음 상태 맵: {}", userReadNotifications);
     }
 
     @Override

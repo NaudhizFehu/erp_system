@@ -52,7 +52,44 @@ public class PositionServiceImpl implements PositionService {
 
     @Override
     public Page<PositionDto> getAllPositions(Pageable pageable) {
-        return new PageImpl<>(new ArrayList<>(), pageable, 0);
+        try {
+            log.info("전체 직급 목록 조회 요청");
+            var positions = positionRepository.findAll(pageable);
+            return positions.map(position -> new PositionDto(
+                    position.getId(),
+                    position.getPositionCode(),
+                    position.getName(),
+                    position.getDescription(),
+                    new com.erp.common.dto.CompanyDto(
+                            position.getCompany().getId(),
+                            position.getCompany().getCompanyCode(),
+                            position.getCompany().getName(),
+                            null, // nameEn
+                            position.getCompany().getBusinessNumber(),
+                            null, // corporationNumber
+                            null, // ceoName
+                            null, // businessType
+                            null, // businessItem
+                            position.getCompany().getAddress(),
+                            null, // addressDetail
+                            null, // postalCode
+                            position.getCompany().getPhone(),
+                            null, // fax
+                            position.getCompany().getEmail(),
+                            null, // website
+                            position.getCompany().getStatus().toString()
+                    ),
+                    position.getLevel(),
+                    position.getIsActive(),
+                    null, // authorities
+                    position.getEmployees() != null ? position.getEmployees().size() : 0, // employeeCount
+                    position.getCreatedAt(),
+                    position.getUpdatedAt()
+            ));
+        } catch (Exception e) {
+            log.error("전체 직급 목록 조회 실패: {}", e.getMessage(), e);
+            throw new RuntimeException("직급 목록 조회에 실패했습니다: " + e.getMessage());
+        }
     }
 
     @Override

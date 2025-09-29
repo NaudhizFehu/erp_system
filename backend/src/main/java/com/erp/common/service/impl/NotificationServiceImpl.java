@@ -145,6 +145,18 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     @Transactional
+    public void deleteAllNotificationsByUser(Long userId) {
+        log.info("사용자의 모든 알림 삭제: userId={}", userId);
+        
+        List<Notification> userNotifications = notificationRepository.findByUserId(userId);
+        
+        notificationRepository.deleteAll(userNotifications);
+        
+        log.info("사용자의 모든 알림 삭제 완료: userId={}, count={}", userId, userNotifications.size());
+    }
+
+    @Override
+    @Transactional
     public NotificationDto createNotification(User user, String title, String message, 
                                             Notification.NotificationType type, String actionUrl) {
         log.info("새 알림 생성: userId={}, title={}, type={}", user.getId(), title, type);

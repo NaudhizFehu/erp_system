@@ -504,7 +504,7 @@ export function EmployeeForm({
                     <SelectContent>
                       {companies.map((company) => (
                         <SelectItem key={company.id} value={company.id.toString()}>
-                          {company.companyName}
+                          {company.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -533,7 +533,7 @@ export function EmployeeForm({
                     <SelectContent>
                       {departments.map((department) => (
                         <SelectItem key={department.id} value={department.id.toString()}>
-                          {department.departmentName}
+                          {department.name}
                         </SelectItem>
                       ))}
                     </SelectContent>

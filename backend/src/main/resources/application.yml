@@ -10,28 +10,36 @@ spring:
   # 데이터베이스 설정 (PostgreSQL)
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/erp_db}
-    username: ${DB_USERNAME:your_username}
-    password: ${DB_PASSWORD:your_password}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 5
-      minimum-idle: 2
+      minimum-idle: 1
       idle-timeout: 300000
       connection-timeout: 30000
       validation-timeout: 5000
-      # 연결 유지 설정 (연결 안정성 개선)
-      keep-alive-time: 30000
-      max-lifetime: 1200000  # 20분으로 단축
-      leak-detection-threshold: 60000
       # 연결 재시도 설정
       connection-test-query: SELECT 1
-      # 연결 안정성 설정
-      register-mbeans: true
       # 연결 풀 설정
       pool-name: ERP-HikariCP
       # 연결 검증 설정
       validation-query: SELECT 1
-      validation-query-timeout: 3
+      validation-query-timeout: 5
+      # 연결 실패 시 재시도 설정
+      initialization-fail-timeout: -1
+      is-auto-commit: true
+      # PostgreSQL 연결 안정성 설정
+      data-source-properties:
+        socketTimeout: 30000
+        connectTimeout: 10000
+        loginTimeout: 30
+        tcpKeepAlive: true
+        ssl: false
+        # PostgreSQL 전용 설정
+        databaseName: erp_db
+        serverName: localhost
+        portNumber: 5432
   
   # JPA 설정
   jpa:
@@ -50,6 +58,14 @@ spring:
           batch_size: 20
         order_inserts: true
         order_updates: true
+        # PostgreSQL 전용 설정
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+  
+  # H2 자동 설정 비활성화
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.h2.H2ConsoleAutoConfiguration
   
   # 웹 설정
   web:
@@ -77,6 +93,11 @@ spring:
   sql:
     init:
       mode: never
+      schema-locations: ""
+      data-locations: ""
+      continue-on-error: false
+      separator: ";"
+      encoding: UTF-8
   
   # 로깅 설정
 logging:
@@ -155,11 +176,21 @@ spring:
     activate:
       on-profile: dev
   
-  # 개발용 데이터베이스
+  # 개발용 데이터베이스 (PostgreSQL)
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/erp_db}
-    username: ${DB_USERNAME:your_username}
-    password: ${DB_PASSWORD:your_password}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+  
+  # SQL 초기화 설정
+  sql:
+    init:
+      mode: never
+      schema-locations: ""
+      data-locations: ""
+      continue-on-error: false
+      separator: ";"
+      encoding: UTF-8
   
   jpa:
     hibernate:
@@ -167,6 +198,7 @@ spring:
     show-sql: true
     defer-datasource-initialization: false
     open-in-view: false
+    database-platform: org.hibernate.dialect.H2Dialect
     properties:
       hibernate:
         format_sql: true

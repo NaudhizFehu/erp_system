@@ -55,6 +55,11 @@ public interface NotificationService {
     void deleteNotification(Long notificationId, Long userId);
 
     /**
+     * 사용자의 모든 알림 삭제 (개발/테스트용)
+     */
+    void deleteAllNotificationsByUser(Long userId);
+
+    /**
      * 새로운 알림 생성
      */
     NotificationDto createNotification(User user, String title, String message, 

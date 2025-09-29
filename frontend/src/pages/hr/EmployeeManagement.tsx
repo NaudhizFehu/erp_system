@@ -60,7 +60,11 @@ import {
   useUpdateEmployee,
   useDeleteEmployee,
   useTerminateEmployee,
-  useEmployeeStatistics
+  useEmployeeStatistics,
+  useHrPermissions,
+  useCompanies,
+  useDepartments,
+  usePositions
 } from '@/hooks/useEmployees'
 import type { 
   Employee, 
@@ -105,6 +109,9 @@ export function EmployeeManagement() {
     employmentStatus: statusFilter !== 'all' ? statusFilter : undefined
   }
 
+  // 권한 체크
+  const { canView, canEdit, canManage, canCreate, canDelete } = useHrPermissions()
+
   // API 훅들
   const { 
     data: employeesData, 
@@ -114,6 +121,8 @@ export function EmployeeManagement() {
     ? useEmployeeSearch(debouncedSearchTerm, searchParamsObj)
     : useEmployees(searchParamsObj)
 
+  // 통계용 전체 데이터 (검색 필터와 무관)
+  const { data: allEmployeesData } = useEmployees({ page: 0, size: 1000 })
   const { data: activeEmployees } = useActiveEmployees()
   const { 
     positionStats, 
@@ -121,6 +130,11 @@ export function EmployeeManagement() {
     genderStats, 
     ageGroupStats 
   } = useEmployeeStatistics()
+
+  // 폼용 데이터
+  const { data: companies = [] } = useCompanies()
+  const { data: departments = [] } = useDepartments()
+  const { data: positions = [] } = usePositions()
 
   // 뮤테이션 훅들
   const createEmployeeMutation = useCreateEmployee()
@@ -241,8 +255,8 @@ export function EmployeeManagement() {
     }
   }
 
-  // 통계 데이터 계산
-  const totalEmployees = employeesData?.totalElements || 0
+  // 통계 데이터 계산 (전체 데이터 기반)
+  const totalEmployees = allEmployeesData?.totalElements || 0
   const activeCount = activeEmployees?.length || 0
   const inactiveCount = totalEmployees - activeCount
 
@@ -257,18 +271,24 @@ export function EmployeeManagement() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
-            <Download className="mr-2 h-4 w-4" />
-            내보내기
-          </Button>
-          <Button variant="outline" size="sm">
-            <Upload className="mr-2 h-4 w-4" />
-            가져오기
-          </Button>
-          <Button onClick={handleCreateEmployee}>
-            <Plus className="mr-2 h-4 w-4" />
-            직원 등록
-          </Button>
+          {canManage && (
+            <>
+              <Button variant="outline" size="sm">
+                <Download className="mr-2 h-4 w-4" />
+                내보내기
+              </Button>
+              <Button variant="outline" size="sm">
+                <Upload className="mr-2 h-4 w-4" />
+                가져오기
+              </Button>
+            </>
+          )}
+          {canCreate && (
+            <Button onClick={handleCreateEmployee}>
+              <Plus className="mr-2 h-4 w-4" />
+              직원 등록
+            </Button>
+          )}
         </div>
       </div>
 
@@ -410,13 +430,13 @@ export function EmployeeManagement() {
             <EmployeeTable
               employees={employeesData?.content || []}
               loading={isLoadingEmployees}
-              onEdit={handleEditEmployee}
-              onView={handleViewEmployee}
-              onDelete={handleDeleteEmployee}
-              onTerminate={handleTerminateEmployee}
+              onEdit={canEdit ? handleEditEmployee : undefined}
+              onView={canView ? handleViewEmployee : undefined}
+              onDelete={canDelete ? handleDeleteEmployee : undefined}
+              onTerminate={canEdit ? handleTerminateEmployee : undefined}
               onSelectionChange={setSelectedEmployees}
-              showSelection={true}
-              showActions={true}
+              showSelection={canManage}
+              showActions={canEdit || canDelete}
             />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -424,11 +444,11 @@ export function EmployeeManagement() {
                 <EmployeeCard
                   key={employee.id}
                   employee={employee}
-                  onEdit={handleEditEmployee}
-                  onView={handleViewEmployee}
-                  onDelete={handleDeleteEmployee}
-                  onTerminate={handleTerminateEmployee}
-                  showActions={true}
+                  onEdit={canEdit ? handleEditEmployee : undefined}
+                  onView={canView ? handleViewEmployee : undefined}
+                  onDelete={canDelete ? handleDeleteEmployee : undefined}
+                  onTerminate={canEdit ? handleTerminateEmployee : undefined}
+                  showActions={canEdit || canDelete}
                 />
               ))}
             </div>
@@ -500,9 +520,9 @@ export function EmployeeManagement() {
           
           <EmployeeForm
             employee={selectedEmployee || undefined}
-            companies={[]} // TODO: 회사 목록 API 연동
-            departments={[]} // TODO: 부서 목록 API 연동  
-            positions={[]} // TODO: 직급 목록 API 연동
+            companies={companies}
+            departments={departments}
+            positions={positions}
             onSubmit={handleFormSubmit}
             onCancel={() => setShowForm(false)}
             loading={createEmployeeMutation.isPending || updateEmployeeMutation.isPending}

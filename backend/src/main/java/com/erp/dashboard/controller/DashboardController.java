@@ -1,6 +1,8 @@
 package com.erp.dashboard.controller;
 
 import com.erp.common.dto.ApiResponse;
+import com.erp.common.entity.User;
+import com.erp.common.repository.UserRepository;
 import com.erp.dashboard.dto.DashboardDto;
 import com.erp.dashboard.service.DashboardService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -35,6 +38,7 @@ import java.util.List;
 public class DashboardController {
 
     private final DashboardService dashboardService;
+    private final UserRepository userRepository;
 
     @GetMapping("/overview/{companyId}")
     @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
@@ -328,6 +332,31 @@ public class DashboardController {
             log.error("알림 통계 조회 실패: userId={}, {}", userId, e.getMessage(), e);
             return ResponseEntity.badRequest()
                     .body(ApiResponse.error("알림 통계 조회에 실패했습니다: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/notifications/unread-count")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @Operation(summary = "읽지 않은 알림 개수 조회", description = "현재 사용자의 읽지 않은 알림 개수를 조회합니다")
+    public ResponseEntity<ApiResponse<Long>> getUnreadNotificationCount(Authentication authentication) {
+        try {
+            String username = authentication.getName();
+            log.info("읽지 않은 알림 개수 조회 API 호출: username={}", username);
+            
+            // 현재 사용자 ID 조회
+            User currentUser = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다: " + username));
+            Long userId = currentUser.getId();
+            
+            DashboardDto.NotificationStatsDto stats = dashboardService.getNotificationStats(userId);
+            Long unreadCount = stats.unreadNotifications();
+            
+            log.info("읽지 않은 알림 개수: userId={}, count={}", userId, unreadCount);
+            return ResponseEntity.ok(ApiResponse.success("읽지 않은 알림 개수 조회 완료", unreadCount));
+        } catch (Exception e) {
+            log.error("읽지 않은 알림 개수 조회 실패: {}", e.getMessage(), e);
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("읽지 않은 알림 개수 조회에 실패했습니다: " + e.getMessage()));
         }
     }
 

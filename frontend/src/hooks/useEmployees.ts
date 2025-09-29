@@ -5,13 +5,17 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { employeeApi } from '@/services/hrApi'
+import { employeeApi, companyApi, departmentApi, positionApi } from '@/services/hrApi'
+import { useAuth } from '@/contexts/AuthContext'
 import type {
   Employee,
   EmployeeCreateRequest,
   EmployeeUpdateRequest,
   SearchParams,
-  StatisticsData
+  StatisticsData,
+  Company,
+  Department,
+  Position
 } from '@/types/hr'
 
 /**
@@ -41,7 +45,34 @@ export const EMPLOYEE_QUERY_KEYS = {
 export function useEmployees(params: SearchParams = {}) {
   return useQuery({
     queryKey: EMPLOYEE_QUERY_KEYS.list(params),
-    queryFn: () => employeeApi.getEmployees(params),
+    queryFn: async () => {
+      try {
+        const result = await employeeApi.getEmployees(params)
+        return result || {
+          content: [],
+          pageable: {
+            sort: { sorted: false, unsorted: true, empty: true },
+            pageNumber: params.page || 0,
+            pageSize: params.size || 20,
+            offset: (params.page || 0) * (params.size || 20),
+            paged: true,
+            unpaged: false
+          },
+          totalElements: 0,
+          totalPages: 0,
+          last: true,
+          first: true,
+          numberOfElements: 0,
+          size: params.size || 20,
+          number: params.page || 0,
+          sort: { sorted: false, unsorted: true, empty: true },
+          empty: true
+        }
+      } catch (error) {
+        console.error('직원 목록 조회 오류:', error)
+        throw error
+      }
+    },
     staleTime: 5 * 60 * 1000, // 5분
     retry: 3
   })
@@ -66,8 +97,35 @@ export function useEmployee(id: number) {
 export function useEmployeeSearch(searchTerm: string, params: SearchParams = {}) {
   return useQuery({
     queryKey: EMPLOYEE_QUERY_KEYS.search(searchTerm, params),
-    queryFn: () => employeeApi.searchEmployees(searchTerm, params),
-    enabled: !!searchTerm && searchTerm.length >= 2,
+    queryFn: async () => {
+      try {
+        const result = await employeeApi.searchEmployees(searchTerm, params)
+        return result || {
+          content: [],
+          pageable: {
+            sort: { sorted: false, unsorted: true, empty: true },
+            pageNumber: params.page || 0,
+            pageSize: params.size || 20,
+            offset: (params.page || 0) * (params.size || 20),
+            paged: true,
+            unpaged: false
+          },
+          totalElements: 0,
+          totalPages: 0,
+          last: true,
+          first: true,
+          numberOfElements: 0,
+          size: params.size || 20,
+          number: params.page || 0,
+          sort: { sorted: false, unsorted: true, empty: true },
+          empty: true
+        }
+      } catch (error) {
+        console.error('직원 검색 오류:', error)
+        throw error
+      }
+    },
+    enabled: !!searchTerm && searchTerm.length >= 1,
     staleTime: 2 * 60 * 1000, // 2분
     retry: 2
   })
@@ -79,7 +137,15 @@ export function useEmployeeSearch(searchTerm: string, params: SearchParams = {})
 export function useActiveEmployees() {
   return useQuery({
     queryKey: EMPLOYEE_QUERY_KEYS.active(),
-    queryFn: () => employeeApi.getActiveEmployees(),
+    queryFn: async () => {
+      try {
+        const result = await employeeApi.getActiveEmployees()
+        return result || []
+      } catch (error) {
+        console.error('재직 직원 목록 조회 오류:', error)
+        throw error
+      }
+    },
     staleTime: 10 * 60 * 1000, // 10분
     retry: 3
   })
@@ -91,7 +157,15 @@ export function useActiveEmployees() {
 export function useActiveEmployeesByCompany(companyId: number) {
   return useQuery({
     queryKey: EMPLOYEE_QUERY_KEYS.activeByCompany(companyId),
-    queryFn: () => employeeApi.getActiveEmployeesByCompany(companyId),
+    queryFn: async () => {
+      try {
+        const result = await employeeApi.getActiveEmployeesByCompany(companyId)
+        return result || []
+      } catch (error) {
+        console.error('회사별 재직 직원 목록 조회 오류:', error)
+        throw error
+      }
+    },
     enabled: !!companyId,
     staleTime: 10 * 60 * 1000,
     retry: 3
@@ -140,39 +214,49 @@ export function useBirthdayEmployeesThisMonth() {
  * 직원 통계 훅
  */
 export function useEmployeeStatistics() {
+  const { user } = useAuth()
+  
+  // HR 통계 조회 권한 체크 (ADMIN, MANAGER, USER 모두 허용)
+  const hasHrStatsPermission = user?.role && ['ADMIN', 'MANAGER', 'USER'].includes(user.role)
+
   const positionStats = useQuery({
     queryKey: [...EMPLOYEE_QUERY_KEYS.statistics(), 'position'],
     queryFn: () => employeeApi.getEmployeeCountByPosition(),
     staleTime: 30 * 60 * 1000, // 30분
-    retry: 3
+    retry: 3,
+    enabled: !!hasHrStatsPermission // 권한이 있을 때만 호출
   })
 
   const departmentStats = useQuery({
     queryKey: [...EMPLOYEE_QUERY_KEYS.statistics(), 'department'],
     queryFn: () => employeeApi.getEmployeeCountByDepartment(),
     staleTime: 30 * 60 * 1000,
-    retry: 3
+    retry: 3,
+    enabled: !!hasHrStatsPermission
   })
 
   const hireYearStats = useQuery({
     queryKey: [...EMPLOYEE_QUERY_KEYS.statistics(), 'hireYear'],
     queryFn: () => employeeApi.getEmployeeCountByHireYear(),
     staleTime: 30 * 60 * 1000,
-    retry: 3
+    retry: 3,
+    enabled: !!hasHrStatsPermission
   })
 
   const ageGroupStats = useQuery({
     queryKey: [...EMPLOYEE_QUERY_KEYS.statistics(), 'ageGroup'],
     queryFn: () => employeeApi.getEmployeeCountByAgeGroup(),
     staleTime: 30 * 60 * 1000,
-    retry: 3
+    retry: 3,
+    enabled: !!hasHrStatsPermission
   })
 
   const genderStats = useQuery({
     queryKey: [...EMPLOYEE_QUERY_KEYS.statistics(), 'gender'],
     queryFn: () => employeeApi.getEmployeeCountByGender(),
     staleTime: 30 * 60 * 1000,
-    retry: 3
+    retry: 3,
+    enabled: !!hasHrStatsPermission
   })
 
   return {
@@ -180,7 +264,32 @@ export function useEmployeeStatistics() {
     departmentStats,
     hireYearStats,
     ageGroupStats,
-    genderStats
+    genderStats,
+    hasHrStatsPermission
+  }
+}
+
+/**
+ * HR 권한 체크 훅
+ */
+export function useHrPermissions() {
+  const { user } = useAuth()
+  
+  return {
+    // 조회 권한 (모든 사용자)
+    canView: user?.role && ['ADMIN', 'MANAGER', 'USER'].includes(user.role),
+    
+    // 수정 권한 (MANAGER, ADMIN)
+    canEdit: user?.role && ['ADMIN', 'MANAGER'].includes(user.role),
+    
+    // 관리 권한 (ADMIN만)
+    canManage: user?.role === 'ADMIN',
+    
+    // 직원 등록 권한 (ADMIN만)
+    canCreate: user?.role === 'ADMIN',
+    
+    // 직원 삭제 권한 (ADMIN만)
+    canDelete: user?.role === 'ADMIN'
   }
 }
 
@@ -315,6 +424,68 @@ export function useCheckEmail(email: string, excludeId?: number) {
     enabled: !!email && email.includes('@'),
     staleTime: 0, // 실시간 검증
     retry: 1
+  })
+}
+
+/**
+ * 회사 목록 조회 훅
+ */
+export function useCompanies() {
+  return useQuery({
+    queryKey: ['companies'],
+    queryFn: companyApi.getCompanies,
+    staleTime: 10 * 60 * 1000, // 10분
+    retry: 2
+  })
+}
+
+/**
+ * 부서 목록 조회 훅
+ */
+export function useDepartments() {
+  return useQuery({
+    queryKey: ['departments'],
+    queryFn: departmentApi.getDepartments,
+    staleTime: 10 * 60 * 1000, // 10분
+    retry: 2
+  })
+}
+
+/**
+ * 회사별 부서 목록 조회 훅
+ */
+export function useDepartmentsByCompany(companyId: number) {
+  return useQuery({
+    queryKey: ['departments', 'company', companyId],
+    queryFn: () => departmentApi.getDepartmentsByCompany(companyId),
+    enabled: !!companyId,
+    staleTime: 10 * 60 * 1000, // 10분
+    retry: 2
+  })
+}
+
+/**
+ * 직급 목록 조회 훅
+ */
+export function usePositions() {
+  return useQuery({
+    queryKey: ['positions'],
+    queryFn: positionApi.getAllPositions,
+    staleTime: 10 * 60 * 1000, // 10분
+    retry: 2
+  })
+}
+
+/**
+ * 회사별 직급 목록 조회 훅
+ */
+export function usePositionsByCompany(companyId: number) {
+  return useQuery({
+    queryKey: ['positions', 'company', companyId],
+    queryFn: () => positionApi.getPositionsByCompany(companyId),
+    enabled: !!companyId,
+    staleTime: 10 * 60 * 1000, // 10분
+    retry: 2
   })
 }
 

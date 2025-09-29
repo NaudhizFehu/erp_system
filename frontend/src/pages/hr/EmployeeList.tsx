@@ -153,7 +153,7 @@ function EmployeeList() {
                 <td>{employee.salary ? formatCurrency(employee.salary) : '-'}</td>
                 <td>
                   <span
-                    className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                    className={`inline-flex items-center justify-center rounded-full px-2 py-1 text-xs font-medium w-16 ${
                       employee.status === EmployeeStatus.ACTIVE
                         ? 'bg-green-100 text-green-800'
                         : employee.status === EmployeeStatus.INACTIVE

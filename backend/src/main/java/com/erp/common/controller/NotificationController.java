@@ -257,8 +257,13 @@ public class NotificationController {
             throw new IllegalArgumentException("인증 정보가 없습니다");
         }
         
-        // 임시로 admin 사용자 ID 반환 (실제로는 SecurityContext에서 사용자 정보 추출)
-        // TODO: 실제 인증 시스템과 연동하여 현재 사용자 ID 추출
-        return 1L; // admin 사용자 ID
+        // 실제 인증된 사용자 ID 반환
+        if (authentication.getPrincipal() instanceof com.erp.common.security.UserPrincipal) {
+            com.erp.common.security.UserPrincipal userPrincipal = 
+                (com.erp.common.security.UserPrincipal) authentication.getPrincipal();
+            return userPrincipal.getId();
+        }
+        
+        throw new IllegalArgumentException("사용자 ID를 추출할 수 없습니다");
     }
 }

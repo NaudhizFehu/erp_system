@@ -8,6 +8,7 @@ export interface UserProfile {
   username: string
   fullName: string
   email: string
+  phone?: string
   phoneNumber?: string
   department?: string
   position?: string
@@ -22,6 +23,7 @@ export interface UserProfile {
 export interface UpdateUserProfileRequest {
   fullName: string
   email: string
+  phone?: string
   phoneNumber?: string
   department?: string
   position?: string
@@ -56,11 +58,23 @@ class UserService {
   async updateProfile(data: UpdateUserProfileRequest): Promise<UserProfile> {
     try {
       console.log('사용자 정보 업데이트 API 호출:', `${this.baseUrl}/profile`)
+      console.log('전송할 데이터:', JSON.stringify(data, null, 2))
       const response = await api.put(`${this.baseUrl}/profile`, data)
       console.log('사용자 정보 업데이트 API 응답:', response)
-      return response.data
+      console.log('응답 데이터 구조:', response.data)
+      console.log('응답 data 필드:', response.data.data)
+      console.log('응답 data 필드 상세:', JSON.stringify(response.data.data, null, 2))
+      // ApiResponse 구조에서 실제 데이터 추출
+      const userData = response.data.data || response.data
+      console.log('최종 반환할 사용자 데이터:', userData)
+      return userData
     } catch (error) {
       console.error('사용자 정보 업데이트 오류:', error)
+      if (error.response) {
+        console.error('응답 데이터:', error.response.data)
+        console.error('응답 상태:', error.response.status)
+        console.error('응답 헤더:', error.response.headers)
+      }
       throw new Error('사용자 정보 업데이트 중 오류가 발생했습니다.')
     }
   }

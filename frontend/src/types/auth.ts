@@ -22,6 +22,7 @@ export interface UserInfo {
   email: string
   fullName: string
   role: string
+  phone?: string
   phoneNumber?: string
   department?: DepartmentInfo
   position?: string

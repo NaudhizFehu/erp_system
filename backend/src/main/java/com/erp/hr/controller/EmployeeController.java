@@ -14,7 +14,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 // import io.swagger.v3.oas.annotations.responses.ApiResponse; // 별칭 대신 완전한 클래스명 사용
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -33,13 +34,13 @@ import java.util.List;
  * 직원 관리 REST 컨트롤러
  * 직원 관련 API 엔드포인트를 제공합니다
  */
-@Slf4j
 @RestController
-@RequestMapping("/api/employees")
-@PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+@RequestMapping("/api/hr/employees")
 @Tag(name = "인사관리", description = "직원, 급여, 근태 관리 API")
 @SecurityRequirement(name = "bearer-jwt")
 public class EmployeeController {
+
+    private static final Logger log = LoggerFactory.getLogger(EmployeeController.class);
 
     @Autowired
     private EmployeeService employeeService;
@@ -47,6 +48,8 @@ public class EmployeeController {
     /**
      * 새로운 직원 등록
      */
+    @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
         summary = "직원 등록",
         description = """
@@ -141,8 +144,6 @@ public class EmployeeController {
             )
         )
     })
-    @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<EmployeeDto>> createEmployee(
         @Parameter(
             description = "직원 등록 정보",
@@ -185,7 +186,7 @@ public class EmployeeController {
      * 직원 정보 수정
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
     public ResponseEntity<ApiResponse<EmployeeDto>> updateEmployee(
             @PathVariable Long id,
             @Valid @RequestBody EmployeeUpdateDto updateDto) {
@@ -203,7 +204,7 @@ public class EmployeeController {
      * 직원 정보 조회 (ID)
      */
     @GetMapping("/{id}")
-    // @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')") // 임시로 인증 제거
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
     public ResponseEntity<ApiResponse<EmployeeDto>> getEmployee(@PathVariable Long id) {
         try {
             log.info("직원 조회 요청: ID {}", id);
@@ -250,6 +251,7 @@ public class EmployeeController {
      * 전체 직원 목록 조회 (페이징)
      */
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
     public ResponseEntity<ApiResponse<Page<EmployeeDto>>> getAllEmployees(
             @PageableDefault(size = 20, sort = "employeeNumber") Pageable pageable) {
         try {
@@ -507,6 +509,7 @@ public class EmployeeController {
      * 직급별 직원 수 통계
      */
     @GetMapping("/statistics/position")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
     public ResponseEntity<ApiResponse<List<Object[]>>> getEmployeeCountByPosition() {
         try {
             log.info("직급별 직원 수 통계 조회 요청");
@@ -522,6 +525,7 @@ public class EmployeeController {
      * 부서별 직원 수 통계
      */
     @GetMapping("/statistics/department")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
     public ResponseEntity<ApiResponse<List<Object[]>>> getEmployeeCountByDepartment() {
         try {
             log.info("부서별 직원 수 통계 조회 요청");
@@ -537,6 +541,7 @@ public class EmployeeController {
      * 입사년도별 직원 수 통계
      */
     @GetMapping("/statistics/hire-year")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
     public ResponseEntity<ApiResponse<List<Object[]>>> getEmployeeCountByHireYear() {
         try {
             log.info("입사년도별 직원 수 통계 조회 요청");
@@ -552,6 +557,7 @@ public class EmployeeController {
      * 연령대별 직원 수 통계
      */
     @GetMapping("/statistics/age-group")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
     public ResponseEntity<ApiResponse<List<Object[]>>> getEmployeeCountByAgeGroup() {
         try {
             log.info("연령대별 직원 수 통계 조회 요청");
@@ -567,6 +573,7 @@ public class EmployeeController {
      * 성별 직원 수 통계
      */
     @GetMapping("/statistics/gender")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
     public ResponseEntity<ApiResponse<List<Object[]>>> getEmployeeCountByGender() {
         try {
             log.info("성별 직원 수 통계 조회 요청");
