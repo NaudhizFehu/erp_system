@@ -43,9 +43,21 @@ export interface PageResponse<T> {
 export interface Company {
   id: number
   companyCode: string
-  companyName: string
+  name: string
+  nameEn?: string
   businessNumber: string
+  corporationNumber?: string
+  ceoName?: string
+  businessType?: string
+  businessItem?: string
   address: string
+  addressDetail?: string
+  postalCode?: string
+  phone?: string
+  fax?: string
+  email?: string
+  website?: string
+  status: string
   createdAt: string
   updatedAt: string
 }
@@ -56,9 +68,23 @@ export interface Company {
 export interface Department {
   id: number
   departmentCode: string
-  departmentName: string
+  name: string
+  nameEn?: string
+  description?: string
+  company?: Company
   parentDepartment?: Department
   manager?: Employee
+  level?: number
+  sortOrder?: number
+  departmentType?: string
+  status?: string
+  costCenterCode?: string
+  phone?: string
+  fax?: string
+  email?: string
+  location?: string
+  budgetAmount?: number
+  fullPath?: string
   createdAt: string
   updatedAt: string
 }
@@ -164,7 +190,7 @@ export enum Gender {
  */
 export enum EmploymentStatus {
   ACTIVE = 'ACTIVE',
-  ON_LEAVE = 'ON_LEAVE',
+  INACTIVE = 'INACTIVE',
   TERMINATED = 'TERMINATED',
   SUSPENDED = 'SUSPENDED'
 }
@@ -174,8 +200,8 @@ export enum EmploymentStatus {
  */
 export enum EmploymentType {
   FULL_TIME = 'FULL_TIME',
-  CONTRACT = 'CONTRACT',
   PART_TIME = 'PART_TIME',
+  TEMPORARY = 'TEMPORARY',
   INTERN = 'INTERN',
   FREELANCER = 'FREELANCER'
 }
@@ -508,14 +534,14 @@ export const KOREAN_LABELS = {
   
   // 근무 상태
   [EmploymentStatus.ACTIVE]: '재직',
-  [EmploymentStatus.ON_LEAVE]: '휴직',
+  [EmploymentStatus.INACTIVE]: '휴직',
   [EmploymentStatus.TERMINATED]: '퇴직',
   [EmploymentStatus.SUSPENDED]: '정직',
   
   // 고용 형태
   [EmploymentType.FULL_TIME]: '정규직',
-  [EmploymentType.CONTRACT]: '계약직',
-  [EmploymentType.PART_TIME]: '시간제',
+  [EmploymentType.PART_TIME]: '계약직',
+  [EmploymentType.TEMPORARY]: '임시직',
   [EmploymentType.INTERN]: '인턴',
   [EmploymentType.FREELANCER]: '프리랜서',
   

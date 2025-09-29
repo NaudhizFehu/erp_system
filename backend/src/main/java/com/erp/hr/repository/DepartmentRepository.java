@@ -55,7 +55,13 @@ public interface DepartmentRepository extends JpaRepository<Department, Long> {
     List<Department> findRootDepartmentsByCompanyId(@Param("companyId") Long companyId);
 
     /**
-     * 부서명으로 검색
+     * 부서명으로 부서 조회 (정확한 일치)
+     */
+    @Query("SELECT d FROM Department d JOIN FETCH d.company c LEFT JOIN FETCH d.manager m WHERE d.name = :name AND d.isDeleted = false")
+    Optional<Department> findByName(@Param("name") String name);
+
+    /**
+     * 부서명으로 검색 (부분 일치)
      */
     @Query("SELECT d FROM Department d JOIN FETCH d.company c LEFT JOIN FETCH d.manager m WHERE d.name LIKE %:name% AND d.isDeleted = false")
     List<Department> findByNameContaining(@Param("name") String name);

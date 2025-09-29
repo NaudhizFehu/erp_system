@@ -1,7 +1,8 @@
 package com.erp.config;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
@@ -17,10 +18,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
  * DDL 강제 실행 컴포넌트
  * Hibernate DDL이 실행되지 않을 경우 강제로 실행합니다
  */
-@Slf4j
 @Component
 @RequiredArgsConstructor
 public class DdlForcer {
+
+    private static final Logger log = LoggerFactory.getLogger(DdlForcer.class);
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -484,20 +486,38 @@ public class DdlForcer {
             };
             
         for (String sql : createTables) {
-            try {
-                // 각 테이블을 개별 트랜잭션으로 생성
-                transactionTemplate.execute(status -> {
-            try {
-                jdbcTemplate.execute(sql);
-                log.info("✅ 테이블 생성 성공");
-                        return null;
-            } catch (Exception e) {
-                log.warn("⚠️ 테이블 생성 중 오류 (이미 존재할 수 있음): {}", e.getMessage());
-                        return null;
+            int retryCount = 0;
+            int maxRetries = 3;
+            boolean success = false;
+            
+            while (retryCount < maxRetries && !success) {
+                try {
+                    // 각 테이블을 개별 트랜잭션으로 생성
+                    transactionTemplate.execute(status -> {
+                        try {
+                            jdbcTemplate.execute(sql);
+                            log.info("✅ 테이블 생성 성공");
+                            return null;
+                        } catch (Exception e) {
+                            log.warn("⚠️ 테이블 생성 중 오류 (이미 존재할 수 있음): {}", e.getMessage());
+                            return null;
+                        }
+                    });
+                    success = true;
+                } catch (Exception e) {
+                    retryCount++;
+                    if (retryCount < maxRetries) {
+                        log.warn("⚠️ 테이블 생성 실패, 재시도 {}/{}: {}", retryCount, maxRetries, e.getMessage());
+                        try {
+                            Thread.sleep(2000); // 2초 대기
+                        } catch (InterruptedException ie) {
+                            Thread.currentThread().interrupt();
+                            break;
+                        }
+                    } else {
+                        log.error("❌ 테이블 생성 최종 실패 (재시도 {}회 후): {}", maxRetries, e.getMessage());
                     }
-                });
-            } catch (Exception e) {
-                log.warn("⚠️ 테이블 생성 트랜잭션 중 오류: {}", e.getMessage());
+                }
             }
         }
         log.info("✅ 하드코딩된 테이블 생성 완료");
@@ -528,22 +548,14 @@ public class DdlForcer {
      * 회사 데이터 삽입
      */
     private void insertCompanyData() {
-        try {
-        transactionTemplate.execute(status -> {
-            try {
-                jdbcTemplate.execute("""
-                        INSERT INTO companies (id, company_code, name, name_en, business_number, corporation_number, ceo_name, business_type, business_item, address, detailed_address, postal_code, phone, fax, email, website, status, is_deleted)
-                    VALUES (1, 'ABC_CORP', 'ABC 기업', 'ABC Corporation', '123-45-67890', '123456-1234567', '김대표', '제조업', '전자제품 제조', '서울특별시 강남구 테헤란로 123', 'ABC빌딩 10층', '06292', '02-1234-5678', '02-1234-5679', 'info@abc.com', 'www.abc.com', 'ACTIVE', false)
-                    ON CONFLICT (id) DO NOTHING
-                    """);
-                log.info("✅ 회사 데이터 삽입 성공");
-            } catch (Exception e) {
-                log.warn("⚠️ 회사 데이터 삽입 중 오류: {}", e.getMessage());
-            }
-            return null;
-        });
-            } catch (Exception e) {
-            log.warn("⚠️ 회사 데이터 삽입 트랜잭션 중 오류: {}", e.getMessage());
+        String[] companyInserts = {
+            "INSERT INTO companies (id, company_code, name, name_en, business_number, corporation_number, ceo_name, business_type, business_item, address, detailed_address, postal_code, phone, fax, email, website, status, is_deleted) VALUES (1, 'ABC_CORP', 'ABC기업', 'ABC Corporation', '123-45-67890', '123456-1234567', '김대표', 'IT 서비스', '소프트웨어 개발', '서울시 강남구 테헤란로 123', 'ABC빌딩 10층', '06292', '02-1234-5678', '02-1234-5679', 'info@abc.com', 'https://www.abc.com', 'ACTIVE', false) ON CONFLICT (id) DO NOTHING",
+            "INSERT INTO companies (id, company_code, name, name_en, business_number, corporation_number, ceo_name, business_type, business_item, address, detailed_address, postal_code, phone, fax, email, website, status, is_deleted) VALUES (2, 'XYZ_GROUP', 'XYZ그룹', 'XYZ Group', '234-56-78901', '234567-2345678', '이사장', '제조업', '제품 제조', '경기도 성남시 분당구 판교역로 456', 'XYZ빌딩 15층', '13494', '031-234-5678', '031-234-5679', 'info@xyz.com', 'https://www.xyz.com', 'ACTIVE', false) ON CONFLICT (id) DO NOTHING",
+            "INSERT INTO companies (id, company_code, name, name_en, business_number, corporation_number, ceo_name, business_type, business_item, address, detailed_address, postal_code, phone, fax, email, website, status, is_deleted) VALUES (3, 'DEF_CORP', 'DEF코퍼레이션', 'DEF Corporation', '345-67-89012', '345678-3456789', '박대표', '서비스업', '고객 서비스', '서울시 서초구 서초대로 789', 'DEF빌딩 8층', '06620', '02-345-6789', '02-345-6790', 'info@def.com', 'https://www.def.com', 'ACTIVE', false) ON CONFLICT (id) DO NOTHING"
+        };
+        
+        for (String sql : companyInserts) {
+            executeSafeInsert(sql, "회사 데이터");
         }
     }
     
@@ -577,8 +589,8 @@ public class DdlForcer {
             log.info("🔐 user 비밀번호 검증 결과: {}", userMatches);
             
             String[] userInserts = {
-                String.format("INSERT INTO users (id, username, password, email, full_name, phone, role, is_active, is_locked, is_password_expired, company_id, department_id, password_changed_at) VALUES (1, 'admin', '%s', 'admin@abc.com', '관리자', '02-1234-5678', 'ADMIN', true, false, false, 1, 1, NOW()) ON CONFLICT (id) DO NOTHING", adminPassword),
-                String.format("INSERT INTO users (id, username, password, email, full_name, phone, role, is_active, is_locked, is_password_expired, company_id, department_id, password_changed_at) VALUES (2, 'user', '%s', 'user@abc.com', '일반사용자', '02-2345-6789', 'USER', true, false, false, 1, 3, NOW()) ON CONFLICT (id) DO NOTHING", userPassword)
+                String.format("INSERT INTO users (id, username, password, email, full_name, phone, role, is_active, is_locked, is_password_expired, company_id, department_id, position_id, password_changed_at) VALUES (1, 'admin', '%s', 'admin@abc.com', '관리자', '02-1234-5678', 'ADMIN', true, false, false, 1, 1, 1, NOW()) ON CONFLICT (id) DO NOTHING", adminPassword),
+                String.format("INSERT INTO users (id, username, password, email, full_name, phone, role, is_active, is_locked, is_password_expired, company_id, department_id, position_id, password_changed_at) VALUES (2, 'user', '%s', 'user@abc.com', '일반사용자', '02-2345-6789', 'USER', true, false, false, 1, 3, 3, NOW()) ON CONFLICT (id) DO NOTHING", userPassword)
             };
             
             for (String sql : userInserts) {
@@ -939,19 +951,41 @@ public class DdlForcer {
      * 안전한 코멘트 실행 (개별 트랜잭션)
      */
     private void executeSafeComment(String sql, String commentType) {
-        try {
-        transactionTemplate.execute(status -> {
+        int retryCount = 0;
+        int maxRetries = 2;
+        boolean success = false;
+        
+        while (retryCount < maxRetries && !success) {
             try {
-                    jdbcTemplate.execute(sql);
-                    log.debug("✅ {} 추가 성공: {}", commentType, sql);
-                    return null;
+                transactionTemplate.execute(status -> {
+                    try {
+                        jdbcTemplate.execute(sql);
+                        log.debug("✅ {} 추가 성공: {}", commentType, sql);
+                        return null;
+                    } catch (Exception e) {
+                        log.warn("⚠️ {} 추가 중 오류: {} - {}", commentType, sql, e.getMessage());
+                        return null;
+                    }
+                });
+                success = true;
             } catch (Exception e) {
-                    log.warn("⚠️ {} 추가 중 오류: {} - {}", commentType, sql, e.getMessage());
-            return null;
+                retryCount++;
+                if (retryCount < maxRetries) {
+                    log.warn("⚠️ {} 추가 실패, 재시도 {}/{}: {}", commentType, retryCount, maxRetries, e.getMessage());
+                    try {
+                        Thread.sleep(1000); // 1초 대기
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                } else {
+                    log.error("❌ {} 추가 최종 실패 (재시도 {}회 후): {} - {}", commentType, maxRetries, sql, e.getMessage());
+                    // 운영 환경에서는 중요한 설정이므로 애플리케이션 시작 실패 처리
+                    if (commentType.contains("테이블") || commentType.contains("기본")) {
+                        throw new RuntimeException("중요한 DDL 작업 실패: " + commentType, e);
+                    }
                 }
-            });
-            } catch (Exception e) {
-            log.warn("⚠️ {} 추가 트랜잭션 중 오류: {} - {}", commentType, sql, e.getMessage());
             }
+        }
     }
 }

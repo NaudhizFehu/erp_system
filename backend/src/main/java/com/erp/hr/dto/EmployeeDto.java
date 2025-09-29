@@ -64,7 +64,9 @@ public record EmployeeDto(
         if (department == null) {
             throw new IllegalArgumentException("소속 부서는 필수입니다");
         }
-        // position은 선택적 필드이므로 null 체크 제거
+        if (position == null) {
+            throw new IllegalArgumentException("직급은 필수입니다");
+        }
         if (hireDate == null) {
             throw new IllegalArgumentException("입사일은 필수입니다");
         }

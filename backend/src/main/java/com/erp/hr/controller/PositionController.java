@@ -25,8 +25,7 @@ import java.util.List;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/hr/positions")
-@PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+@RequestMapping("/api/positions")
 public class PositionController {
 
     @Autowired
@@ -103,6 +102,7 @@ public class PositionController {
      * 전체 직급 목록 조회 (페이징)
      */
     @GetMapping
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Page<PositionDto>>> getAllPositions(
             @PageableDefault(size = 20, sort = "level") Pageable pageable) {
         try {

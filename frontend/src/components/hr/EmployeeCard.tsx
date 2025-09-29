@@ -140,12 +140,18 @@ export function EmployeeCard({
         </div>
 
         {/* 상태 뱃지 */}
-        <div className="flex items-center space-x-2">
-          <Badge variant={getStatusBadgeVariant(employee.employmentStatus)}>
+        <div className="flex flex-col gap-1">
+          <Badge 
+            variant={getStatusBadgeVariant(employee.employmentStatus)}
+            className="w-16 text-xs px-2 py-1 flex items-center justify-center"
+          >
             {KOREAN_LABELS[employee.employmentStatus]}
           </Badge>
           {employee.employmentType && (
-            <Badge variant="outline">
+            <Badge 
+              variant="outline" 
+              className="w-16 text-xs px-2 py-1 flex items-center justify-center"
+            >
               {KOREAN_LABELS[employee.employmentType]}
             </Badge>
           )}

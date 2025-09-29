@@ -59,15 +59,16 @@ public class User extends BaseEntity {
     private String fullName;
 
     /**
-     * 전화번호
+     * 유선전화번호 (사무실)
      */
-    @Pattern(regexp = "^\\d{2,3}-\\d{3,4}-\\d{4}$", message = "올바른 전화번호 형식이어야 합니다")
+    @Pattern(regexp = "^(01[016789]-?\\d{3,4}-?\\d{4}|0[2-6]\\d?-?\\d{3,4}-?\\d{4}|\\d{4}-?\\d{4}|\\d{10,11}|\\d{8})$", message = "올바른 유선전화번호 형식이어야 합니다")
     @Column(name = "phone", length = 20)
     private String phone;
 
     /**
-     * 전화번호 (추가 필드)
+     * 휴대폰번호
      */
+    @Pattern(regexp = "^(01[016789]-?\\d{3,4}-?\\d{4}|0[2-6]\\d?-?\\d{3,4}-?\\d{4}|\\d{4}-?\\d{4}|\\d{10,11}|\\d{8})$", message = "올바른 휴대폰번호 형식이어야 합니다")
     @Column(name = "phone_number", length = 20)
     private String phoneNumber;
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save, Eye, EyeOff, User, Mail, Phone, Building } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -22,16 +23,26 @@ function UserProfilePage() {
   const { user, updateUser } = useAuth()
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [success, setSuccess] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
   const [departments, setDepartments] = useState<{ id: number; name: string }[]>([])
   const [positions, setPositions] = useState<{ id: number; name: string }[]>([])
+  
+  // 필드별 에러 상태 관리
+  const [fieldErrors, setFieldErrors] = useState<{
+    fullName?: string
+    email?: string
+    phone?: string
+    phoneNumber?: string
+    currentPassword?: string
+    newPassword?: string
+    confirmPassword?: string
+  }>({})
   
   const [formData, setFormData] = useState({
     username: '',
     fullName: '',
     email: '',
+    phone: '',
     phoneNumber: '',
     departmentId: '',
     departmentName: '',
@@ -50,15 +61,21 @@ function UserProfilePage() {
    */
   useEffect(() => {
     if (user) {
+      console.log('UserProfilePage useEffect에서 user 정보:', user)
+      console.log('UserProfilePage useEffect에서 user 정보 상세:', JSON.stringify(user, null, 2))
+      console.log('UserProfilePage useEffect department 필드:', user.department)
+      console.log('UserProfilePage useEffect department?.name:', user.department?.name)
+      console.log('UserProfilePage useEffect position 필드:', user.position)
       setFormData({
         username: user.username || '',
         fullName: user.fullName || '',
         email: user.email || '',
+        phone: user.phone || '',
         phoneNumber: user.phoneNumber || '',
         departmentId: user.department?.id?.toString() || '',
         departmentName: user.department?.name || '',
-        positionId: '', // TODO: position 정보가 user에 없으므로 추후 추가
-        positionName: '',
+        positionId: '', // position은 문자열로 저장되므로 ID는 별도 관리 필요
+        positionName: user.position || '', // user.position 필드 사용
         currentPassword: '',
         newPassword: '',
         confirmPassword: ''
@@ -84,16 +101,36 @@ function UserProfilePage() {
         const posData = await positionService.getAllPositions()
         setPositions(posData)
         
+        // 현재 사용자의 부서/직급에 맞는 ID 설정
+        if (user) {
+          setFormData(prev => {
+            const selectedDept = deptData.find(dept => dept.name === user.department?.name)
+            const selectedPos = posData.find(pos => pos.name === user.position)
+            
+            console.log('드롭다운 로딩 후 ID 설정:')
+            console.log('사용자 부서명:', user.department?.name)
+            console.log('선택된 부서:', selectedDept)
+            console.log('사용자 직급:', user.position)
+            console.log('선택된 직급:', selectedPos)
+            
+            return {
+              ...prev,
+              departmentId: selectedDept ? selectedDept.id.toString() : prev.departmentId,
+              positionId: selectedPos ? selectedPos.id.toString() : prev.positionId
+            }
+          })
+        }
+        
       } catch (error) {
         console.error('드롭다운 데이터 로드 실패:', error)
-        setError('부서/직급 목록을 불러오는 중 오류가 발생했습니다.')
+        toast.error('부서/직급 목록을 불러오는 중 오류가 발생했습니다.')
       } finally {
         setLoading(false)
       }
     }
 
     loadDropdownData()
-  }, [isAdmin])
+  }, [isAdmin, user])
 
   /**
    * 폼 데이터 업데이트
@@ -130,38 +167,79 @@ function UserProfilePage() {
    * 폼 유효성 검사
    */
   const validateForm = () => {
+    const errors: typeof fieldErrors = {}
+    let hasErrors = false
+
+    // 이름 검증
     if (!formData.fullName.trim()) {
-      setError('이름은 필수입니다.')
-      return false
+      errors.fullName = '이름은 필수입니다.'
+      hasErrors = true
     }
     
+    // 이메일 검증
     if (!formData.email.trim()) {
-      setError('이메일은 필수입니다.')
-      return false
+      errors.email = '이메일은 필수입니다.'
+      hasErrors = true
+    } else {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(formData.email)) {
+        errors.email = '올바른 이메일 형식을 입력해주세요.'
+        hasErrors = true
+      }
+    }
+
+    // 부서 검증 (필수)
+    if (!formData.departmentName?.trim()) {
+      errors.departmentName = '부서는 필수입니다.'
+      hasErrors = true
     }
     
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(formData.email)) {
-      setError('올바른 이메일 형식을 입력해주세요.')
-      return false
+    // 직급 검증 (필수)
+    if (!formData.positionName?.trim()) {
+      errors.positionName = '직급은 필수입니다.'
+      hasErrors = true
+    }
+
+    // 전화번호 검증 (선택사항이지만 형식이 있으면 검증)
+    if (formData.phone && formData.phone.trim()) {
+      const phoneRegex = /^(01[016789]-?\d{3,4}-?\d{4}|0[2-6]\d?-?\d{3,4}-?\d{4}|\d{4}-?\d{4}|\d{10,11}|\d{8})$/
+      if (!phoneRegex.test(formData.phone.trim())) {
+        errors.phone = '올바른 유선전화번호 형식을 입력해주세요.'
+        hasErrors = true
+      }
+    }
+
+    if (formData.phoneNumber && formData.phoneNumber.trim()) {
+      const phoneRegex = /^(01[016789]-?\d{3,4}-?\d{4}|0[2-6]\d?-?\d{3,4}-?\d{4}|\d{4}-?\d{4}|\d{10,11}|\d{8})$/
+      if (!phoneRegex.test(formData.phoneNumber.trim())) {
+        errors.phoneNumber = '올바른 휴대폰번호 형식을 입력해주세요.'
+        hasErrors = true
+      }
     }
 
     // 비밀번호 변경 시 검증
     if (formData.newPassword || formData.confirmPassword) {
       if (!formData.currentPassword) {
-        setError('현재 비밀번호를 입력해주세요.')
-        return false
+        errors.currentPassword = '현재 비밀번호를 입력해주세요.'
+        hasErrors = true
       }
       
-      if (formData.newPassword.length < 6) {
-        setError('새 비밀번호는 6자 이상이어야 합니다.')
-        return false
+      if (formData.newPassword && formData.newPassword.length < 6) {
+        errors.newPassword = '새 비밀번호는 6자 이상이어야 합니다.'
+        hasErrors = true
       }
       
-      if (formData.newPassword !== formData.confirmPassword) {
-        setError('새 비밀번호가 일치하지 않습니다.')
-        return false
+      if (formData.newPassword && formData.confirmPassword && formData.newPassword !== formData.confirmPassword) {
+        errors.confirmPassword = '새 비밀번호가 일치하지 않습니다.'
+        hasErrors = true
       }
+    }
+
+    setFieldErrors(errors)
+    
+    if (hasErrors) {
+      toast.error('입력 정보를 확인해주세요.')
+      return false
     }
 
     return true
@@ -175,20 +253,64 @@ function UserProfilePage() {
 
     try {
       setSaving(true)
-      setError(null)
-      setSuccess(null)
+      setFieldErrors({}) // 필드별 에러 상태 초기화
 
-      // 프로필 정보 업데이트
+      // 프로필 정보 업데이트 (부서/직급은 필수값)
       const profileData: UpdateUserProfileRequest = {
-        fullName: formData.fullName,
-        email: formData.email,
-        phoneNumber: formData.phoneNumber,
-        department: formData.departmentName,
-        position: formData.positionName
+        fullName: formData.fullName?.trim() || '',
+        email: formData.email?.trim() || '',
+        phone: formData.phone?.trim() || undefined,
+        phoneNumber: formData.phoneNumber?.trim() || undefined,
+        department: formData.departmentName?.trim() || '', // 필수값으로 처리
+        position: formData.positionName?.trim() || '' // 필수값으로 처리
       }
 
+      // 빈 문자열인 선택적 필드들을 제거 (부서/직급은 필수값이므로 제거하지 않음)
+      Object.keys(profileData).forEach(key => {
+        const value = profileData[key as keyof UpdateUserProfileRequest]
+        if ((key === 'phone' || key === 'phoneNumber') && (value === '' || value === null)) {
+          delete profileData[key as keyof UpdateUserProfileRequest]
+        }
+      })
+
       const updatedUser = await userService.updateProfile(profileData)
-      updateUser(updatedUser)
+      console.log('업데이트된 사용자 정보:', updatedUser)
+      console.log('업데이트된 사용자 정보 상세:', JSON.stringify(updatedUser, null, 2))
+      console.log('department 필드:', updatedUser.department)
+      console.log('position 필드:', updatedUser.position)
+      
+      // 폼 데이터를 업데이트된 사용자 정보로 동기화
+      // 부서와 직급의 ID도 찾아서 설정해야 함
+      const selectedDepartment = departments.find(dept => dept.name === updatedUser.department)
+      const selectedPosition = positions.find(pos => pos.name === updatedUser.position)
+      
+      const newFormData = {
+        ...formData,
+        fullName: updatedUser.fullName || '',
+        email: updatedUser.email || '',
+        phone: updatedUser.phone || '',
+        phoneNumber: updatedUser.phoneNumber || '',
+        departmentId: selectedDepartment ? selectedDepartment.id.toString() : '',
+        departmentName: updatedUser.department || '',
+        positionId: selectedPosition ? selectedPosition.id.toString() : '',
+        positionName: updatedUser.position || '',
+        // 비밀번호 필드는 초기화
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      }
+      setFormData(newFormData)
+      
+      // 전역 상태 업데이트 - department 객체를 올바르게 구성
+      const updatedUserWithDepartment = {
+        ...updatedUser,
+        department: selectedDepartment ? {
+          id: selectedDepartment.id,
+          name: selectedDepartment.name,
+          departmentCode: selectedDepartment.departmentCode || ''
+        } : null
+      }
+      updateUser(updatedUserWithDepartment)
       
       // 비밀번호 변경이 요청된 경우
       if (formData.newPassword && formData.currentPassword) {
@@ -198,19 +320,11 @@ function UserProfilePage() {
         })
       }
       
-      setSuccess('사용자 정보가 성공적으로 저장되었습니다!')
-      
-      // 비밀번호 필드 초기화
-      setFormData(prev => ({
-        ...prev,
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      }))
+      toast.success('사용자 정보가 성공적으로 저장되었습니다!')
       
     } catch (error) {
       console.error('사용자 정보 저장 실패:', error)
-      setError('사용자 정보 저장에 실패했습니다.')
+      toast.error('사용자 정보 저장에 실패했습니다.')
     } finally {
       setSaving(false)
     }
@@ -287,9 +401,19 @@ function UserProfilePage() {
               <Input
                 id="fullName"
                 value={formData.fullName}
-                onChange={(e) => updateFormData('fullName', e.target.value)}
+                onChange={(e) => {
+                  updateFormData('fullName', e.target.value)
+                  // 에러 상태 초기화
+                  if (fieldErrors.fullName) {
+                    setFieldErrors(prev => ({ ...prev, fullName: undefined }))
+                  }
+                }}
                 placeholder="이름을 입력하세요"
+                className={fieldErrors.fullName ? "border-red-500 focus-visible:ring-red-500" : ""}
               />
+              {fieldErrors.fullName && (
+                <p className="text-sm text-red-600 mt-1">{fieldErrors.fullName}</p>
+              )}
             </div>
 
             <div>
@@ -298,19 +422,59 @@ function UserProfilePage() {
                 id="email"
                 type="email"
                 value={formData.email}
-                onChange={(e) => updateFormData('email', e.target.value)}
+                onChange={(e) => {
+                  updateFormData('email', e.target.value)
+                  // 에러 상태 초기화
+                  if (fieldErrors.email) {
+                    setFieldErrors(prev => ({ ...prev, email: undefined }))
+                  }
+                }}
                 placeholder="이메일을 입력하세요"
+                className={fieldErrors.email ? "border-red-500 focus-visible:ring-red-500" : ""}
               />
+              {fieldErrors.email && (
+                <p className="text-sm text-red-600 mt-1">{fieldErrors.email}</p>
+              )}
             </div>
 
             <div>
-              <Label htmlFor="phoneNumber">전화번호</Label>
+              <Label htmlFor="phone">유선전화</Label>
+              <Input
+                id="phone"
+                value={formData.phone}
+                onChange={(e) => {
+                  updateFormData('phone', e.target.value)
+                  // 에러 상태 초기화
+                  if (fieldErrors.phone) {
+                    setFieldErrors(prev => ({ ...prev, phone: undefined }))
+                  }
+                }}
+                placeholder="유선전화번호를 입력하세요 (예: 02-123-4567)"
+                className={fieldErrors.phone ? "border-red-500 focus-visible:ring-red-500" : ""}
+              />
+              {fieldErrors.phone && (
+                <p className="text-sm text-red-600 mt-1">{fieldErrors.phone}</p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="phoneNumber">휴대폰</Label>
               <Input
                 id="phoneNumber"
                 value={formData.phoneNumber}
-                onChange={(e) => updateFormData('phoneNumber', e.target.value)}
-                placeholder="전화번호를 입력하세요"
+                onChange={(e) => {
+                  updateFormData('phoneNumber', e.target.value)
+                  // 에러 상태 초기화
+                  if (fieldErrors.phoneNumber) {
+                    setFieldErrors(prev => ({ ...prev, phoneNumber: undefined }))
+                  }
+                }}
+                placeholder="휴대폰번호를 입력하세요 (예: 010-1234-5678)"
+                className={fieldErrors.phoneNumber ? "border-red-500 focus-visible:ring-red-500" : ""}
               />
+              {fieldErrors.phoneNumber && (
+                <p className="text-sm text-red-600 mt-1">{fieldErrors.phoneNumber}</p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -325,10 +489,12 @@ function UserProfilePage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="department">부서</Label>
+              <Label htmlFor="department">
+                부서 <span className="text-red-500">*</span>
+              </Label>
               {isAdmin ? (
                 <Select value={formData.departmentId} onValueChange={handleDepartmentSelect}>
-                  <SelectTrigger>
+                  <SelectTrigger className={fieldErrors.departmentName ? 'border-red-500' : ''}>
                     <SelectValue placeholder="부서를 선택하세요" />
                   </SelectTrigger>
                   <SelectContent>
@@ -343,16 +509,21 @@ function UserProfilePage() {
                 <Input
                   value={formData.departmentName}
                   disabled
-                  className="bg-muted"
+                  className={`bg-muted ${fieldErrors.departmentName ? 'border-red-500' : ''}`}
                 />
+              )}
+              {fieldErrors.departmentName && (
+                <p className="text-sm text-red-500">{fieldErrors.departmentName}</p>
               )}
             </div>
 
             <div>
-              <Label htmlFor="position">직급</Label>
+              <Label htmlFor="position">
+                직급 <span className="text-red-500">*</span>
+              </Label>
               {isAdmin ? (
                 <Select value={formData.positionId} onValueChange={handlePositionSelect}>
-                  <SelectTrigger>
+                  <SelectTrigger className={fieldErrors.positionName ? 'border-red-500' : ''}>
                     <SelectValue placeholder="직급을 선택하세요" />
                   </SelectTrigger>
                   <SelectContent>
@@ -367,8 +538,11 @@ function UserProfilePage() {
                 <Input
                   value={formData.positionName}
                   disabled
-                  className="bg-muted"
+                  className={`bg-muted ${fieldErrors.positionName ? 'border-red-500' : ''}`}
                 />
+              )}
+              {fieldErrors.positionName && (
+                <p className="text-sm text-red-500">{fieldErrors.positionName}</p>
               )}
             </div>
           </CardContent>
@@ -391,8 +565,15 @@ function UserProfilePage() {
                 id="currentPassword"
                 type={showPassword ? "text" : "password"}
                 value={formData.currentPassword}
-                onChange={(e) => updateFormData('currentPassword', e.target.value)}
+                onChange={(e) => {
+                  updateFormData('currentPassword', e.target.value)
+                  // 에러 상태 초기화
+                  if (fieldErrors.currentPassword) {
+                    setFieldErrors(prev => ({ ...prev, currentPassword: undefined }))
+                  }
+                }}
                 placeholder="현재 비밀번호를 입력하세요"
+                className={fieldErrors.currentPassword ? "border-red-500 focus-visible:ring-red-500" : ""}
               />
               <Button
                 type="button"
@@ -408,6 +589,9 @@ function UserProfilePage() {
                 )}
               </Button>
             </div>
+            {fieldErrors.currentPassword && (
+              <p className="text-sm text-red-600 mt-1">{fieldErrors.currentPassword}</p>
+            )}
           </div>
 
           <div>
@@ -416,9 +600,19 @@ function UserProfilePage() {
               id="newPassword"
               type={showPassword ? "text" : "password"}
               value={formData.newPassword}
-              onChange={(e) => updateFormData('newPassword', e.target.value)}
+              onChange={(e) => {
+                updateFormData('newPassword', e.target.value)
+                // 에러 상태 초기화
+                if (fieldErrors.newPassword) {
+                  setFieldErrors(prev => ({ ...prev, newPassword: undefined }))
+                }
+              }}
               placeholder="새 비밀번호를 입력하세요"
+              className={fieldErrors.newPassword ? "border-red-500 focus-visible:ring-red-500" : ""}
             />
+            {fieldErrors.newPassword && (
+              <p className="text-sm text-red-600 mt-1">{fieldErrors.newPassword}</p>
+            )}
           </div>
 
           <div>
@@ -427,9 +621,19 @@ function UserProfilePage() {
               id="confirmPassword"
               type={showPassword ? "text" : "password"}
               value={formData.confirmPassword}
-              onChange={(e) => updateFormData('confirmPassword', e.target.value)}
+              onChange={(e) => {
+                updateFormData('confirmPassword', e.target.value)
+                // 에러 상태 초기화
+                if (fieldErrors.confirmPassword) {
+                  setFieldErrors(prev => ({ ...prev, confirmPassword: undefined }))
+                }
+              }}
               placeholder="새 비밀번호를 다시 입력하세요"
+              className={fieldErrors.confirmPassword ? "border-red-500 focus-visible:ring-red-500" : ""}
             />
+            {fieldErrors.confirmPassword && (
+              <p className="text-sm text-red-600 mt-1">{fieldErrors.confirmPassword}</p>
+            )}
           </div>
 
           <p className="text-xs text-muted-foreground">
@@ -459,22 +663,6 @@ function UserProfilePage() {
         </Button>
       </div>
 
-      {/* 결과 메시지 */}
-      {success && (
-        <Card className="mt-6 border-green-200 bg-green-50">
-          <CardContent className="p-4">
-            <p className="text-green-800">{success}</p>
-          </CardContent>
-        </Card>
-      )}
-
-      {error && (
-        <Card className="mt-6 border-red-200 bg-red-50">
-          <CardContent className="p-4">
-            <p className="text-red-800">{error}</p>
-          </CardContent>
-        </Card>
-      )}
     </div>
   )
 }

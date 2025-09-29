@@ -20,7 +20,9 @@ import type {
   StatisticsData,
   EmploymentStatus,
   PositionCategory,
-  PositionType
+  PositionType,
+  Company,
+  Department
 } from '@/types/hr'
 
 // Mock API import
@@ -31,6 +33,62 @@ const API_BASE_URL = '/hr'
 
 // Mock API 사용 여부 (운영 환경에서는 false로 설정)
 const USE_MOCK_API = false
+
+/**
+ * 회사 관리 API 서비스
+ */
+export const companyApi = {
+  /**
+   * 전체 회사 목록 조회
+   */
+  getCompanies: async (): Promise<Company[]> => {
+    try {
+      const response = await api.get<PageResponse<Company>>('/companies', {
+        params: { page: 0, size: 1000 }
+      })
+      return response.data?.content || []
+    } catch (error) {
+      console.error('회사 목록 조회 오류:', error)
+      return []
+    }
+  }
+}
+
+/**
+ * 부서 관리 API 서비스
+ */
+export const departmentApi = {
+  /**
+   * 전체 부서 목록 조회
+   */
+  getDepartments: async (): Promise<Department[]> => {
+    try {
+      const response = await api.get<PageResponse<Department>>('/departments', {
+        params: { page: 0, size: 1000 }
+      })
+      return response.data?.content || []
+    } catch (error) {
+      console.error('부서 목록 조회 오류:', error)
+      return []
+    }
+  },
+
+  /**
+   * 회사별 부서 목록 조회
+   */
+  getDepartmentsByCompany: async (companyId: number): Promise<Department[]> => {
+    try {
+      const response = await api.get<PageResponse<Department>>(`/departments/company/${companyId}`, {
+        params: { page: 0, size: 1000 }
+      })
+      return response.data?.content || []
+    } catch (error) {
+      console.error('회사별 부서 목록 조회 오류:', error)
+      return []
+    }
+  }
+}
+
 
 /**
  * 직원 관리 API 서비스
@@ -52,6 +110,31 @@ export const employeeApi = {
         ...params
       }
     })
+    
+    // 빈 결과를 반환하는 경우를 대비한 기본값 설정
+    if (!response.data || !response.data.content) {
+      return {
+        content: [],
+        pageable: {
+          sort: { sorted: false, unsorted: true, empty: true },
+          pageNumber: params.page || 0,
+          pageSize: params.size || 20,
+          offset: (params.page || 0) * (params.size || 20),
+          paged: true,
+          unpaged: false
+        },
+        totalElements: 0,
+        totalPages: 0,
+        last: true,
+        first: true,
+        numberOfElements: 0,
+        size: params.size || 20,
+        number: params.page || 0,
+        sort: { sorted: false, unsorted: true, empty: true },
+        empty: true
+      }
+    }
+    
     return response.data
   },
 
@@ -99,7 +182,7 @@ export const employeeApi = {
       return mockEmployeeApi.searchEmployees(searchTerm, params)
     }
     
-    const { data } = await api.get<ApiResponse<PageResponse<Employee>>>(`${API_BASE_URL}/employees/search`, {
+    const { data } = await api.get<PageResponse<Employee>>(`${API_BASE_URL}/employees/search`, {
       params: {
         searchTerm,
         page: params.page || 0,
@@ -107,7 +190,32 @@ export const employeeApi = {
         sort: params.sort || 'employeeNumber'
       }
     })
-    return data.data
+    
+    // 빈 결과를 반환하는 경우를 대비한 기본값 설정
+    if (!data || !data.content) {
+      return {
+        content: [],
+        pageable: {
+          sort: { sorted: false, unsorted: true, empty: true },
+          pageNumber: params.page || 0,
+          pageSize: params.size || 20,
+          offset: (params.page || 0) * (params.size || 20),
+          paged: true,
+          unpaged: false
+        },
+        totalElements: 0,
+        totalPages: 0,
+        last: true,
+        first: true,
+        numberOfElements: 0,
+        size: params.size || 20,
+        number: params.page || 0,
+        sort: { sorted: false, unsorted: true, empty: true },
+        empty: true
+      }
+    }
+    
+    return data
   },
 
   /**
@@ -154,8 +262,8 @@ export const employeeApi = {
       return mockEmployeeApi.getActiveEmployees()
     }
     
-    const { data } = await api.get<ApiResponse<Employee[]>>(`${API_BASE_URL}/employees/active`)
-    return data.data
+    const { data } = await api.get<Employee[]>(`${API_BASE_URL}/employees/active`)
+    return data || []
   },
 
   /**
@@ -166,18 +274,18 @@ export const employeeApi = {
       return mockEmployeeApi.getActiveEmployeesByCompany(companyId)
     }
     
-    const { data } = await api.get<ApiResponse<Employee[]>>(`${API_BASE_URL}/employees/active/company/${companyId}`)
-    return data.data
+    const { data } = await api.get<Employee[]>(`${API_BASE_URL}/employees/active/company/${companyId}`)
+    return data || []
   },
 
   /**
    * 입사일 범위로 직원 조회
    */
   getEmployeesByHireDateRange: async (startDate: string, endDate: string): Promise<Employee[]> => {
-    const { data } = await api.get<ApiResponse<Employee[]>>(`${API_BASE_URL}/employees/hire-date`, {
+    const { data } = await api.get<Employee[]>(`${API_BASE_URL}/employees/hire-date`, {
       params: { startDate, endDate }
     })
-    return data.data
+    return data || []
   },
 
   /**
@@ -257,10 +365,15 @@ export const employeeApi = {
       return mockEmployeeApi.checkEmployeeNumber(employeeNumber, excludeId)
     }
     
-    const { data } = await api.get<ApiResponse<boolean>>(`${API_BASE_URL}/employees/check/employee-number`, {
-      params: { employeeNumber, excludeId }
-    })
-    return data.data
+    try {
+      const { data } = await api.get<ApiResponse<boolean>>(`${API_BASE_URL}/employees/check/employee-number`, {
+        params: { employeeNumber, excludeId }
+      })
+      return data.data ?? false
+    } catch (error) {
+      console.error('사번 중복 확인 오류:', error)
+      return false
+    }
   },
 
   /**
@@ -271,10 +384,15 @@ export const employeeApi = {
       return mockEmployeeApi.checkEmail(email, excludeId)
     }
     
-    const { data } = await api.get<ApiResponse<boolean>>(`${API_BASE_URL}/employees/check/email`, {
-      params: { email, excludeId }
-    })
-    return data.data
+    try {
+      const { data } = await api.get<ApiResponse<boolean>>(`${API_BASE_URL}/employees/check/email`, {
+        params: { email, excludeId }
+      })
+      return data.data ?? false
+    } catch (error) {
+      console.error('이메일 중복 확인 오류:', error)
+      return false
+    }
   },
 
   /**
@@ -353,7 +471,7 @@ export const positionApi = {
       return mockPositionApi.getPositions(params)
     }
     
-    const { data } = await api.get<ApiResponse<PageResponse<Position>>>(`${API_BASE_URL}/positions`, {
+    const { data } = await api.get<ApiResponse<PageResponse<Position>>>('/positions', {
       params: {
         page: params.page || 0,
         size: params.size || 20,
@@ -372,7 +490,7 @@ export const positionApi = {
       return mockPositionApi.getPosition(id)
     }
     
-    const { data } = await api.get<ApiResponse<Position>>(`${API_BASE_URL}/positions/${id}`)
+    const { data } = await api.get<ApiResponse<Position>>(`/positions/${id}`)
     return data.data
   },
 
@@ -380,8 +498,27 @@ export const positionApi = {
    * 직급 코드로 조회
    */
   getPositionByCode: async (positionCode: string): Promise<Position> => {
-    const { data } = await api.get<ApiResponse<Position>>(`${API_BASE_URL}/positions/code/${positionCode}`)
+    const { data } = await api.get<ApiResponse<Position>>(`/positions/code/${positionCode}`)
     return data.data
+  },
+
+  /**
+   * 전체 직급 목록 조회 (배열)
+   */
+  getAllPositions: async (): Promise<Position[]> => {
+    if (USE_MOCK_API) {
+      return mockPositionApi.getActivePositions()
+    }
+    
+    try {
+      const { data } = await api.get<ApiResponse<PageResponse<Position>>>('/positions', {
+        params: { page: 0, size: 1000 }
+      })
+      return data.data?.content || []
+    } catch (error) {
+      console.error('직급 목록 조회 오류:', error)
+      return []
+    }
   },
 
   /**
@@ -392,7 +529,7 @@ export const positionApi = {
       return mockPositionApi.getPositionsByCompany(companyId)
     }
     
-    const { data } = await api.get<ApiResponse<Position[]>>(`${API_BASE_URL}/positions/company/${companyId}`)
+    const { data } = await api.get<ApiResponse<Position[]>>(`/positions/company/${companyId}`)
     return data.data
   },
 
@@ -400,7 +537,7 @@ export const positionApi = {
    * 회사별 활성 직급 목록 조회
    */
   getActivePositionsByCompany: async (companyId: number): Promise<Position[]> => {
-    const { data } = await api.get<ApiResponse<Position[]>>(`${API_BASE_URL}/positions/company/${companyId}/active`)
+    const { data } = await api.get<ApiResponse<Position[]>>(`/positions/company/${companyId}/active`)
     return data.data
   },
 
@@ -408,7 +545,7 @@ export const positionApi = {
    * 직급 레벨별 조회
    */
   getPositionsByLevel: async (level: number): Promise<Position[]> => {
-    const { data } = await api.get<ApiResponse<Position[]>>(`${API_BASE_URL}/positions/level/${level}`)
+    const { data } = await api.get<ApiResponse<Position[]>>(`/positions/level/${level}`)
     return data.data
   },
 
@@ -416,7 +553,7 @@ export const positionApi = {
    * 직급 분류별 조회
    */
   getPositionsByCategory: async (category: PositionCategory): Promise<Position[]> => {
-    const { data } = await api.get<ApiResponse<Position[]>>(`${API_BASE_URL}/positions/category/${category}`)
+    const { data } = await api.get<ApiResponse<Position[]>>(`/positions/category/${category}`)
     return data.data
   },
 
@@ -424,7 +561,7 @@ export const positionApi = {
    * 직급 유형별 조회
    */
   getPositionsByType: async (type: PositionType): Promise<Position[]> => {
-    const { data } = await api.get<ApiResponse<Position[]>>(`${API_BASE_URL}/positions/type/${type}`)
+    const { data } = await api.get<ApiResponse<Position[]>>(`/positions/type/${type}`)
     return data.data
   },
 
@@ -436,7 +573,7 @@ export const positionApi = {
       return mockPositionApi.getActivePositions()
     }
     
-    const { data } = await api.get<ApiResponse<Position[]>>(`${API_BASE_URL}/positions/active`)
+    const { data } = await api.get<ApiResponse<Position[]>>(`/positions/active`)
     return data.data
   },
 
@@ -444,7 +581,7 @@ export const positionApi = {
    * 직급 검색
    */
   searchPositions: async (searchTerm: string, params: SearchParams = {}): Promise<PageResponse<Position>> => {
-    const { data } = await api.get<ApiResponse<PageResponse<Position>>>(`${API_BASE_URL}/positions/search`, {
+    const { data } = await api.get<ApiResponse<PageResponse<Position>>>(`/positions/search`, {
       params: {
         searchTerm,
         page: params.page || 0,
@@ -459,7 +596,7 @@ export const positionApi = {
    * 승진 가능한 직급 조회
    */
   getPromotablePositions: async (companyId: number, currentLevel: number): Promise<Position[]> => {
-    const { data } = await api.get<ApiResponse<Position[]>>(`${API_BASE_URL}/positions/promotable`, {
+    const { data } = await api.get<ApiResponse<Position[]>>(`/positions/promotable`, {
       params: { companyId, currentLevel }
     })
     return data.data
@@ -469,7 +606,7 @@ export const positionApi = {
    * 급여 범위별 직급 조회
    */
   getPositionsBySalaryRange: async (salary: number): Promise<Position[]> => {
-    const { data } = await api.get<ApiResponse<Position[]>>(`${API_BASE_URL}/positions/salary-range`, {
+    const { data } = await api.get<ApiResponse<Position[]>>(`/positions/salary-range`, {
       params: { salary }
     })
     return data.data
@@ -479,7 +616,7 @@ export const positionApi = {
    * 직급 등록
    */
   createPosition: async (position: PositionCreateRequest): Promise<Position> => {
-    const { data } = await api.post<ApiResponse<Position>>(`${API_BASE_URL}/positions`, position)
+    const { data } = await api.post<ApiResponse<Position>>(`/positions`, position)
     return data.data
   },
 
@@ -487,7 +624,7 @@ export const positionApi = {
    * 직급 정보 수정
    */
   updatePosition: async (id: number, position: PositionUpdateRequest): Promise<Position> => {
-    const { data } = await api.put<ApiResponse<Position>>(`${API_BASE_URL}/positions/${id}`, position)
+    const { data } = await api.put<ApiResponse<Position>>(`/positions/${id}`, position)
     return data.data
   },
 
@@ -495,7 +632,7 @@ export const positionApi = {
    * 직급 활성화/비활성화 토글
    */
   togglePositionStatus: async (id: number): Promise<Position> => {
-    const { data } = await api.patch<ApiResponse<Position>>(`${API_BASE_URL}/positions/${id}/toggle-status`)
+    const { data } = await api.patch<ApiResponse<Position>>(`/positions/${id}/toggle-status`)
     return data.data
   },
 
@@ -503,14 +640,14 @@ export const positionApi = {
    * 직급 삭제 (소프트 삭제)
    */
   deletePosition: async (id: number): Promise<void> => {
-    await api.delete<ApiResponse<void>>(`${API_BASE_URL}/positions/${id}`)
+    await api.delete<ApiResponse<void>>(`/positions/${id}`)
   },
 
   /**
    * 직급 코드 중복 확인
    */
   checkPositionCode: async (positionCode: string, excludeId?: number): Promise<boolean> => {
-    const { data } = await api.get<ApiResponse<boolean>>(`${API_BASE_URL}/positions/check/position-code`, {
+    const { data } = await api.get<ApiResponse<boolean>>(`/positions/check/position-code`, {
       params: { positionCode, excludeId }
     })
     return data.data
@@ -520,7 +657,7 @@ export const positionApi = {
    * 회사별 직급 코드 중복 확인
    */
   checkPositionCodeInCompany: async (companyId: number, positionCode: string, excludeId?: number): Promise<boolean> => {
-    const { data } = await api.get<ApiResponse<boolean>>(`${API_BASE_URL}/positions/check/position-code/company/${companyId}`, {
+    const { data } = await api.get<ApiResponse<boolean>>(`/positions/check/position-code/company/${companyId}`, {
       params: { positionCode, excludeId }
     })
     return data.data
@@ -530,7 +667,7 @@ export const positionApi = {
    * 직급 분류별 통계
    */
   getPositionCountByCategory: async (): Promise<StatisticsData[]> => {
-    const { data } = await api.get<ApiResponse<[PositionCategory, number][]>>(`${API_BASE_URL}/positions/statistics/category`)
+    const { data } = await api.get<ApiResponse<[PositionCategory, number][]>>(`/positions/statistics/category`)
     return data.data.map(([category, count]) => ({ 
       label: category === 'EXECUTIVE' ? '임원' : 
              category === 'MANAGEMENT' ? '관리직' :
@@ -544,7 +681,7 @@ export const positionApi = {
    * 직급 유형별 통계
    */
   getPositionCountByType: async (): Promise<StatisticsData[]> => {
-    const { data } = await api.get<ApiResponse<[PositionType, number][]>>(`${API_BASE_URL}/positions/statistics/type`)
+    const { data } = await api.get<ApiResponse<[PositionType, number][]>>(`/positions/statistics/type`)
     return data.data.map(([type, count]) => ({ 
       label: type === 'PERMANENT' ? '정규직' :
              type === 'CONTRACT' ? '계약직' :
@@ -557,7 +694,7 @@ export const positionApi = {
    * 회사별 직급 수 통계
    */
   getPositionCountByCompany: async (): Promise<StatisticsData[]> => {
-    const { data } = await api.get<ApiResponse<[string, number][]>>(`${API_BASE_URL}/positions/statistics/company`)
+    const { data } = await api.get<ApiResponse<[string, number][]>>(`/positions/statistics/company`)
     return data.data.map(([label, count]) => ({ label, count }))
   },
 
@@ -565,7 +702,7 @@ export const positionApi = {
    * 레벨별 직급 수 통계
    */
   getPositionCountByLevel: async (): Promise<StatisticsData[]> => {
-    const { data } = await api.get<ApiResponse<[number, number][]>>(`${API_BASE_URL}/positions/statistics/level`)
+    const { data } = await api.get<ApiResponse<[number, number][]>>(`/positions/statistics/level`)
     return data.data.map(([level, count]) => ({ label: `${level}레벨`, count }))
   }
 }

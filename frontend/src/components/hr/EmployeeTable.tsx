@@ -370,16 +370,20 @@ export function EmployeeTable({
 
                 {/* 상태 */}
                 <TableCell>
-                  <div className="space-y-1">
-                    <Badge variant={getStatusBadgeVariant(employee.employmentStatus)}>
+                  <div className="flex flex-col gap-1">
+                    <Badge 
+                      variant={getStatusBadgeVariant(employee.employmentStatus)}
+                      className="w-16 text-xs px-2 py-1 flex items-center justify-center"
+                    >
                       {KOREAN_LABELS[employee.employmentStatus]}
                     </Badge>
                     {employee.employmentType && (
-                      <div>
-                        <Badge variant="outline" className="text-xs">
-                          {KOREAN_LABELS[employee.employmentType]}
-                        </Badge>
-                      </div>
+                      <Badge 
+                        variant="outline" 
+                        className="w-16 text-xs px-2 py-1 flex items-center justify-center"
+                      >
+                        {KOREAN_LABELS[employee.employmentType]}
+                      </Badge>
                     )}
                   </div>
                 </TableCell>

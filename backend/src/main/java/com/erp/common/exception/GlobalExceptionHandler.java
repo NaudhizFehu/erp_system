@@ -207,14 +207,19 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Object>> handleMethodArgumentNotValidException(
             MethodArgumentNotValidException ex, WebRequest request) {
         
-        log.warn("Method argument validation failed: {}", ex.getMessage());
+        log.error("Method argument validation failed: {}", ex.getMessage());
+        log.error("Validation errors count: {}", ex.getBindingResult().getFieldErrors().size());
         
         Map<String, String> fieldErrors = new HashMap<>();
         ex.getBindingResult().getFieldErrors().forEach(error -> {
+            log.error("Field validation error - Field: {}, RejectedValue: {}, Message: {}", 
+                    error.getField(), error.getRejectedValue(), error.getDefaultMessage());
             fieldErrors.put(error.getField(), error.getDefaultMessage());
         });
         
         String path = getRequestPath(request);
+        log.error("Request path: {}", path);
+        
         ApiResponse<Object> response = ApiResponse.validationError(
             "입력값 검증에 실패했습니다", 
             fieldErrors

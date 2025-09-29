@@ -43,8 +43,15 @@ class DepartmentService {
       const response = await api.get(`${this.baseUrl}?page=0&size=1000`)
       console.log('부서 목록 조회 API 응답:', response)
       
-      // 응답에서 부서 목록 추출
-      const departments = response.data?.data || response.data || []
+      // 응답에서 부서 목록 추출 (Page 객체에서 content 배열 추출)
+      const pageData = response.data?.data || response.data
+      const departments = pageData?.content || []
+      
+      if (!Array.isArray(departments)) {
+        console.error('부서 목록이 배열이 아닙니다:', departments)
+        return []
+      }
+      
       return departments.map((dept: Department) => ({
         id: dept.id,
         name: dept.name
@@ -64,8 +71,15 @@ class DepartmentService {
       const response = await api.get(`${this.baseUrl}/company/${companyId}?page=0&size=1000`)
       console.log('회사별 부서 목록 조회 API 응답:', response)
       
-      // 응답에서 부서 목록 추출
-      const departments = response.data?.data || response.data || []
+      // 응답에서 부서 목록 추출 (Page 객체에서 content 배열 추출)
+      const pageData = response.data?.data || response.data
+      const departments = pageData?.content || []
+      
+      if (!Array.isArray(departments)) {
+        console.error('회사별 부서 목록이 배열이 아닙니다:', departments)
+        return []
+      }
+      
       return departments.map((dept: Department) => ({
         id: dept.id,
         name: dept.name

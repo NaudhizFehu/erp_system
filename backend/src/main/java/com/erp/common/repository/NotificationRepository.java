@@ -58,4 +58,10 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
      */
     @Query("SELECT n FROM Notification n WHERE n.user.id = :userId AND n.isDeleted = false AND n.createdAt >= :twoWeeksAgo ORDER BY n.createdAt DESC")
     List<Notification> findNotificationsByUserIdAndDateRange(@Param("userId") Long userId, @Param("twoWeeksAgo") java.time.LocalDateTime twoWeeksAgo);
+
+    /**
+     * 사용자별 모든 알림 조회 (삭제되지 않은 것만)
+     */
+    @Query("SELECT n FROM Notification n WHERE n.user.id = :userId AND n.isDeleted = false ORDER BY n.createdAt DESC")
+    List<Notification> findByUserId(@Param("userId") Long userId);
 }

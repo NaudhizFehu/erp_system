@@ -51,12 +51,12 @@ project-root/
 
 ## WAR 배포 설정
 ```xml
-<packaging>war</packaging>
-<dependency>
-  <groupId>org.springframework.boot</groupId>
-  <artifactId>spring-boot-starter-tomcat</artifactId>
-  <scope>provided</scope>
-</dependency>
+war
+
+  org.springframework.boot
+  spring-boot-starter-tomcat
+  provided
+
 ```
 
 SpringBootServletInitializer 상속 필수:
@@ -407,9 +407,9 @@ export function DevQuickLogin() {
   }
   
   return (
-    <div className="dev-quick-login">
+    
       {/* 개발용 빠른 로그인 UI */}
-    </div>
+    
   )
 }
 ```
@@ -511,11 +511,156 @@ function OrderManagement() {
   // 비즈니스 로직 구현
   
   return (
-    <div className="order-management">
+    
       {/* 컴포넌트 구현 */}
-    </div>
+    
   )
 }
 
 export { OrderManagement }
 ```
+
+# 추가 개발 규칙
+
+## DB 연결 및 관리 규칙
+
+### DB 연결 오류 처리
+- DB 연결 오류 발생 시 **오류 내용만 공유**하고 연결 확인 안내만 제공
+- 임의로 DB 연결 설정 변경 또는 수정 금지
+- 사용자의 명시적 요청 없이 DB 설정 파일 수정 금지
+
+### DB 설정 보호 규칙
+- **사용자가 설정한 모든 DB 정보는 수정 불가능**
+- 기존 DB 설정 값들을 임의로 변경하거나 수정 제안 금지
+- 사용자가 설정한 DB 연결 정보, 사용자명, 비밀번호, 포트, 호스트 등 모든 정보 보호
+- DB 설정 관련 문제 발생 시에도 기존 설정값 유지하고 문제 해결 방안만 제시
+
+### DB 제한 사항
+- **PostgreSQL만 사용 허용**
+- MySQL, MariaDB, H2, SQLite 등 다른 DB 사용 절대 금지
+- DB 변경 제안 시 PostgreSQL 범위 내에서만 대안 제시
+
+```yaml
+# ✅ 허용되는 DB 설정 예시 (사용자 설정값 보호)
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/erp_db
+    driver-class-name: org.postgresql.Driver
+    
+# ❌ 금지되는 행위
+# 1. 다른 DB 사용
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/erp_db  # MySQL 금지
+    url: jdbc:h2:mem:testdb                  # H2 금지
+
+# 2. 사용자 설정값 임의 변경 (절대 금지)
+# - 포트 번호 변경: 5432 → 5433
+# - 데이터베이스명 변경: erp_db → new_db
+# - 호스트 변경: localhost → 192.168.1.100
+# - 사용자명/비밀번호 변경
+# - 연결 URL 전체 변경
+```
+
+## Git 버전 관리 규칙
+
+### Git 커밋 처리
+- **사용자가 명시적으로 Git 커밋을 요청할 때만** Git 작업 수행
+- 코드 수정 후 자동으로 커밋하지 않음
+- 커밋 메시지는 사용자 확인 후 진행
+
+### Git 워크플로우 (순서 엄수)
+1. **GitLab 커밋** (개발용 리포지토리)
+   ```bash
+   git add .
+   git commit -m "feat: 기능명 구현"
+   git push gitlab develop
+   ```
+
+2. **GitHub develop 브랜치 커밋** (포트폴리오용)
+   ```bash
+   git push github develop
+   ```
+
+3. **GitHub main 브랜치 머지**
+   ```bash
+   git checkout main
+   git merge develop
+   git push github main
+   git checkout develop
+   ```
+
+### Git 커밋 금지 상황
+- 코드 수정 중 자동 커밋
+- 사용자 요청 없는 임의 커밋
+- 워크플로우 순서 변경 (GitLab → GitHub develop → GitHub main 순서 준수)
+
+## 빌드 및 실행 환경 규칙
+
+### Maven 사용 제한
+- **콘솔에서 mvn 명령어 직접 실행 금지**
+- IDE의 Maven 통합 기능만 사용
+- 빌드 오류 발생 시 IDE 내에서 해결 방법 제시
+
+```bash
+# ❌ 금지되는 명령어
+mvn clean install
+mvn spring-boot:run
+mvn test
+
+# ✅ 권장 방법
+# IDE의 Maven 프로젝트 새로고침
+# IDE의 Run/Debug 구성 사용
+# IDE의 테스트 실행 기능 사용
+```
+
+### 백엔드 서버 관리
+- 백엔드 재기동이 필요한 경우 **사용자에게 요청**하여 답변 대기
+- 서버 로그 확인이 필요한 경우 **사용자에게 로그 요청**
+- 임의로 서버 재시작 또는 설정 변경하지 않음
+
+#### 백엔드 관련 요청 예시
+```
+"백엔드 서버를 재시작해 주세요. 설정 변경사항을 적용하기 위함입니다."
+
+"다음 설정 변경 후 서버 로그를 확인해 주세요:
+- application.yml의 logging level 변경
+- 예상되는 로그: 'JWT token validation completed'"
+
+"서버 기동 시 오류가 예상됩니다. 
+기동 후 콘솔 로그에서 'Database connection' 관련 메시지를 공유해 주세요."
+```
+
+## 문제 해결 프로세스
+
+### 단계별 문제 해결
+1. **문제 상황 정확히 파악**
+   - 오류 메시지 분석
+   - 영향 범위 확인
+
+2. **사용자와 소통**
+   - 필요한 정보 요청
+   - 해결 방안 설명
+
+3. **단계적 해결**
+   - 코드 수정
+   - 사용자 확인 요청
+   - 추가 작업 진행
+
+### 금지 사항 요약
+- ❌ DB 연결 오류 시 임의 설정 변경
+- ❌ 사용자가 설정한 DB 정보 수정 (포트, 호스트, DB명, 사용자명, 비밀번호 등)
+- ❌ PostgreSQL 외 다른 DB 사용/제안
+- ❌ 사용자 요청 없는 Git 커밋
+- ❌ Git 워크플로우 순서 변경
+- ❌ 콘솔에서 mvn 명령어 실행
+- ❌ 사용자 확인 없는 서버 재기동
+- ❌ 로그 확인 없는 문제 해결 진행
+
+### 필수 확인 사항
+- ✅ DB 오류 시 연결 상태만 안내 (설정값 변경 금지)
+- ✅ 기존 DB 설정값 절대 보호
+- ✅ Git 커밋 전 사용자 명시적 요청 확인
+- ✅ 백엔드 관련 작업 시 사용자와 소통
+- ✅ PostgreSQL 범위 내에서만 DB 관련 조언
+- ✅ IDE 기반 Maven 작업 안내

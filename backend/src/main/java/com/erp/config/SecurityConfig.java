@@ -192,7 +192,8 @@ public class SecurityConfig {
                 
                 // 사용자 관리 엔드포인트
                 .requestMatchers(HttpMethod.POST, "/api/users").hasAnyRole("SUPER_ADMIN", "ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/api/users/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "MANAGER")
+                .requestMatchers(HttpMethod.PUT, "/api/users/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "MANAGER", "USER")
+                .requestMatchers(HttpMethod.PUT, "/api/auth/profile").hasAnyRole("SUPER_ADMIN", "ADMIN", "MANAGER", "USER")
                 .requestMatchers(HttpMethod.GET, "/api/users/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "MANAGER", "USER")
                 
                 // 회사 관리 엔드포인트
