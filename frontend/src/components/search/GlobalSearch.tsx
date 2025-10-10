@@ -1,6 +1,7 @@
 import { Search, X, Clock, TrendingUp, Users, Package, ShoppingCart, Building2, FolderOpen } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import {
   Popover,
@@ -13,6 +14,7 @@ import { productService } from '@/services/productService'
 import { orderService } from '@/services/orderService'
 import { departmentService } from '@/services/departmentService'
 import api from '@/services/api'
+import { getSearchTypeInfo } from '@/config/searchTypes'
 
 /**
  * 검색 결과 타입 정의
@@ -42,6 +44,7 @@ interface SearchSuggestion {
  */
 function GlobalSearch() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [open, setOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
@@ -49,26 +52,37 @@ function GlobalSearch() {
   const [recentSearches, setRecentSearches] = useState<string[]>([])
   const inputRef = useRef<HTMLInputElement>(null)
 
-  // 최근 검색어 (실제로는 localStorage에서 가져옴)
+  // 최근 검색어 (계정별로 localStorage에서 가져옴)
   useEffect(() => {
-    const saved = localStorage.getItem('recentSearches')
-    if (saved) {
-      setRecentSearches(JSON.parse(saved))
+    if (user?.id) {
+      const saved = localStorage.getItem(`recentSearches_${user.id}`)
+      if (saved) {
+        try {
+          setRecentSearches(JSON.parse(saved))
+        } catch (error) {
+          console.error('최근 검색어 로드 실패:', error)
+          setRecentSearches([])
+        }
+      }
     }
-  }, [])
+  }, [user])
 
   // 인기 검색어 (실제 데이터 기반)
   const popularSearches = [
     '김관리', '노트북', 'ABC 기업', '인사부', '무선마우스'
   ]
 
-  // 빠른 검색 카테고리 (실제 데이터에 맞게 개선)
+  // 빠른 검색 카테고리 (권한에 따라 표시)
   const quickCategories: SearchSuggestion[] = [
     { id: 'cat-1', text: '모든 직원', type: 'category', category: 'employee', icon: 'Users' },
     { id: 'cat-2', text: '모든 상품', type: 'category', category: 'product', icon: 'Package' },
     { id: 'cat-3', text: '모든 고객', type: 'category', category: 'customer', icon: 'Building2' },
     { id: 'cat-4', text: '모든 부서', type: 'category', category: 'department', icon: 'FolderOpen' },
-    { id: 'cat-5', text: '모든 회사', type: 'category', category: 'company', icon: 'Building2' }
+    // SUPER_ADMIN만 회사 검색 버튼 표시
+    ...(user?.role === 'SUPER_ADMIN' 
+      ? [{ id: 'cat-5', text: '모든 회사', type: 'category' as const, category: 'company', icon: 'Building2' }]
+      : []
+    )
   ]
 
   // 실제 데이터 기반 검색 제안
@@ -85,6 +99,17 @@ function GlobalSearch() {
   ]
 
   /**
+   * 최근 검색어 저장
+   */
+  const saveRecentSearch = (term: string) => {
+    if (user?.id && term.trim()) {
+      const updated = [term, ...recentSearches.filter(t => t !== term)].slice(0, 5)
+      setRecentSearches(updated)
+      localStorage.setItem(`recentSearches_${user.id}`, JSON.stringify(updated))
+    }
+  }
+
+  /**
    * 검색 실행
    */
   const performSearch = async (term: string) => {
@@ -93,25 +118,48 @@ function GlobalSearch() {
       return
     }
 
+    // 최근 검색어에 추가
+    saveRecentSearch(term)
+
     setIsLoading(true)
     
     try {
       console.log('🔍 검색 시작:', term)
+      
+      // 권한에 따라 companyId 파라미터 설정
+      let searchUrl = `/search?q=${encodeURIComponent(term)}`
+      
+      if (user?.role === 'SUPER_ADMIN') {
+        // SUPER_ADMIN: 전체 검색 (companyId 없음)
+        console.log('🔑 SUPER_ADMIN 권한: 전체 데이터 검색')
+        searchUrl = `/search?q=${encodeURIComponent(term)}`
+      } else if (user?.company?.id) {
+        // 일반 사용자: 자기 회사만 검색
+        console.log(`🏢 일반 사용자 권한: 회사 ${user.company.id}(${user.company.name}) 데이터만 검색`)
+        searchUrl = `/search?q=${encodeURIComponent(term)}&companyId=${user.company.id}`
+      } else {
+        // 회사 정보가 없는 경우
+        console.warn('⚠️ 회사 정보가 없어 검색할 수 없습니다')
+        setResults([])
+        setIsLoading(false)
+        return
+      }
+      
       // 실제 API 호출 (axios 인스턴스 사용으로 인증 토큰 자동 추가)
-      const response = await api.get(`/search?q=${encodeURIComponent(term)}&companyId=1`)
+      const response = await api.get(searchUrl)
       console.log('📡 응답 데이터:', response)
       console.log('📡 응답 타입:', typeof response)
       console.log('📡 응답 구조:', Object.keys(response || {}))
       
-      // axios 응답 인터셉터에서 response.data만 반환하므로
-      // response 자체가 {success: true, data: [...], message: '...'} 형태입니다
-      if (response && response.success) {
-        console.log('✅ 검색 성공, 결과:', response.data)
-        console.log('✅ 결과 타입:', typeof response.data)
-        console.log('✅ 결과 길이:', response.data?.length || 0)
+      // axios 응답 인터셉터에서 전체 response를 반환하므로
+      // response.data가 {success: true, data: [...], message: '...'} 형태입니다
+      if (response?.data && response.data.success) {
+        console.log('✅ 검색 성공, 결과:', response.data.data)
+        console.log('✅ 결과 타입:', typeof response.data.data)
+        console.log('✅ 결과 길이:', response.data.data?.length || 0)
         
         // 검색 결과가 배열인지 확인
-        const searchResults = Array.isArray(response.data) ? response.data : []
+        const searchResults = Array.isArray(response.data.data) ? response.data.data : []
         setResults(searchResults)
         
         // 각 결과의 구조 확인
@@ -119,14 +167,14 @@ function GlobalSearch() {
           console.log(`✅ 결과 ${index}:`, result)
         })
       } else {
-        console.error('❌ 검색 API 오류:', response?.message || '알 수 없는 오류')
+        console.error('❌ 검색 API 오류:', response?.data?.message || '알 수 없는 오류')
         console.error('❌ 응답 구조:', response)
         setResults([])
       }
     } catch (error) {
       console.error('💥 검색 오류:', error)
-      console.error('💥 오류 상세:', error.response?.data)
-      console.error('💥 오류 상태:', error.response?.status)
+      console.error('💥 오류 상세:', (error as any).response?.data)
+      console.error('💥 오류 상태:', (error as any).response?.status)
       setResults([])
     } finally {
       setIsLoading(false)
@@ -143,26 +191,104 @@ function GlobalSearch() {
       console.log('🔍 카테고리 검색 시작:', category, term)
       
       let response
+      
+      // 1. 직원 검색
       if (category === 'employee') {
-        response = await api.get(`/employees/company/1?page=0&size=100`)
-      } else if (category === 'product') {
-        response = await api.get(`/products/companies/1?page=0&size=100`)
-      } else if (category === 'customer') {
-        response = await api.get(`/sales/customers/company/1?page=0&size=100`)
-      } else if (category === 'department') {
-        // 부서 목록 조회 API 사용
-        response = await api.get(`/departments/company/1?page=0&size=100`)
-      } else if (category === 'company') {
-        response = await api.get(`/companies?page=0&size=100`)
-      } else {
-        // 기본 전역 검색
-        response = await api.get(`/search?q=${encodeURIComponent(term)}&companyId=1`)
+        if (user?.role === 'SUPER_ADMIN') {
+          console.log('🔑 SUPER_ADMIN: 전체 직원 조회')
+          response = await api.get(`/hr/employees?page=0&size=100`)
+        } else if (user?.company?.id) {
+          console.log(`🏢 일반 사용자: 회사 ${user.company.id}(${user.company.name}) 직원만 조회`)
+          response = await api.get(`/hr/employees/company/${user.company.id}?page=0&size=100`)
+        } else {
+          console.warn('⚠️ 회사 정보가 없어 직원을 조회할 수 없습니다')
+          setResults([])
+          setIsLoading(false)
+          return
+        }
+      } 
+      
+      // 2. 상품 검색
+      else if (category === 'product') {
+        if (user?.role === 'SUPER_ADMIN') {
+          console.log('🔑 SUPER_ADMIN: 전체 상품 조회')
+          response = await api.get(`/products?page=0&size=100`)
+        } else if (user?.company?.id) {
+          console.log(`🏢 일반 사용자: 회사 ${user.company.id}(${user.company.name}) 상품만 조회`)
+          response = await api.get(`/products/companies/${user.company.id}?page=0&size=100`)
+        } else {
+          console.warn('⚠️ 회사 정보가 없어 상품을 조회할 수 없습니다')
+          setResults([])
+          setIsLoading(false)
+          return
+        }
+      } 
+      
+      // 3. 고객 검색
+      else if (category === 'customer') {
+        if (user?.role === 'SUPER_ADMIN') {
+          console.log('🔑 SUPER_ADMIN: 전체 고객 조회')
+          response = await api.get(`/sales/customers?page=0&size=100`)
+        } else if (user?.company?.id) {
+          console.log(`🏢 일반 사용자: 회사 ${user.company.id}(${user.company.name}) 고객만 조회`)
+          response = await api.get(`/sales/customers/company/${user.company.id}?page=0&size=100`)
+        } else {
+          console.warn('⚠️ 회사 정보가 없어 고객을 조회할 수 없습니다')
+          setResults([])
+          setIsLoading(false)
+          return
+        }
+      } 
+      
+      // 4. 부서 검색
+      else if (category === 'department') {
+        if (user?.role === 'SUPER_ADMIN') {
+          console.log('🔑 SUPER_ADMIN: 전체 부서 조회')
+          response = await api.get(`/departments?page=0&size=100`)
+        } else if (user?.company?.id) {
+          console.log(`🏢 일반 사용자: 회사 ${user.company.id}(${user.company.name}) 부서만 조회`)
+          response = await api.get(`/departments/company/${user.company.id}?page=0&size=100`)
+        } else {
+          console.warn('⚠️ 회사 정보가 없어 부서를 조회할 수 없습니다')
+          setResults([])
+          setIsLoading(false)
+          return
+        }
+      } 
+      
+      // 5. 회사 검색 (SUPER_ADMIN만 가능)
+      else if (category === 'company') {
+        if (user?.role === 'SUPER_ADMIN') {
+          console.log('🔑 SUPER_ADMIN: 전체 회사 조회')
+          response = await api.get(`/companies?page=0&size=100`)
+        } else {
+          console.warn('⚠️ 회사 목록은 SUPER_ADMIN만 조회 가능합니다')
+          setResults([])
+          setIsLoading(false)
+          return
+        }
+      } 
+      
+      // 6. 기본 전역 검색
+      else {
+        if (user?.role === 'SUPER_ADMIN') {
+          console.log('🔑 SUPER_ADMIN: 전체 검색')
+          response = await api.get(`/search?q=${encodeURIComponent(term)}`)
+        } else if (user?.company?.id) {
+          console.log(`🏢 일반 사용자: 회사 ${user.company.id}(${user.company.name}) 데이터만 검색`)
+          response = await api.get(`/search?q=${encodeURIComponent(term)}&companyId=${user.company.id}`)
+        } else {
+          console.warn('⚠️ 회사 정보가 없어 검색할 수 없습니다')
+          setResults([])
+          setIsLoading(false)
+          return
+        }
       }
       
       console.log('📡 카테고리 검색 응답:', response)
       
-      if (response && response.success) {
-        const data = response.data?.content || response.data || []
+      if (response?.data && response.data.success) {
+        const data = response.data.data?.content || response.data.data || []
         console.log('✅ 카테고리 검색 성공, 결과:', data)
         
         // 카테고리별 데이터를 검색 결과 형식으로 변환
@@ -214,7 +340,7 @@ function GlobalSearch() {
         setResults(searchResults)
         console.log('✅ 변환된 검색 결과:', searchResults)
       } else {
-        console.error('❌ 카테고리 검색 API 오류:', response?.message || '알 수 없는 오류')
+        console.error('❌ 카테고리 검색 API 오류:', response?.data?.message || '알 수 없는 오류')
         setResults([])
       }
     } catch (error) {
@@ -224,17 +350,6 @@ function GlobalSearch() {
     } finally {
       setIsLoading(false)
     }
-  }
-
-  /**
-   * 최근 검색어 저장
-   */
-  const saveRecentSearch = (term: string) => {
-    if (!term.trim()) return
-    
-    const updated = [term, ...recentSearches.filter(s => s !== term)].slice(0, 5)
-    setRecentSearches(updated)
-    localStorage.setItem('recentSearches', JSON.stringify(updated))
   }
 
   /**
@@ -331,25 +446,20 @@ function GlobalSearch() {
   }
 
   /**
-   * 타입별 아이콘 및 색상
+   * 타입별 아이콘 및 색상 (설정 파일에서 가져옴)
    */
   const getTypeInfo = (type: SearchResult['type']) => {
-    switch (type) {
-      case 'employee':
-        return { label: '직원', color: 'text-blue-600', bgColor: 'bg-blue-50', icon: 'Users' }
-      case 'product':
-        return { label: '상품', color: 'text-green-600', bgColor: 'bg-green-50', icon: 'Package' }
-      case 'order':
-        return { label: '주문', color: 'text-purple-600', bgColor: 'bg-purple-50', icon: 'ShoppingCart' }
-      case 'customer':
-        return { label: '고객', color: 'text-orange-600', bgColor: 'bg-orange-50', icon: 'Building2' }
-      case 'department':
-        return { label: '부서', color: 'text-gray-600', bgColor: 'bg-gray-50', icon: 'FolderOpen' }
-      case 'company':
-        return { label: '회사', color: 'text-indigo-600', bgColor: 'bg-indigo-50', icon: 'Building2' }
-      default:
-        return { label: '기타', color: 'text-gray-600', bgColor: 'bg-gray-50', icon: 'Search' }
+    const typeInfo = getSearchTypeInfo(type)
+    if (typeInfo) {
+      return {
+        label: typeInfo.label,
+        color: typeInfo.color,
+        bgColor: typeInfo.bgColor,
+        icon: typeInfo.icon
+      }
     }
+    // 기본값 (알 수 없는 타입)
+    return { label: '기타', color: 'text-gray-600', bgColor: 'bg-gray-50', icon: 'Search' }
   }
 
   /**

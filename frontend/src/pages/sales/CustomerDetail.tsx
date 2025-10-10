@@ -32,15 +32,9 @@ function CustomerDetail() {
       setLoading(true)
       setError(null)
       
-      // 실제 API 호출
-      const response = await fetch(`/api/sales/customers/${customerId}`)
-      const data = await response.json()
-      
-      if (data.success) {
-        setCustomer(data.data)
-      } else {
-        setError(data.message || '고객 정보를 불러오는 중 오류가 발생했습니다.')
-      }
+      // customerService 사용 (인증 토큰 자동 포함)
+      const customerData = await customerService.getCustomerById(customerId)
+      setCustomer(customerData)
     } catch (err) {
       setError('고객 정보를 불러오는 중 오류가 발생했습니다.')
       console.error('고객 상세 정보 조회 오류:', err)

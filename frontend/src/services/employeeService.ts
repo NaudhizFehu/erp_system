@@ -82,7 +82,7 @@ export interface EmployeeListResponse {
  * 직원 관련 API 호출을 담당합니다
  */
 class EmployeeService {
-  private baseUrl = '/employees'
+  private baseUrl = '/hr/employees'
 
   /**
    * 직원 목록 조회
@@ -109,8 +109,8 @@ class EmployeeService {
       console.log('직원 조회 API 응답 데이터.data:', response.data.data)
       
       // 백엔드 응답 구조: {success: true, message: '...', data: {직원데이터}, ...}
-      // response.data가 이미 직원 데이터이므로 response.data.data가 아니라 response.data를 반환
-      return response.data
+      // response.data.data가 실제 직원 데이터이므로 이를 반환
+      return response.data.data
     } catch (error) {
       console.error('직원 상세 정보 조회 오류:', error)
       throw new Error('직원 정보를 불러오는 중 오류가 발생했습니다.')

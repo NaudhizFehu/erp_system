@@ -99,6 +99,28 @@ public class ProductController {
     }
 
     /**
+     * 전체 상품 목록 조회 (SUPER_ADMIN용)
+     */
+    @GetMapping
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<Page<ProductDto.ProductResponseDto>>> getAllProducts(
+            @PageableDefault(size = 100, sort = "createdAt") Pageable pageable) {
+        try {
+            log.info("전체 상품 목록 조회 요청 (SUPER_ADMIN)");
+            
+            Page<ProductDto.ProductResponseDto> result = productService.getAllProducts(pageable);
+            
+            return ResponseEntity.ok(ApiResponse.success(
+                "전체 상품 조회 완료",
+                result
+            ));
+        } catch (Exception e) {
+            log.error("전체 상품 조회 실패: {}", e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    /**
      * 상품 조회 (ID)
      */
     @GetMapping("/{id}")
