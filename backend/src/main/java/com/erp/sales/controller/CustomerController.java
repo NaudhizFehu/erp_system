@@ -82,6 +82,9 @@ public class CustomerController {
         }
     }
 
+    /**
+     * 고객 상세 조회 (구체적 경로를 먼저 배치)
+     */
     @GetMapping("/{customerId}")
     // @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")  // 개발/테스트용으로 임시 비활성화
     @Operation(summary = "고객 상세 조회", description = "고객 상세 정보를 조회합니다")
@@ -95,6 +98,24 @@ public class CustomerController {
             log.error("고객 조회 실패: ID={}, {}", customerId, e.getMessage(), e);
             return ResponseEntity.badRequest()
                     .body(ApiResponse.error("고객 조회에 실패했습니다: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * 전체 고객 목록 조회 (SUPER_ADMIN용, 구체적 경로 뒤에 배치)
+     */
+    @GetMapping
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @Operation(summary = "전체 고객 목록 조회", description = "모든 회사의 고객을 조회합니다 (SUPER_ADMIN만)")
+    public ResponseEntity<ApiResponse<Page<CustomerDto.CustomerSummaryDto>>> getAllCustomers(
+            @PageableDefault(size = 100, sort = "createdAt") Pageable pageable) {
+        try {
+            log.info("전체 고객 목록 조회 요청 (SUPER_ADMIN)");
+            Page<CustomerDto.CustomerSummaryDto> result = customerService.getAllCustomers(pageable);
+            return ResponseEntity.ok(ApiResponse.success("전체 고객 조회 완료", result));
+        } catch (Exception e) {
+            log.error("전체 고객 조회 실패: {}", e.getMessage(), e);
+            throw e;
         }
     }
 

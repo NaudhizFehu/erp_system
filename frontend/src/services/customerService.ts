@@ -78,7 +78,9 @@ class CustomerService {
       const response = await api.get(`${this.baseUrl}/${id}`)
       console.log('고객 상세 조회 API 응답:', response)
       console.log('고객 상세 조회 API 응답 데이터:', response.data)
-      return response.data
+      // 백엔드 응답 구조: {success: true, message: '...', data: {고객데이터}, ...}
+      // response.data.data가 실제 고객 데이터이므로 이를 반환
+      return response.data.data
     } catch (error) {
       console.error('고객 상세 정보 조회 오류:', error)
       throw new Error('고객 정보를 불러오는 중 오류가 발생했습니다.')

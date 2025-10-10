@@ -41,6 +41,11 @@ public interface CustomerService {
     CustomerDto.CustomerResponseDto getCustomerByCode(String customerCode);
 
     /**
+     * 전체 고객 목록 조회 (SUPER_ADMIN용)
+     */
+    Page<CustomerDto.CustomerSummaryDto> getAllCustomers(Pageable pageable);
+
+    /**
      * 회사별 고객 목록 조회
      */
     Page<CustomerDto.CustomerSummaryDto> getCustomersByCompany(Long companyId, Pageable pageable);

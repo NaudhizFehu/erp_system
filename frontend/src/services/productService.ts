@@ -127,7 +127,9 @@ class ProductService {
   async getProductById(id: number): Promise<Product> {
     try {
       const response = await api.get(`${this.baseUrl}/${id}`)
-      return response.data
+      // 백엔드 응답 구조: {success: true, message: '...', data: {상품데이터}, ...}
+      // response.data.data가 실제 상품 데이터이므로 이를 반환
+      return response.data.data
     } catch (error) {
       console.error('상품 상세 정보 조회 오류:', error)
       throw new Error('상품 정보를 불러오는 중 오류가 발생했습니다.')

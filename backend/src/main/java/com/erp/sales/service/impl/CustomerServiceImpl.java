@@ -110,6 +110,15 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
+    public Page<CustomerDto.CustomerSummaryDto> getAllCustomers(Pageable pageable) {
+        log.info("전체 고객 목록 조회 (SUPER_ADMIN) - 페이지: {}, 크기: {}", 
+                pageable.getPageNumber(), pageable.getPageSize());
+        
+        Page<Customer> customers = customerRepository.findAll(pageable);
+        return customers.map(this::mapToSummaryDto);
+    }
+
+    @Override
     public Page<CustomerDto.CustomerSummaryDto> getCustomersByCompany(Long companyId, Pageable pageable) {
         return customerRepository.findByCompanyIdAndIsDeletedFalse(companyId, pageable)
                 .map(this::mapToSummaryDto);

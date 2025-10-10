@@ -71,14 +71,19 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Page<ProductDto.ProductResponseDto> getAllProducts(Pageable pageable) {
-        // TODO: 실제 구현 필요
-        return new PageImpl<>(new ArrayList<>(), pageable, 0);
+        log.info("전체 상품 목록 조회 (SUPER_ADMIN) - 페이지: {}, 크기: {}", 
+                pageable.getPageNumber(), pageable.getPageSize());
+        
+        Page<Product> products = productRepository.findAll(pageable);
+        return products.map(ProductDto.ProductResponseDto::from);
     }
 
     @Override
     public Page<ProductDto.ProductSummaryDto> getProductsByCompany(Long companyId, Pageable pageable) {
-        // TODO: 실제 구현 필요
-        return new PageImpl<>(new ArrayList<>(), pageable, 0);
+        log.info("회사별 상품 목록 조회 - 회사: {}", companyId);
+        
+        Page<Product> products = productRepository.findByCompanyIdOrderByProductNameAsc(companyId, pageable);
+        return products.map(ProductDto.ProductSummaryDto::from);
     }
 
     @Override
