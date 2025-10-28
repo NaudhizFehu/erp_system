@@ -4,7 +4,13 @@ import com.erp.common.dto.ApiResponse;
 import com.erp.hr.dto.EmployeeCreateDto;
 import com.erp.hr.dto.EmployeeDto;
 import com.erp.hr.dto.EmployeeUpdateDto;
+import com.erp.hr.dto.ImportResult;
+import com.erp.hr.entity.Employee;
 import com.erp.hr.service.EmployeeService;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -24,11 +30,15 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import com.erp.common.security.UserPrincipal;
 import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.time.LocalDateTime;
 
 /**
  * 직원 관리 REST 컨트롤러
@@ -49,7 +59,7 @@ public class EmployeeController {
      * 새로운 직원 등록
      */
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(
         summary = "직원 등록",
         description = """
@@ -186,7 +196,7 @@ public class EmployeeController {
      * 직원 정보 수정
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<EmployeeDto>> updateEmployee(
             @PathVariable Long id,
             @Valid @RequestBody EmployeeUpdateDto updateDto) {
@@ -204,10 +214,31 @@ public class EmployeeController {
      * 직원 정보 조회 (ID)
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
-    public ResponseEntity<ApiResponse<EmployeeDto>> getEmployee(@PathVariable Long id) {
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<EmployeeDto>> getEmployee(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
         try {
-            log.info("직원 조회 요청: ID {}", id);
+            log.info("직원 조회 요청: ID {}, 사용자: {}", id, userPrincipal.getUsername());
+            
+            // USER 권한이면 본인 직원 정보만 조회 가능
+            if (userPrincipal.hasRole("ROLE_USER")) {
+                Long userEmployeeId = userPrincipal.getEmployeeId();
+                
+                // employeeId가 없으면 본인 직원 정보 조회 불가
+                if (userEmployeeId == null) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(ApiResponse.error("직원 정보가 연결되어 있지 않습니다"));
+                }
+                
+                // 본인이 아닌 다른 직원 정보 조회 시도 시 거부
+                if (!id.equals(userEmployeeId)) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(ApiResponse.error("본인의 정보만 조회할 수 있습니다"));
+                }
+            }
+            // SUPER_ADMIN, ADMIN, MANAGER는 권한 범위 내 모든 직원 조회 가능
+            
             EmployeeDto employee = employeeService.getEmployee(id);
             return ResponseEntity.ok(ApiResponse.success(employee));
         } catch (Exception e) {
@@ -249,15 +280,32 @@ public class EmployeeController {
 
     /**
      * 전체 직원 목록 조회 (페이징)
+     * SUPER_ADMIN은 모든 회사 직원 조회, 나머지는 자사 직원만 조회
      */
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Page<EmployeeDto>>> getAllEmployees(
-            @PageableDefault(size = 20, sort = "employeeNumber") Pageable pageable) {
+            @PageableDefault(size = 20, sort = "employeeNumber") Pageable pageable,
+            @RequestParam(required = false) Employee.EmploymentStatus employmentStatus,
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
         try {
-            log.info("전체 직원 목록 조회 요청: 페이지 {}, 크기 {}", 
-                    pageable.getPageNumber(), pageable.getPageSize());
-            Page<EmployeeDto> employees = employeeService.getAllEmployees(pageable);
+            log.info("전체 직원 목록 조회 요청: 페이지 {}, 크기 {}, 상태 {}", 
+                    pageable.getPageNumber(), pageable.getPageSize(), employmentStatus);
+            
+            // SUPER_ADMIN이 아니면 자사 직원만 조회
+            if (!userPrincipal.isSuperAdmin()) {
+                Long companyId = userPrincipal.getCompanyId();
+                if (companyId == null) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                            .body(ApiResponse.error("회사 정보가 없습니다"));
+                }
+                log.info("자사 직원만 조회: 회사 ID {}, 상태 {}", companyId, employmentStatus);
+                Page<EmployeeDto> employees = employeeService.getEmployeesByCompany(companyId, pageable, employmentStatus);
+                return ResponseEntity.ok(ApiResponse.success(employees));
+            }
+            
+            // SUPER_ADMIN은 모든 직원 조회
+            Page<EmployeeDto> employees = employeeService.getAllEmployees(pageable, employmentStatus);
             return ResponseEntity.ok(ApiResponse.success(employees));
         } catch (Exception e) {
             log.error("전체 직원 목록 조회 실패: {}", e.getMessage(), e);
@@ -267,14 +315,24 @@ public class EmployeeController {
 
     /**
      * 회사별 직원 목록 조회 (페이징)
+     * SUPER_ADMIN은 모든 회사 조회 가능, 나머지는 자사만 조회 가능
      */
     @GetMapping("/company/{companyId}")
     public ResponseEntity<ApiResponse<Page<EmployeeDto>>> getEmployeesByCompany(
             @PathVariable Long companyId,
-            @PageableDefault(size = 20, sort = "employeeNumber") Pageable pageable) {
+            @PageableDefault(size = 20, sort = "employeeNumber") Pageable pageable,
+            @RequestParam(required = false) Employee.EmploymentStatus employmentStatus,
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
         try {
-            log.info("회사별 직원 목록 조회 요청: 회사 ID {}", companyId);
-            Page<EmployeeDto> employees = employeeService.getEmployeesByCompany(companyId, pageable);
+            log.info("회사별 직원 목록 조회 요청: 회사 ID {}, 상태 {}", companyId, employmentStatus);
+            
+            // SUPER_ADMIN이 아니면 자사 데이터만 조회 가능
+            if (!userPrincipal.isSuperAdmin() && !userPrincipal.belongsToCompany(companyId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(ApiResponse.error("다른 회사의 직원을 조회할 수 없습니다"));
+            }
+            
+            Page<EmployeeDto> employees = employeeService.getEmployeesByCompany(companyId, pageable, employmentStatus);
             return ResponseEntity.ok(ApiResponse.success(employees));
         } catch (Exception e) {
             log.error("회사별 직원 목록 조회 실패: 회사 ID {}, 오류: {}", companyId, e.getMessage(), e);
@@ -420,7 +478,7 @@ public class EmployeeController {
      * 직원 퇴직 처리
      */
     @PatchMapping("/{id}/terminate")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> terminateEmployee(
             @PathVariable Long id,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate terminationDate,
@@ -439,7 +497,7 @@ public class EmployeeController {
      * 직원 복직 처리
      */
     @PatchMapping("/{id}/reactivate")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> reactivateEmployee(@PathVariable Long id) {
         try {
             log.info("직원 복직 처리 요청: ID {}", id);
@@ -454,11 +512,27 @@ public class EmployeeController {
     /**
      * 직원 삭제 (소프트 삭제)
      */
+    /**
+     * 직원 정보 삭제
+     * SUPER_ADMIN은 모든 직원 삭제 가능, ADMIN은 자사 직원만 삭제 가능
+     */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Void>> deleteEmployee(@PathVariable Long id) {
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> deleteEmployee(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
         try {
             log.info("직원 삭제 요청: ID {}", id);
+            
+            // SUPER_ADMIN이 아니면 자사 직원만 삭제 가능
+            if (!userPrincipal.isSuperAdmin()) {
+                EmployeeDto employee = employeeService.getEmployee(id);
+                if (!userPrincipal.belongsToCompany(employee.company().id())) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                            .body(ApiResponse.error("다른 회사의 직원을 삭제할 수 없습니다"));
+                }
+            }
+            
             employeeService.deleteEmployee(id);
             return ResponseEntity.ok(ApiResponse.success("직원이 성공적으로 삭제되었습니다"));
         } catch (Exception e) {
@@ -509,7 +583,7 @@ public class EmployeeController {
      * 직급별 직원 수 통계
      */
     @GetMapping("/statistics/position")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<List<Object[]>>> getEmployeeCountByPosition() {
         try {
             log.info("직급별 직원 수 통계 조회 요청");
@@ -525,7 +599,7 @@ public class EmployeeController {
      * 부서별 직원 수 통계
      */
     @GetMapping("/statistics/department")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<List<Object[]>>> getEmployeeCountByDepartment() {
         try {
             log.info("부서별 직원 수 통계 조회 요청");
@@ -541,7 +615,7 @@ public class EmployeeController {
      * 입사년도별 직원 수 통계
      */
     @GetMapping("/statistics/hire-year")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<List<Object[]>>> getEmployeeCountByHireYear() {
         try {
             log.info("입사년도별 직원 수 통계 조회 요청");
@@ -557,7 +631,7 @@ public class EmployeeController {
      * 연령대별 직원 수 통계
      */
     @GetMapping("/statistics/age-group")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<List<Object[]>>> getEmployeeCountByAgeGroup() {
         try {
             log.info("연령대별 직원 수 통계 조회 요청");
@@ -573,7 +647,7 @@ public class EmployeeController {
      * 성별 직원 수 통계
      */
     @GetMapping("/statistics/gender")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<List<Object[]>>> getEmployeeCountByGender() {
         try {
             log.info("성별 직원 수 통계 조회 요청");
@@ -581,6 +655,170 @@ public class EmployeeController {
             return ResponseEntity.ok(ApiResponse.success(statistics));
         } catch (Exception e) {
             log.error("성별 직원 수 통계 조회 실패: {}", e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    /**
+     * 회사별 최근 직원 목록 조회 (사번 중복 방지용)
+     */
+    @GetMapping("/recent/company/{companyId}")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<List<EmployeeDto>>> getRecentEmployeesByCompany(
+            @PathVariable Long companyId) {
+        try {
+            log.info("회사별 최근 직원 목록 조회 요청: 회사 ID {}", companyId);
+            List<EmployeeDto> employees = employeeService.getRecentEmployeesByCompany(companyId);
+            return ResponseEntity.ok(ApiResponse.success(employees));
+        } catch (Exception e) {
+            log.error("회사별 최근 직원 목록 조회 실패: 회사 ID {}, 오류: {}", companyId, e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    /**
+     * 엑셀로 직원 데이터 내보내기
+     */
+    @GetMapping("/export/excel")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('SUPER_ADMIN')")
+    public ResponseEntity<Resource> exportToExcel(
+        @RequestParam(required = false) Long companyId,
+        @AuthenticationPrincipal UserPrincipal userPrincipal
+    ) {
+        try {
+            log.info("엑셀 내보내기 요청: 회사 ID {}, 사용자: {}", companyId, userPrincipal.getUsername());
+            
+            // SUPER_ADMIN: companyId null 허용 (전체), 있으면 해당 회사
+            // ADMIN/MANAGER: 자동으로 자사 companyId 사용
+            Long targetCompanyId = companyId;
+            if (!userPrincipal.hasRole("ROLE_SUPER_ADMIN")) {
+                targetCompanyId = userPrincipal.getCompanyId();
+            }
+            
+            org.springframework.core.io.ByteArrayResource resource = employeeService.exportToExcel(targetCompanyId);
+            
+            return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, 
+                    "attachment; filename=employees_" + LocalDate.now() + ".xlsx")
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(resource);
+        } catch (Exception e) {
+            log.error("엑셀 내보내기 실패", e);
+            throw e;
+        }
+    }
+
+    /**
+     * CSV로 직원 데이터 내보내기
+     */
+    @GetMapping("/export/csv")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('SUPER_ADMIN')")
+    public ResponseEntity<Resource> exportToCsv(
+        @RequestParam(required = false) Long companyId,
+        @AuthenticationPrincipal UserPrincipal userPrincipal
+    ) {
+        try {
+            log.info("CSV 내보내기 요청: 회사 ID {}, 사용자: {}", companyId, userPrincipal.getUsername());
+            
+            Long targetCompanyId = companyId;
+            if (!userPrincipal.hasRole("ROLE_SUPER_ADMIN")) {
+                targetCompanyId = userPrincipal.getCompanyId();
+            }
+            
+            org.springframework.core.io.ByteArrayResource resource = employeeService.exportToCsv(targetCompanyId);
+            
+            return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, 
+                    "attachment; filename=employees_" + LocalDate.now() + ".csv")
+                .contentType(MediaType.TEXT_PLAIN)
+                .body(resource);
+        } catch (Exception e) {
+            log.error("CSV 내보내기 실패", e);
+            throw e;
+        }
+    }
+
+    /**
+     * 엑셀에서 직원 데이터 가져오기
+     */
+    @PostMapping("/import/excel")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<ImportResult>> importFromExcel(
+        @RequestParam("file") MultipartFile file,
+        @RequestParam(required = false) Long companyId,
+        @AuthenticationPrincipal UserPrincipal userPrincipal
+    ) {
+        try {
+            log.info("엑셀 가져오기 요청: 파일명 {}, 회사 ID {}, 사용자: {}", 
+                file.getOriginalFilename(), companyId, userPrincipal.getUsername());
+            
+            // companyId 결정 로직
+            Long targetCompanyId = companyId;
+            if (!userPrincipal.hasRole("ROLE_SUPER_ADMIN")) {
+                // ADMIN/MANAGER는 자사만 가능
+                targetCompanyId = userPrincipal.getCompanyId();
+            }
+            
+            // SUPER_ADMIN도 가져오기 시 companyId 필수
+            if (targetCompanyId == null) {
+                return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("가져오기 시 회사를 선택해야 합니다"));
+            }
+            
+            ImportResult result = employeeService.importFromExcel(file, targetCompanyId);
+            return ResponseEntity.ok(ApiResponse.success("가져오기 완료", result));
+        } catch (Exception e) {
+            log.error("엑셀 가져오기 실패", e);
+            throw e;
+        }
+    }
+
+    /**
+     * CSV에서 직원 데이터 가져오기
+     */
+    @PostMapping("/import/csv")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<ImportResult>> importFromCsv(
+        @RequestParam("file") MultipartFile file,
+        @RequestParam(required = false) Long companyId,
+        @AuthenticationPrincipal UserPrincipal userPrincipal
+    ) {
+        try {
+            log.info("CSV 가져오기 요청: 파일명 {}, 회사 ID {}, 사용자: {}", 
+                file.getOriginalFilename(), companyId, userPrincipal.getUsername());
+            
+            Long targetCompanyId = companyId;
+            if (!userPrincipal.hasRole("ROLE_SUPER_ADMIN")) {
+                targetCompanyId = userPrincipal.getCompanyId();
+            }
+            
+            // SUPER_ADMIN도 가져오기 시 companyId 필수
+            if (targetCompanyId == null) {
+                return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("가져오기 시 회사를 선택해야 합니다"));
+            }
+            
+            ImportResult result = employeeService.importFromCsv(file, targetCompanyId);
+            return ResponseEntity.ok(ApiResponse.success("가져오기 완료", result));
+        } catch (Exception e) {
+            log.error("CSV 가져오기 실패", e);
+            throw e;
+        }
+    }
+
+    /**
+     * 모든 재직 상태별 직원 수 조회
+     */
+    @GetMapping("/count/by-status")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('SUPER_ADMIN')")
+    @Operation(summary = "상태별 직원 수 조회", description = "모든 재직 상태별 직원 수를 조회합니다")
+    public ResponseEntity<ApiResponse<Map<String, Long>>> getEmployeeCountsByStatus() {
+        try {
+            log.info("상태별 직원 수 조회 요청");
+            Map<String, Long> counts = employeeService.getEmployeeCountsByAllStatuses();
+            return ResponseEntity.ok(ApiResponse.success(counts));
+        } catch (Exception e) {
+            log.error("상태별 직원 수 조회 실패: {}", e.getMessage(), e);
             throw e;
         }
     }

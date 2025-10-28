@@ -35,7 +35,7 @@ public class NotificationController {
      * 사용자의 알림 목록 조회 (페이징)
      */
     @GetMapping
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "알림 목록 조회", description = "사용자의 알림 목록을 조회합니다")
     public ResponseEntity<ApiResponse<Page<NotificationDto>>> getNotifications(
             Authentication authentication,
@@ -59,7 +59,7 @@ public class NotificationController {
      * 읽지 않은 알림 개수 조회
      */
     @GetMapping("/unread-count")
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "읽지 않은 알림 개수", description = "읽지 않은 알림의 개수를 조회합니다")
     public ResponseEntity<ApiResponse<Long>> getUnreadCount(Authentication authentication) {
         try {
@@ -80,7 +80,7 @@ public class NotificationController {
      * 최근 3일 이내 알림 목록 조회
      */
     @GetMapping("/recent")
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "최근 3일 이내 알림 목록", description = "최근 3일 이내의 모든 알림(읽은/읽지 않은) 목록을 조회합니다")
     public ResponseEntity<ApiResponse<List<NotificationDto>>> getRecentNotifications(Authentication authentication) {
         try {
@@ -101,7 +101,7 @@ public class NotificationController {
      * 최근 2주 이내 모든 알림 목록 조회
      */
     @GetMapping("/all")
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "최근 2주 이내 모든 알림 목록", description = "최근 2주 이내의 모든 알림(읽은/읽지 않은) 목록을 조회합니다")
     public ResponseEntity<ApiResponse<List<NotificationDto>>> getAllNotifications(Authentication authentication) {
         try {
@@ -122,7 +122,7 @@ public class NotificationController {
      * 읽지 않은 알림 목록 조회
      */
     @GetMapping("/unread")
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "읽지 않은 알림 목록", description = "읽지 않은 알림 목록을 조회합니다")
     public ResponseEntity<ApiResponse<List<NotificationDto>>> getUnreadNotifications(Authentication authentication) {
         try {
@@ -143,7 +143,7 @@ public class NotificationController {
      * 특정 알림을 읽음 처리
      */
     @PutMapping("/{id}/read")
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "알림 읽음 처리", description = "특정 알림을 읽음 처리합니다")
     public ResponseEntity<ApiResponse<Void>> markAsRead(
             @Parameter(description = "알림 ID") @PathVariable Long id,
@@ -166,7 +166,7 @@ public class NotificationController {
      * 모든 알림을 읽음 처리
      */
     @PutMapping("/read-all")
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "모든 알림 읽음 처리", description = "사용자의 모든 알림을 읽음 처리합니다")
     public ResponseEntity<ApiResponse<Void>> markAllAsRead(Authentication authentication) {
         try {
@@ -187,7 +187,7 @@ public class NotificationController {
      * 알림 삭제
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "알림 삭제", description = "특정 알림을 삭제합니다")
     public ResponseEntity<ApiResponse<Void>> deleteNotification(
             @Parameter(description = "알림 ID") @PathVariable Long id,

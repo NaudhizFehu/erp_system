@@ -35,7 +35,7 @@ public class PositionController {
      * 새로운 직급 등록
      */
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<PositionDto>> createPosition(
             @Valid @RequestBody PositionCreateDto createDto) {
         try {
@@ -53,7 +53,7 @@ public class PositionController {
      * 직급 정보 수정
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<PositionDto>> updatePosition(
             @PathVariable Long id,
             @Valid @RequestBody PositionUpdateDto updateDto) {
@@ -102,7 +102,7 @@ public class PositionController {
      * 전체 직급 목록 조회 (페이징)
      */
     @GetMapping
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Page<PositionDto>>> getAllPositions(
             @PageableDefault(size = 20, sort = "level") Pageable pageable) {
         try {
@@ -258,7 +258,7 @@ public class PositionController {
      * 직급 활성화/비활성화 토글
      */
     @PatchMapping("/{id}/toggle-status")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<PositionDto>> togglePositionStatus(@PathVariable Long id) {
         try {
             log.info("직급 상태 토글 요청: ID {}", id);
@@ -274,7 +274,7 @@ public class PositionController {
      * 직급 삭제 (소프트 삭제)
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deletePosition(@PathVariable Long id) {
         try {
             log.info("직급 삭제 요청: ID {}", id);

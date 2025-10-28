@@ -649,7 +649,7 @@ public class AuthController {
     }
 
     /**
-     * 사용자 활성화/비활성화 (관리자 전용)
+     * 사용자 활성화/비활성화 (관리자 또는 HR팀 매니저 전용)
      * 
      * @param userId 사용자 ID
      * @param isActive 활성화 여부
@@ -661,10 +661,10 @@ public class AuthController {
         log.info("사용자 활성화 상태 변경 요청: userId={}, isActive={}", userId, isActive);
         
         try {
-            // 현재 사용자가 관리자인지 확인
+            // 현재 사용자가 관리자 또는 HR팀 매니저인지 확인
             UserPrincipal currentUser = JwtAuthenticationFilter.getCurrentUser();
-            if (currentUser == null || !currentUser.isAdmin()) {
-                throw ExceptionUtils.adminRequired();
+            if (currentUser == null || !currentUser.hasUserManagementPermission()) {
+                throw new BusinessException(ErrorCode.INSUFFICIENT_PERMISSION, "사용자 계정을 관리할 권한이 없습니다");
             }
             
             // 대상 사용자 조회

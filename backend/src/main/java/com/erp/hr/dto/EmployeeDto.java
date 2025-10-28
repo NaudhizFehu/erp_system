@@ -30,7 +30,7 @@ public record EmployeeDto(
         LocalDate terminationDate,
         Employee.EmploymentStatus employmentStatus,
         Employee.EmploymentType employmentType,
-        // baseSalary 필드 제거됨
+        Long baseSalary,
         String bankName,
         String accountNumber,
         String accountHolder,
@@ -98,6 +98,7 @@ public record EmployeeDto(
             employee.getTerminationDate(),
             employee.getEmploymentStatus(),
             employee.getEmploymentType(),
+            employee.getBaseSalary(),
             employee.getBankName(),
             employee.getAccountNumber(),
             employee.getAccountHolder(),

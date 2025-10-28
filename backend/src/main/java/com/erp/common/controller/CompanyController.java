@@ -36,7 +36,7 @@ public class CompanyController {
      * 전체 회사 목록 조회 (페이징)
      */
     @GetMapping
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "회사 목록 조회", description = "등록된 모든 회사 목록을 조회합니다")
     public ResponseEntity<ApiResponse<Page<CompanyDto>>> getAllCompanies(
             @PageableDefault(size = 20) Pageable pageable) {
@@ -59,7 +59,7 @@ public class CompanyController {
      * 회사 상세 조회
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "회사 상세 조회", description = "특정 회사의 상세 정보를 조회합니다")
     public ResponseEntity<ApiResponse<CompanyDto>> getCompany(
             @Parameter(description = "회사 ID") @PathVariable Long id) {
@@ -87,7 +87,7 @@ public class CompanyController {
      * 회사 검색
      */
     @GetMapping("/search")
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "회사 검색", description = "회사명으로 회사를 검색합니다")
     public ResponseEntity<ApiResponse<List<Company>>> searchCompanies(
             @Parameter(description = "검색어") @RequestParam String q) {
@@ -106,7 +106,7 @@ public class CompanyController {
      * 활성 회사 목록 조회
      */
     @GetMapping("/active")
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "활성 회사 목록", description = "활성 상태인 회사 목록을 조회합니다")
     public ResponseEntity<ApiResponse<List<Company>>> getActiveCompanies() {
         try {

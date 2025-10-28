@@ -45,7 +45,7 @@ public record EmployeeUpdateDto(
         Employee.EmploymentType employmentType,
         
         @Min(value = 0, message = "기본급은 0 이상이어야 합니다")
-        // baseSalary 필드 제거됨
+        Long baseSalary,
         
         @Size(max = 50, message = "은행명은 50자 이하여야 합니다")
         String bankName,

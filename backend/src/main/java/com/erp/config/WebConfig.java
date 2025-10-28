@@ -15,7 +15,7 @@ import java.util.List;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
-    @Value("${erp.cors.allowed-origins:http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173}")
+    @Value("${erp.cors.allowed-origins:http://localhost:3000,http://localhost:5173,http://localhost:9960,http://127.0.0.1:3000,http://127.0.0.1:5173,http://127.0.0.1:9960}")
     private List<String> allowedOrigins;
 
     @Value("${erp.cors.allowed-methods:GET,POST,PUT,DELETE,OPTIONS,PATCH}")

@@ -91,6 +91,7 @@ public class SecurityConfig {
         configuration.setAllowedOriginPatterns(Arrays.asList(
             "http://localhost:3000",    // React 개발 서버
             "http://localhost:5173",    // Vite 개발 서버
+            "http://localhost:9960",    // Vite 개발 서버 (새 포트)
             "https://erp.company.com",  // 운영 도메인
             "https://*.company.com"     // 서브도메인
         ));

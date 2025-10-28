@@ -27,14 +27,16 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     /**
      * 사용자명으로 사용자 조회 (회사 및 부서 정보 포함)
+     * SUPER_ADMIN은 company가 NULL일 수 있으므로 LEFT JOIN 사용
      */
-    @Query("SELECT u FROM User u JOIN FETCH u.company c LEFT JOIN FETCH u.department d WHERE u.username = :username AND u.isDeleted = false")
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.company c LEFT JOIN FETCH u.department d WHERE u.username = :username AND u.isDeleted = false")
     Optional<User> findByUsernameWithCompanyAndDepartment(@Param("username") String username);
 
     /**
      * ID로 사용자 조회 (회사 및 부서 정보 포함)
+     * SUPER_ADMIN은 company가 NULL일 수 있으므로 LEFT JOIN 사용
      */
-    @Query("SELECT u FROM User u JOIN FETCH u.company c LEFT JOIN FETCH u.department d WHERE u.id = :id AND u.isDeleted = false")
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.company c LEFT JOIN FETCH u.department d WHERE u.id = :id AND u.isDeleted = false")
     Optional<User> findByIdWithCompanyAndDepartment(@Param("id") Long id);
 
     /**
@@ -44,8 +46,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     /**
      * 이메일로 사용자 조회 (회사 및 부서 정보 포함)
+     * SUPER_ADMIN은 company가 NULL일 수 있으므로 LEFT JOIN 사용
      */
-    @Query("SELECT u FROM User u JOIN FETCH u.company c LEFT JOIN FETCH u.department d WHERE u.email = :email AND u.isDeleted = false")
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.company c LEFT JOIN FETCH u.department d WHERE u.email = :email AND u.isDeleted = false")
     Optional<User> findByEmailWithCompanyAndDepartment(@Param("email") String email);
 
     /**

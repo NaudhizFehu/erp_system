@@ -1,6 +1,7 @@
 package com.erp.common.repository;
 
 import com.erp.common.entity.Notification;
+import com.erp.common.entity.NotificationScope;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -64,4 +65,43 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
      */
     @Query("SELECT n FROM Notification n WHERE n.user.id = :userId AND n.isDeleted = false ORDER BY n.createdAt DESC")
     List<Notification> findByUserId(@Param("userId") Long userId);
+
+    /**
+     * 사용자의 알림 조회 (범위 기반 필터링)
+     */
+    @Query("""
+        SELECT n FROM Notification n 
+        WHERE n.isDeleted = false 
+        AND (
+            (n.scope = 'USER' AND n.user.id = :userId)
+            OR (n.scope = 'SYSTEM')
+            OR (n.scope = 'COMPANY' AND n.company.id = :companyId)
+            OR (n.scope = 'DEPARTMENT' AND n.department.id = :departmentId)
+        )
+        ORDER BY n.createdAt DESC
+    """)
+    Page<Notification> findByUserWithScope(
+        @Param("userId") Long userId,
+        @Param("companyId") Long companyId,
+        @Param("departmentId") Long departmentId,
+        Pageable pageable
+    );
+
+    /**
+     * 특정 범위의 알림 조회
+     */
+    @Query("SELECT n FROM Notification n WHERE n.scope = :scope AND n.isDeleted = false ORDER BY n.createdAt DESC")
+    List<Notification> findByScope(@Param("scope") NotificationScope scope);
+
+    /**
+     * 회사별 알림 조회
+     */
+    @Query("SELECT n FROM Notification n WHERE n.scope = 'COMPANY' AND n.company.id = :companyId AND n.isDeleted = false ORDER BY n.createdAt DESC")
+    List<Notification> findByCompanyId(@Param("companyId") Long companyId);
+
+    /**
+     * 부서별 알림 조회
+     */
+    @Query("SELECT n FROM Notification n WHERE n.scope = 'DEPARTMENT' AND n.department.id = :departmentId AND n.isDeleted = false ORDER BY n.createdAt DESC")
+    List<Notification> findByDepartmentId(@Param("departmentId") Long departmentId);
 }

@@ -69,6 +69,7 @@ public class DdlForcer {
     private void dropExistingTables() {
             log.info("기존 테이블 삭제 중...");
             String[] dropTables = {
+                "DROP TABLE IF EXISTS notification_settings CASCADE",
                 "DROP TABLE IF EXISTS notifications CASCADE",
                 "DROP TABLE IF EXISTS stock_movements CASCADE",
                 "DROP TABLE IF EXISTS inventories CASCADE", 
@@ -177,7 +178,7 @@ public class DdlForcer {
                 "is_password_expired BOOLEAN NOT NULL DEFAULT FALSE, " +
                 "last_login_at TIMESTAMP, " +
                 "password_changed_at TIMESTAMP, " +
-                "company_id BIGINT NOT NULL, " +
+                "company_id BIGINT, " +
                 "department_id BIGINT, " +
                 "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, " +
                 "updated_at TIMESTAMP, " +
@@ -229,6 +230,7 @@ public class DdlForcer {
                 "termination_date DATE, " +
                 "employment_status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE', " +
                 "employment_type VARCHAR(20), " +
+                "salary BIGINT, " +
                 "bank_name VARCHAR(50), " +
                 "account_number VARCHAR(50), " +
                 "account_holder VARCHAR(50), " +
@@ -465,12 +467,35 @@ public class DdlForcer {
                 "FOREIGN KEY (warehouse_id) REFERENCES warehouses(id)" +
                 ")",
                 
+                "CREATE TABLE IF NOT EXISTS notification_settings (" +
+                "id BIGSERIAL PRIMARY KEY, " +
+                "company_id BIGINT, " +
+                "role VARCHAR(20) NOT NULL, " +
+                "scope VARCHAR(20) NOT NULL, " +
+                "is_enabled BOOLEAN NOT NULL DEFAULT TRUE, " +
+                "min_priority VARCHAR(20), " +
+                "category_settings TEXT, " +
+                "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, " +
+                "updated_at TIMESTAMP, " +
+                "created_by BIGINT, " +
+                "updated_by BIGINT, " +
+                "is_deleted BOOLEAN NOT NULL DEFAULT FALSE, " +
+                "deleted_at TIMESTAMP, " +
+                "deleted_by BIGINT, " +
+                "FOREIGN KEY (company_id) REFERENCES companies(id)" +
+                ")",
+
                 "CREATE TABLE IF NOT EXISTS notifications (" +
                 "id BIGSERIAL PRIMARY KEY, " +
                 "user_id BIGINT NOT NULL, " +
                 "title VARCHAR(200) NOT NULL, " +
                 "message VARCHAR(1000) NOT NULL, " +
                 "type VARCHAR(20) NOT NULL, " +
+                "scope VARCHAR(20) NOT NULL, " +
+                "priority VARCHAR(20) NOT NULL, " +
+                "category VARCHAR(50), " +
+                "company_id BIGINT, " +
+                "department_id BIGINT, " +
                 "is_read BOOLEAN NOT NULL DEFAULT FALSE, " +
                 "action_url VARCHAR(500), " +
                 "read_at TIMESTAMP, " +
@@ -481,7 +506,9 @@ public class DdlForcer {
                 "is_deleted BOOLEAN NOT NULL DEFAULT FALSE, " +
                 "deleted_at TIMESTAMP, " +
                 "deleted_by BIGINT, " +
-                "FOREIGN KEY (user_id) REFERENCES users(id)" +
+                "FOREIGN KEY (user_id) REFERENCES users(id), " +
+                "FOREIGN KEY (company_id) REFERENCES companies(id), " +
+                "FOREIGN KEY (department_id) REFERENCES departments(id)" +
                 ")"
             };
             
@@ -531,10 +558,10 @@ public class DdlForcer {
         
         // 각 데이터 삽입을 개별적으로 안전하게 처리 (외래키 의존성 순서 고려)
         insertCompanyData();
-        insertDepartmentData();
+        insertDepartmentData(); // 부서 데이터 먼저 생성 (users의 외래키 제약조건)
         insertUserData();
-        insertPositionData();
-        insertEmployeeData();
+        // insertPositionData(); // DataInitializer에서 관리
+        // insertEmployeeData(); // DataInitializer에서 관리
         insertProductCategoryData();
         insertWarehouseData();  // 상품보다 먼저 삽입
         insertProductData();
@@ -564,14 +591,27 @@ public class DdlForcer {
      */
     private void insertDepartmentData() {
         String[] departmentInserts = {
-            "INSERT INTO departments (id, department_code, name, description, parent_department_id, manager_id, company_id, department_type) VALUES (1, 'HR_DEPT', '인사부', '인사관리 및 채용업무', NULL, NULL, 1, 'DEPARTMENT') ON CONFLICT (id) DO NOTHING",
-            "INSERT INTO departments (id, department_code, name, description, parent_department_id, manager_id, company_id, department_type) VALUES (2, 'SALES_DEPT', '영업부', '영업 및 고객관리', NULL, NULL, 1, 'DEPARTMENT') ON CONFLICT (id) DO NOTHING",
-            "INSERT INTO departments (id, department_code, name, description, parent_department_id, manager_id, company_id, department_type) VALUES (3, 'IT_DEPT', 'IT부서', '시스템 개발 및 유지보수', NULL, NULL, 1, 'DEPARTMENT') ON CONFLICT (id) DO NOTHING"
+            // ABC기업 (company_id = 1)
+            "INSERT INTO departments (id, department_code, name, description, parent_department_id, manager_id, company_id, department_type) VALUES (1, 'ABC_HR', '인사팀', '인사관리 및 채용업무', NULL, NULL, 1, 'DEPARTMENT') ON CONFLICT (id) DO NOTHING",
+            "INSERT INTO departments (id, department_code, name, description, parent_department_id, manager_id, company_id, department_type) VALUES (2, 'ABC_SALES', '영업팀', '영업 및 고객관리', NULL, NULL, 1, 'DEPARTMENT') ON CONFLICT (id) DO NOTHING",
+            "INSERT INTO departments (id, department_code, name, description, parent_department_id, manager_id, company_id, department_type) VALUES (3, 'ABC_DEV', '개발팀', '시스템 개발 및 유지보수', NULL, NULL, 1, 'DEPARTMENT') ON CONFLICT (id) DO NOTHING",
+            
+            // XYZ그룹 (company_id = 2)
+            "INSERT INTO departments (id, department_code, name, description, parent_department_id, manager_id, company_id, department_type) VALUES (4, 'XYZ_HR', '인사팀', '인사관리 및 채용업무', NULL, NULL, 2, 'DEPARTMENT') ON CONFLICT (id) DO NOTHING",
+            "INSERT INTO departments (id, department_code, name, description, parent_department_id, manager_id, company_id, department_type) VALUES (5, 'XYZ_SALES', '영업팀', '영업 및 고객관리', NULL, NULL, 2, 'DEPARTMENT') ON CONFLICT (id) DO NOTHING",
+            "INSERT INTO departments (id, department_code, name, description, parent_department_id, manager_id, company_id, department_type) VALUES (6, 'XYZ_DEV', '개발팀', '시스템 개발 및 유지보수', NULL, NULL, 2, 'DEPARTMENT') ON CONFLICT (id) DO NOTHING",
+            
+            // DEF코퍼레이션 (company_id = 3)
+            "INSERT INTO departments (id, department_code, name, description, parent_department_id, manager_id, company_id, department_type) VALUES (7, 'DEF_HR', '인사팀', '인사관리 및 채용업무', NULL, NULL, 3, 'DEPARTMENT') ON CONFLICT (id) DO NOTHING",
+            "INSERT INTO departments (id, department_code, name, description, parent_department_id, manager_id, company_id, department_type) VALUES (8, 'DEF_SALES', '영업팀', '영업 및 고객관리', NULL, NULL, 3, 'DEPARTMENT') ON CONFLICT (id) DO NOTHING",
+            "INSERT INTO departments (id, department_code, name, description, parent_department_id, manager_id, company_id, department_type) VALUES (9, 'DEF_DEV', '개발팀', '시스템 개발 및 유지보수', NULL, NULL, 3, 'DEPARTMENT') ON CONFLICT (id) DO NOTHING"
         };
         
         for (String sql : departmentInserts) {
             executeSafeInsert(sql, "부서 데이터");
         }
+        
+        log.info("✅ 부서 데이터 삽입 완료: ABC기업(3개), XYZ그룹(3개), DEF코퍼레이션(3개)");
     }
     
     /**
@@ -579,27 +619,50 @@ public class DdlForcer {
      */
     private void insertUserData() {
             try {
+                String superadminPassword = passwordEncoder.encode("super123");
                 String adminPassword = passwordEncoder.encode("admin123");
-            String userPassword = passwordEncoder.encode("user123");
+                String managerPassword = passwordEncoder.encode("manager123");
+                String hrManagerPassword = passwordEncoder.encode("hr123");
+                String userPassword = passwordEncoder.encode("user123");
+                String xyzPassword = passwordEncoder.encode("xyz123");
+                String defPassword = passwordEncoder.encode("def123");
                 
                 // 비밀번호 검증
-            boolean adminMatches = passwordEncoder.matches("admin123", adminPassword);
-            boolean userMatches = passwordEncoder.matches("user123", userPassword);
-            log.info("🔐 admin 비밀번호 검증 결과: {}", adminMatches);
-            log.info("🔐 user 비밀번호 검증 결과: {}", userMatches);
+                boolean superadminMatches = passwordEncoder.matches("super123", superadminPassword);
+                boolean adminMatches = passwordEncoder.matches("admin123", adminPassword);
+                boolean userMatches = passwordEncoder.matches("user123", userPassword);
+                log.info("🔐 superadmin 비밀번호 검증 결과: {}", superadminMatches);
+                log.info("🔐 admin 비밀번호 검증 결과: {}", adminMatches);
+                log.info("🔐 user 비밀번호 검증 결과: {}", userMatches);
             
             String[] userInserts = {
-                String.format("INSERT INTO users (id, username, password, email, full_name, phone, role, is_active, is_locked, is_password_expired, company_id, department_id, position_id, password_changed_at) VALUES (1, 'admin', '%s', 'admin@abc.com', '관리자', '02-1234-5678', 'ADMIN', true, false, false, 1, 1, 1, NOW()) ON CONFLICT (id) DO NOTHING", adminPassword),
-                String.format("INSERT INTO users (id, username, password, email, full_name, phone, role, is_active, is_locked, is_password_expired, company_id, department_id, position_id, password_changed_at) VALUES (2, 'user', '%s', 'user@abc.com', '일반사용자', '02-2345-6789', 'USER', true, false, false, 1, 3, 3, NOW()) ON CONFLICT (id) DO NOTHING", userPassword)
+                // 시스템 관리자 (SUPER_ADMIN) - 회사 소속 없음
+                String.format("INSERT INTO users (id, username, password, email, full_name, phone, role, is_active, is_locked, is_password_expired, password_changed_at) VALUES (1, 'superadmin', '%s', 'super@erp-system.com', '시스템관리자', '02-0000-0000', 'SUPER_ADMIN', true, false, false, NOW()) ON CONFLICT (id) DO NOTHING", superadminPassword),
+                
+                // ABC기업 사용자들
+                String.format("INSERT INTO users (id, username, password, email, full_name, phone, role, is_active, is_locked, is_password_expired, company_id, department_id, position, password_changed_at) VALUES (2, 'admin', '%s', 'admin@abc.com', '관리자', '02-1234-5678', 'ADMIN', true, false, false, 1, 1, '대표이사', NOW()) ON CONFLICT (id) DO NOTHING", adminPassword),
+                String.format("INSERT INTO users (id, username, password, email, full_name, phone, role, is_active, is_locked, is_password_expired, company_id, department_id, position, password_changed_at) VALUES (3, 'manager', '%s', 'manager@abc.com', '개발팀매니저', '02-3456-7890', 'MANAGER', true, false, false, 1, 3, '부장', NOW()) ON CONFLICT (id) DO NOTHING", managerPassword),
+                String.format("INSERT INTO users (id, username, password, email, full_name, phone, role, is_active, is_locked, is_password_expired, company_id, department_id, position, password_changed_at) VALUES (4, 'hr_manager', '%s', 'hr_manager@abc.com', '인사팀매니저', '02-3456-7891', 'MANAGER', true, false, false, 1, 1, '부장', NOW()) ON CONFLICT (id) DO NOTHING", hrManagerPassword),
+                String.format("INSERT INTO users (id, username, password, email, full_name, phone, role, is_active, is_locked, is_password_expired, company_id, department_id, position, password_changed_at) VALUES (5, 'user', '%s', 'user@abc.com', '일반사용자', '02-2345-6789', 'USER', true, false, false, 1, 3, '대리', NOW()) ON CONFLICT (id) DO NOTHING", userPassword),
+                
+                // XYZ그룹 사용자들
+                String.format("INSERT INTO users (id, username, password, email, full_name, phone, role, is_active, is_locked, is_password_expired, company_id, department_id, position, password_changed_at) VALUES (6, 'xyz_admin', '%s', 'admin@xyz.com', 'XYZ관리자', '031-234-5678', 'ADMIN', true, false, false, 2, 4, '대표이사', NOW()) ON CONFLICT (id) DO NOTHING", xyzPassword),
+                String.format("INSERT INTO users (id, username, password, email, full_name, phone, role, is_active, is_locked, is_password_expired, company_id, department_id, position, password_changed_at) VALUES (7, 'xyz_manager', '%s', 'manager@xyz.com', 'XYZ인사팀매니저', '031-234-5679', 'MANAGER', true, false, false, 2, 4, '부장', NOW()) ON CONFLICT (id) DO NOTHING", xyzPassword),
+                
+                // DEF코퍼레이션 사용자들
+                String.format("INSERT INTO users (id, username, password, email, full_name, phone, role, is_active, is_locked, is_password_expired, company_id, department_id, position, password_changed_at) VALUES (8, 'def_admin', '%s', 'admin@def.com', 'DEF관리자', '02-345-6789', 'ADMIN', true, false, false, 3, 7, '대표이사', NOW()) ON CONFLICT (id) DO NOTHING", defPassword),
+                String.format("INSERT INTO users (id, username, password, email, full_name, phone, role, is_active, is_locked, is_password_expired, company_id, department_id, position, password_changed_at) VALUES (9, 'def_user', '%s', 'user@def.com', 'DEF사용자', '02-345-6790', 'USER', true, false, false, 3, 7, '사원', NOW()) ON CONFLICT (id) DO NOTHING", defPassword)
             };
             
             for (String sql : userInserts) {
                 executeSafeInsert(sql, "사용자 데이터");
             }
             
-            log.info("✅ 로그인 계정 정보:");
-            log.info("   👤 admin 계정 - 사용자명: admin, 비밀번호: admin123, 역할: ADMIN");
-            log.info("   👤 user 계정 - 사용자명: user, 비밀번호: user123, 역할: USER");
+            log.info("✅ 로그인 계정 정보 (총 9개):");
+            log.info("   🔑 시스템: superadmin/super123 (SUPER_ADMIN)");
+            log.info("   👤 ABC기업: admin/admin123 (ADMIN), manager/manager123 (MANAGER), hr_manager/hr123 (HR MANAGER), user/user123 (USER)");
+            log.info("   👤 XYZ그룹: xyz_admin/xyz123 (ADMIN), xyz_manager/xyz123 (HR MANAGER)");
+            log.info("   👤 DEF코퍼레이션: def_admin/def123 (ADMIN), def_user/def123 (USER)");
             
             } catch (Exception e) {
             log.warn("⚠️ 사용자 데이터 삽입 중 오류: {}", e.getMessage());
@@ -798,6 +861,7 @@ public class DdlForcer {
             "COMMENT ON TABLE inventories IS '재고 정보 테이블'",
             "COMMENT ON TABLE warehouses IS '창고 정보 테이블'",
             "COMMENT ON TABLE stock_movements IS '재고 이동 이력 테이블'",
+            "COMMENT ON TABLE notification_settings IS '알림 설정 테이블'",
             "COMMENT ON TABLE notifications IS '알림 정보 테이블'"
         };
 
@@ -843,6 +907,13 @@ public class DdlForcer {
             "COMMENT ON COLUMN departments.sort_order IS '정렬 순서'",
             "COMMENT ON COLUMN departments.department_type IS '부서 유형'",
             "COMMENT ON COLUMN departments.status IS '부서 상태'",
+            "COMMENT ON COLUMN departments.is_deleted IS '삭제 여부'",
+            "COMMENT ON COLUMN departments.created_at IS '생성일시'",
+            "COMMENT ON COLUMN departments.updated_at IS '수정일시'",
+            "COMMENT ON COLUMN departments.created_by IS '생성자 ID'",
+            "COMMENT ON COLUMN departments.updated_by IS '수정자 ID'",
+            "COMMENT ON COLUMN departments.deleted_at IS '삭제일시'",
+            "COMMENT ON COLUMN departments.deleted_by IS '삭제자 ID'",
 
             // positions 테이블
             "COMMENT ON COLUMN positions.id IS '직급 고유 ID'",
@@ -852,6 +923,13 @@ public class DdlForcer {
             "COMMENT ON COLUMN positions.description IS '직급 설명'",
             "COMMENT ON COLUMN positions.level IS '직급 레벨'",
             "COMMENT ON COLUMN positions.is_active IS '활성화 여부'",
+            "COMMENT ON COLUMN positions.created_at IS '생성일시'",
+            "COMMENT ON COLUMN positions.updated_at IS '수정일시'",
+            "COMMENT ON COLUMN positions.created_by IS '생성자 ID'",
+            "COMMENT ON COLUMN positions.updated_by IS '수정자 ID'",
+            "COMMENT ON COLUMN positions.is_deleted IS '삭제 여부'",
+            "COMMENT ON COLUMN positions.deleted_at IS '삭제일시'",
+            "COMMENT ON COLUMN positions.deleted_by IS '삭제자 ID'",
 
             // employees 테이블
             "COMMENT ON COLUMN employees.id IS '직원 고유 ID'",
@@ -874,6 +952,26 @@ public class DdlForcer {
             "COMMENT ON COLUMN employees.termination_date IS '퇴사일'",
             "COMMENT ON COLUMN employees.employment_status IS '고용 상태'",
             "COMMENT ON COLUMN employees.employment_type IS '고용 유형'",
+            "COMMENT ON COLUMN employees.salary IS '기본급 (원 단위, 정수)'",
+            "COMMENT ON COLUMN employees.bank_name IS '은행명'",
+            "COMMENT ON COLUMN employees.account_number IS '계좌번호'",
+            "COMMENT ON COLUMN employees.account_holder IS '예금주명'",
+            "COMMENT ON COLUMN employees.emergency_contact IS '비상연락처'",
+            "COMMENT ON COLUMN employees.emergency_relation IS '비상연락처 관계'",
+            "COMMENT ON COLUMN employees.education IS '학력'",
+            "COMMENT ON COLUMN employees.major IS '전공'",
+            "COMMENT ON COLUMN employees.career IS '경력사항'",
+            "COMMENT ON COLUMN employees.skills IS '보유 기술'",
+            "COMMENT ON COLUMN employees.certifications IS '자격증'",
+            "COMMENT ON COLUMN employees.memo IS '메모'",
+            "COMMENT ON COLUMN employees.profile_image_url IS '프로필 이미지 URL'",
+            "COMMENT ON COLUMN employees.created_at IS '생성일시'",
+            "COMMENT ON COLUMN employees.updated_at IS '수정일시'",
+            "COMMENT ON COLUMN employees.created_by IS '생성자 ID'",
+            "COMMENT ON COLUMN employees.updated_by IS '수정자 ID'",
+            "COMMENT ON COLUMN employees.is_deleted IS '삭제 여부'",
+            "COMMENT ON COLUMN employees.deleted_at IS '삭제일시'",
+            "COMMENT ON COLUMN employees.deleted_by IS '삭제자 ID'",
 
             // users 테이블 (기본 컬럼만)
             "COMMENT ON COLUMN users.id IS '사용자 고유 ID'",
@@ -882,9 +980,60 @@ public class DdlForcer {
             "COMMENT ON COLUMN users.email IS '이메일'",
             "COMMENT ON COLUMN users.role IS '사용자 역할'",
             "COMMENT ON COLUMN users.is_active IS '활성화 여부'",
+            "COMMENT ON COLUMN users.full_name IS '전체 이름'",
+            "COMMENT ON COLUMN users.phone IS '전화번호'",
+            "COMMENT ON COLUMN users.phone_number IS '전화번호(중복)'",
+            "COMMENT ON COLUMN users.position IS '직책'",
+            "COMMENT ON COLUMN users.is_locked IS '계정 잠김 여부'",
+            "COMMENT ON COLUMN users.is_password_expired IS '비밀번호 만료 여부'",
+            "COMMENT ON COLUMN users.last_login_at IS '마지막 로그인 일시'",
+            "COMMENT ON COLUMN users.password_changed_at IS '비밀번호 변경 일시'",
+            "COMMENT ON COLUMN users.company_id IS '소속 회사 ID'",
+            "COMMENT ON COLUMN users.department_id IS '소속 부서 ID'",
+            "COMMENT ON COLUMN users.created_at IS '생성일시'",
+            "COMMENT ON COLUMN users.updated_at IS '수정일시'",
+            "COMMENT ON COLUMN users.created_by IS '생성자 ID'",
+            "COMMENT ON COLUMN users.updated_by IS '수정자 ID'",
+            "COMMENT ON COLUMN users.is_deleted IS '삭제 여부'",
+            "COMMENT ON COLUMN users.deleted_at IS '삭제일시'",
+            "COMMENT ON COLUMN users.deleted_by IS '삭제자 ID'",
+
+            // accounts 테이블
+            "COMMENT ON COLUMN accounts.id IS '계정 고유 ID'",
+            "COMMENT ON COLUMN accounts.company_id IS '소속 회사 ID'",
+            "COMMENT ON COLUMN accounts.parent_account_id IS '상위 계정 ID'",
+            "COMMENT ON COLUMN accounts.account_code IS '계정 코드'",
+            "COMMENT ON COLUMN accounts.account_name IS '계정명'",
+            "COMMENT ON COLUMN accounts.account_name_en IS '계정명(영문)'",
+            "COMMENT ON COLUMN accounts.description IS '계정 설명'",
+            "COMMENT ON COLUMN accounts.account_type IS '계정 유형'",
+            "COMMENT ON COLUMN accounts.account_category IS '계정 분류'",
+            "COMMENT ON COLUMN accounts.is_active IS '활성화 여부'",
+            "COMMENT ON COLUMN accounts.created_at IS '생성일시'",
+            "COMMENT ON COLUMN accounts.updated_at IS '수정일시'",
+            "COMMENT ON COLUMN accounts.created_by IS '생성자 ID'",
+            "COMMENT ON COLUMN accounts.updated_by IS '수정자 ID'",
+            "COMMENT ON COLUMN accounts.is_deleted IS '삭제 여부'",
+            "COMMENT ON COLUMN accounts.deleted_at IS '삭제일시'",
+            "COMMENT ON COLUMN accounts.deleted_by IS '삭제자 ID'",
+
+            // product_categories 테이블
+            "COMMENT ON COLUMN product_categories.id IS '카테고리 고유 ID'",
+            "COMMENT ON COLUMN product_categories.company_id IS '소속 회사 ID'",
+            "COMMENT ON COLUMN product_categories.parent_category_id IS '상위 카테고리 ID'",
+            "COMMENT ON COLUMN product_categories.category_code IS '카테고리 코드'",
+            "COMMENT ON COLUMN product_categories.name IS '카테고리명'",
+            "COMMENT ON COLUMN product_categories.description IS '카테고리 설명'",
+            "COMMENT ON COLUMN product_categories.is_active IS '활성화 여부'",
+            "COMMENT ON COLUMN product_categories.created_at IS '생성일시'",
+            "COMMENT ON COLUMN product_categories.updated_at IS '수정일시'",
+            "COMMENT ON COLUMN product_categories.created_by IS '생성자 ID'",
+            "COMMENT ON COLUMN product_categories.updated_by IS '수정자 ID'",
+            "COMMENT ON COLUMN product_categories.is_deleted IS '삭제 여부'",
+            "COMMENT ON COLUMN product_categories.deleted_at IS '삭제일시'",
+            "COMMENT ON COLUMN product_categories.deleted_by IS '삭제자 ID'",
 
             // customers 테이블 (기본 컬럼만)
-            "COMMENT ON COLUMN customers.id IS '고객 고유 ID'",
             "COMMENT ON COLUMN customers.company_id IS '소속 회사 ID'",
             "COMMENT ON COLUMN customers.customer_code IS '고객 코드'",
             "COMMENT ON COLUMN customers.customer_name IS '고객명'",
@@ -893,6 +1042,19 @@ public class DdlForcer {
             "COMMENT ON COLUMN customers.email IS '이메일'",
             "COMMENT ON COLUMN customers.phone IS '전화번호'",
             "COMMENT ON COLUMN customers.address IS '주소'",
+            "COMMENT ON COLUMN customers.customer_grade IS '고객 등급'",
+            "COMMENT ON COLUMN customers.business_registration_number IS '사업자등록번호'",
+            "COMMENT ON COLUMN customers.ceo_name IS '대표자명'",
+            "COMMENT ON COLUMN customers.sales_manager_id IS '담당 영업 직원 ID'",
+            "COMMENT ON COLUMN customers.credit_limit IS '신용 한도'",
+            "COMMENT ON COLUMN customers.payment_terms IS '결제 조건'",
+            "COMMENT ON COLUMN customers.created_at IS '생성일시'",
+            "COMMENT ON COLUMN customers.updated_at IS '수정일시'",
+            "COMMENT ON COLUMN customers.created_by IS '생성자 ID'",
+            "COMMENT ON COLUMN customers.updated_by IS '수정자 ID'",
+            "COMMENT ON COLUMN customers.is_deleted IS '삭제 여부'",
+            "COMMENT ON COLUMN customers.deleted_at IS '삭제일시'",
+            "COMMENT ON COLUMN customers.deleted_by IS '삭제자 ID'",
 
             // products 테이블 (기본 컬럼만)
             "COMMENT ON COLUMN products.id IS '상품 고유 ID'",
@@ -903,6 +1065,54 @@ public class DdlForcer {
             "COMMENT ON COLUMN products.category_id IS '카테고리 ID'",
             "COMMENT ON COLUMN products.selling_price IS '판매가격'",
             "COMMENT ON COLUMN products.standard_cost IS '표준원가'",
+            "COMMENT ON COLUMN products.product_name_en IS '상품명(영문)'",
+            "COMMENT ON COLUMN products.detailed_description IS '상세 설명'",
+            "COMMENT ON COLUMN products.product_type IS '상품 유형'",
+            "COMMENT ON COLUMN products.product_status IS '상품 상태'",
+            "COMMENT ON COLUMN products.stock_management_type IS '재고 관리 방식'",
+            "COMMENT ON COLUMN products.is_active IS '활성화 여부'",
+            "COMMENT ON COLUMN products.track_inventory IS '재고 추적 여부'",
+            "COMMENT ON COLUMN products.barcode IS '바코드'",
+            "COMMENT ON COLUMN products.qr_code IS 'QR 코드'",
+            "COMMENT ON COLUMN products.sku IS 'SKU'",
+            "COMMENT ON COLUMN products.base_unit IS '기본 단위'",
+            "COMMENT ON COLUMN products.sub_unit IS '보조 단위'",
+            "COMMENT ON COLUMN products.unit_conversion_rate IS '단위 환산율'",
+            "COMMENT ON COLUMN products.average_cost IS '평균 원가'",
+            "COMMENT ON COLUMN products.last_purchase_price IS '최근 구매가'",
+            "COMMENT ON COLUMN products.min_selling_price IS '최소 판매가'",
+            "COMMENT ON COLUMN products.safety_stock IS '안전 재고'",
+            "COMMENT ON COLUMN products.min_stock IS '최소 재고'",
+            "COMMENT ON COLUMN products.max_stock IS '최대 재고'",
+            "COMMENT ON COLUMN products.reorder_point IS '재주문 시점'",
+            "COMMENT ON COLUMN products.reorder_quantity IS '재주문 수량'",
+            "COMMENT ON COLUMN products.lead_time_days IS '리드타임(일)'",
+            "COMMENT ON COLUMN products.shelf_life_days IS '유통기한(일)'",
+            "COMMENT ON COLUMN products.width IS '폭'",
+            "COMMENT ON COLUMN products.height IS '높이'",
+            "COMMENT ON COLUMN products.depth IS '깊이'",
+            "COMMENT ON COLUMN products.weight IS '무게'",
+            "COMMENT ON COLUMN products.volume IS '부피'",
+            "COMMENT ON COLUMN products.color IS '색상'",
+            "COMMENT ON COLUMN products.size IS '크기'",
+            "COMMENT ON COLUMN products.brand IS '브랜드'",
+            "COMMENT ON COLUMN products.manufacturer IS '제조사'",
+            "COMMENT ON COLUMN products.supplier IS '공급업체'",
+            "COMMENT ON COLUMN products.origin_country IS '원산지'",
+            "COMMENT ON COLUMN products.hs_code IS 'HS 코드'",
+            "COMMENT ON COLUMN products.tax_rate IS '세율'",
+            "COMMENT ON COLUMN products.image_paths IS '이미지 경로'",
+            "COMMENT ON COLUMN products.attachment_paths IS '첨부파일 경로'",
+            "COMMENT ON COLUMN products.tags IS '태그'",
+            "COMMENT ON COLUMN products.sort_order IS '정렬 순서'",
+            "COMMENT ON COLUMN products.metadata IS '메타데이터'",
+            "COMMENT ON COLUMN products.created_at IS '생성일시'",
+            "COMMENT ON COLUMN products.updated_at IS '수정일시'",
+            "COMMENT ON COLUMN products.created_by IS '생성자 ID'",
+            "COMMENT ON COLUMN products.updated_by IS '수정자 ID'",
+            "COMMENT ON COLUMN products.is_deleted IS '삭제 여부'",
+            "COMMENT ON COLUMN products.deleted_at IS '삭제일시'",
+            "COMMENT ON COLUMN products.deleted_by IS '삭제자 ID'",
 
             // orders 테이블 (기본 컬럼만)
             "COMMENT ON COLUMN orders.id IS '주문 고유 ID'",
@@ -914,6 +1124,13 @@ public class DdlForcer {
             "COMMENT ON COLUMN orders.total_amount IS '총 주문금액'",
             "COMMENT ON COLUMN orders.payment_status IS '결제 상태'",
             "COMMENT ON COLUMN orders.delivery_date IS '배송일'",
+            "COMMENT ON COLUMN orders.created_at IS '생성일시'",
+            "COMMENT ON COLUMN orders.updated_at IS '수정일시'",
+            "COMMENT ON COLUMN orders.created_by IS '생성자 ID'",
+            "COMMENT ON COLUMN orders.updated_by IS '수정자 ID'",
+            "COMMENT ON COLUMN orders.is_deleted IS '삭제 여부'",
+            "COMMENT ON COLUMN orders.deleted_at IS '삭제일시'",
+            "COMMENT ON COLUMN orders.deleted_by IS '삭제자 ID'",
 
             // inventories 테이블 (기본 컬럼만)
             "COMMENT ON COLUMN inventories.id IS '재고 고유 ID'",
@@ -921,6 +1138,17 @@ public class DdlForcer {
             "COMMENT ON COLUMN inventories.product_id IS '상품 ID'",
             "COMMENT ON COLUMN inventories.warehouse_id IS '창고 ID'",
             "COMMENT ON COLUMN inventories.quantity IS '재고 수량'",
+            "COMMENT ON COLUMN inventories.reserved_quantity IS '예약 수량'",
+            "COMMENT ON COLUMN inventories.available_quantity IS '가용 수량'",
+            "COMMENT ON COLUMN inventories.reorder_point IS '재주문 시점'",
+            "COMMENT ON COLUMN inventories.max_stock IS '최대 재고'",
+            "COMMENT ON COLUMN inventories.created_at IS '생성일시'",
+            "COMMENT ON COLUMN inventories.updated_at IS '수정일시'",
+            "COMMENT ON COLUMN inventories.created_by IS '생성자 ID'",
+            "COMMENT ON COLUMN inventories.updated_by IS '수정자 ID'",
+            "COMMENT ON COLUMN inventories.is_deleted IS '삭제 여부'",
+            "COMMENT ON COLUMN inventories.deleted_at IS '삭제일시'",
+            "COMMENT ON COLUMN inventories.deleted_by IS '삭제자 ID'",
 
             // warehouses 테이블 (기본 컬럼만)
             "COMMENT ON COLUMN warehouses.id IS '창고 고유 ID'",
@@ -930,16 +1158,69 @@ public class DdlForcer {
             "COMMENT ON COLUMN warehouses.location IS '창고 위치'",
             "COMMENT ON COLUMN warehouses.capacity IS '창고 용량'",
             "COMMENT ON COLUMN warehouses.warehouse_type IS '창고 유형'",
+            "COMMENT ON COLUMN warehouses.is_active IS '활성화 여부'",
+            "COMMENT ON COLUMN warehouses.created_at IS '생성일시'",
+            "COMMENT ON COLUMN warehouses.updated_at IS '수정일시'",
+            "COMMENT ON COLUMN warehouses.created_by IS '생성자 ID'",
+            "COMMENT ON COLUMN warehouses.updated_by IS '수정자 ID'",
+            "COMMENT ON COLUMN warehouses.is_deleted IS '삭제 여부'",
+            "COMMENT ON COLUMN warehouses.deleted_at IS '삭제일시'",
+            "COMMENT ON COLUMN warehouses.deleted_by IS '삭제자 ID'",
+
+            // stock_movements 테이블
+            "COMMENT ON COLUMN stock_movements.id IS '재고 이동 고유 ID'",
+            "COMMENT ON COLUMN stock_movements.company_id IS '소속 회사 ID'",
+            "COMMENT ON COLUMN stock_movements.product_id IS '상품 ID'",
+            "COMMENT ON COLUMN stock_movements.warehouse_id IS '창고 ID'",
+            "COMMENT ON COLUMN stock_movements.movement_type IS '이동 유형'",
+            "COMMENT ON COLUMN stock_movements.quantity IS '수량'",
+            "COMMENT ON COLUMN stock_movements.reference_type IS '참조 유형'",
+            "COMMENT ON COLUMN stock_movements.reference_id IS '참조 ID'",
+            "COMMENT ON COLUMN stock_movements.movement_date IS '이동 일시'",
+            "COMMENT ON COLUMN stock_movements.reason IS '이동 사유'",
+            "COMMENT ON COLUMN stock_movements.created_at IS '생성일시'",
+            "COMMENT ON COLUMN stock_movements.updated_at IS '수정일시'",
+            "COMMENT ON COLUMN stock_movements.created_by IS '생성자 ID'",
+            "COMMENT ON COLUMN stock_movements.updated_by IS '수정자 ID'",
+            "COMMENT ON COLUMN stock_movements.is_deleted IS '삭제 여부'",
+            "COMMENT ON COLUMN stock_movements.deleted_at IS '삭제일시'",
+            "COMMENT ON COLUMN stock_movements.deleted_by IS '삭제자 ID'",
+
+            // notification_settings 테이블
+            "COMMENT ON COLUMN notification_settings.id IS '알림 설정 고유 ID'",
+            "COMMENT ON COLUMN notification_settings.company_id IS '소속 회사 ID (null이면 시스템 전체 기본 설정)'",
+            "COMMENT ON COLUMN notification_settings.role IS '대상 역할 (SUPER_ADMIN, ADMIN, MANAGER, USER)'",
+            "COMMENT ON COLUMN notification_settings.scope IS '알림 범위 (SYSTEM, COMPANY, DEPARTMENT, USER)'",
+            "COMMENT ON COLUMN notification_settings.is_enabled IS '수신 가능 여부'",
+            "COMMENT ON COLUMN notification_settings.min_priority IS '최소 우선순위 (이 우선순위 이상만 수신)'",
+            "COMMENT ON COLUMN notification_settings.category_settings IS '카테고리별 설정 (JSON 형태)'",
+            "COMMENT ON COLUMN notification_settings.created_at IS '생성일시'",
+            "COMMENT ON COLUMN notification_settings.updated_at IS '수정일시'",
+            "COMMENT ON COLUMN notification_settings.created_by IS '생성자 ID'",
+            "COMMENT ON COLUMN notification_settings.updated_by IS '수정자 ID'",
+            "COMMENT ON COLUMN notification_settings.is_deleted IS '삭제 여부'",
+            "COMMENT ON COLUMN notification_settings.deleted_at IS '삭제일시'",
+            "COMMENT ON COLUMN notification_settings.deleted_by IS '삭제자 ID'",
 
             // notifications 테이블
-            "COMMENT ON COLUMN notifications.id IS '알림 고유 ID'",
             "COMMENT ON COLUMN notifications.user_id IS '사용자 ID'",
             "COMMENT ON COLUMN notifications.title IS '알림 제목'",
             "COMMENT ON COLUMN notifications.message IS '알림 메시지'",
             "COMMENT ON COLUMN notifications.type IS '알림 타입'",
+            "COMMENT ON COLUMN notifications.scope IS '알림 범위 (SYSTEM, COMPANY, DEPARTMENT, USER)'",
+            "COMMENT ON COLUMN notifications.priority IS '알림 우선순위 (LOW, NORMAL, HIGH, URGENT)'",
+            "COMMENT ON COLUMN notifications.category IS '알림 카테고리 (선택사항)'",
+            "COMMENT ON COLUMN notifications.company_id IS '알림 대상 회사 ID (회사 범위인 경우)'",
+            "COMMENT ON COLUMN notifications.department_id IS '알림 대상 부서 ID (부서 범위인 경우)'",
             "COMMENT ON COLUMN notifications.is_read IS '읽음 여부'",
             "COMMENT ON COLUMN notifications.action_url IS '액션 URL'",
-            "COMMENT ON COLUMN notifications.read_at IS '읽은 시간'"
+            "COMMENT ON COLUMN notifications.read_at IS '읽은 시간'",
+            "COMMENT ON COLUMN notifications.created_at IS '생성일시'",
+            "COMMENT ON COLUMN notifications.updated_at IS '수정일시'",
+            "COMMENT ON COLUMN notifications.created_by IS '생성자 ID'",
+            "COMMENT ON COLUMN notifications.updated_by IS '수정자 ID'",
+            "COMMENT ON COLUMN notifications.is_deleted IS '삭제 여부'",
+            "COMMENT ON COLUMN notifications.deleted_by IS '삭제자 ID'"
         };
 
         for (String comment : columnComments) {

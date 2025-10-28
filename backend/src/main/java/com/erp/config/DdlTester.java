@@ -49,9 +49,9 @@ public class DdlTester {
             
             // 3. 다른 테이블들도 확인
             String[] tables = {
-                "common_departments", "users", "employees", "products", "accounts", 
+                "users", "employees", "products", "accounts", 
                 "product_categories", "positions", "customers", "orders", 
-                "inventories", "warehouses", "stock_movements"
+                "inventories", "warehouses", "stock_movements", "notification_settings"
             };
             for (String table : tables) {
                 try {

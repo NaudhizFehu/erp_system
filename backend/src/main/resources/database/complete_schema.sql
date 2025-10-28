@@ -44,6 +44,29 @@ CREATE TABLE companies (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 회사 테이블 코멘트
+COMMENT ON TABLE companies IS '회사 정보 테이블';
+COMMENT ON COLUMN companies.id IS '회사 ID (Primary Key)';
+COMMENT ON COLUMN companies.company_code IS '회사 코드 (고유값)';
+COMMENT ON COLUMN companies.name IS '회사명 (한글)';
+COMMENT ON COLUMN companies.name_en IS '회사명 (영문)';
+COMMENT ON COLUMN companies.business_number IS '사업자등록번호';
+COMMENT ON COLUMN companies.corporation_number IS '법인등록번호';
+COMMENT ON COLUMN companies.ceo_name IS '대표자명';
+COMMENT ON COLUMN companies.business_type IS '업종';
+COMMENT ON COLUMN companies.business_item IS '업태';
+COMMENT ON COLUMN companies.address IS '주소';
+COMMENT ON COLUMN companies.detailed_address IS '상세주소';
+COMMENT ON COLUMN companies.postal_code IS '우편번호';
+COMMENT ON COLUMN companies.phone IS '대표 전화번호';
+COMMENT ON COLUMN companies.fax IS '팩스번호';
+COMMENT ON COLUMN companies.email IS '대표 이메일';
+COMMENT ON COLUMN companies.website IS '웹사이트 URL';
+COMMENT ON COLUMN companies.status IS '회사 상태 (ACTIVE/INACTIVE)';
+COMMENT ON COLUMN companies.is_deleted IS '삭제 여부';
+COMMENT ON COLUMN companies.created_at IS '생성일시';
+COMMENT ON COLUMN companies.updated_at IS '수정일시';
+
 -- ==============================================
 -- 1. 인사관리 모듈 테이블
 -- ==============================================
@@ -61,6 +84,18 @@ CREATE TABLE departments (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 부서 테이블 코멘트
+COMMENT ON TABLE departments IS '부서 정보 테이블';
+COMMENT ON COLUMN departments.id IS '부서 ID (Primary Key)';
+COMMENT ON COLUMN departments.department_code IS '부서 코드 (고유값)';
+COMMENT ON COLUMN departments.name IS '부서명';
+COMMENT ON COLUMN departments.description IS '부서 설명';
+COMMENT ON COLUMN departments.parent_department_id IS '상위 부서 ID';
+COMMENT ON COLUMN departments.manager_id IS '부서장 직원 ID';
+COMMENT ON COLUMN departments.company_id IS '소속 회사 ID';
+COMMENT ON COLUMN departments.created_at IS '생성일시';
+COMMENT ON COLUMN departments.updated_at IS '수정일시';
+
 -- 직급 테이블
 CREATE TABLE positions (
     id BIGSERIAL PRIMARY KEY,
@@ -72,23 +107,102 @@ CREATE TABLE positions (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 직급 테이블 코멘트
+COMMENT ON TABLE positions IS '직급 정보 테이블';
+COMMENT ON COLUMN positions.id IS '직급 ID (Primary Key)';
+COMMENT ON COLUMN positions.position_code IS '직급 코드 (고유값)';
+COMMENT ON COLUMN positions.name IS '직급명';
+COMMENT ON COLUMN positions.description IS '직급 설명';
+COMMENT ON COLUMN positions.level_order IS '직급 레벨 (숫자가 작을수록 높은 직급)';
+COMMENT ON COLUMN positions.created_at IS '생성일시';
+COMMENT ON COLUMN positions.updated_at IS '수정일시';
+
 -- 직원 테이블
 CREATE TABLE employees (
     id BIGSERIAL PRIMARY KEY,
     employee_number VARCHAR(20) NOT NULL UNIQUE,
     name VARCHAR(50) NOT NULL,
+    name_en VARCHAR(100),
     email VARCHAR(100) NOT NULL UNIQUE,
     phone VARCHAR(20),
+    mobile VARCHAR(20),
+    birth_date DATE,
+    gender VARCHAR(10),
+    address TEXT,
+    address_detail TEXT,
+    postal_code VARCHAR(10),
     hire_date DATE NOT NULL,
+    termination_date DATE,
     department_id BIGINT REFERENCES departments(id),
     position_id BIGINT REFERENCES positions(id),
-    salary DECIMAL(12,2),
-    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'INACTIVE', 'TERMINATED')),
-    address TEXT,
-    birth_date DATE,
+    company_id BIGINT REFERENCES companies(id),
+    employment_status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    employment_type VARCHAR(20) NOT NULL DEFAULT 'FULL_TIME',
+    salary BIGINT,
+    bank_name VARCHAR(50),
+    account_number VARCHAR(20),
+    account_holder VARCHAR(50),
+    emergency_contact VARCHAR(20),
+    emergency_relation VARCHAR(20),
+    education VARCHAR(100),
+    major VARCHAR(100),
+    career TEXT,
+    skills TEXT,
+    certifications TEXT,
+    memo TEXT,
+    profile_image_url VARCHAR(500),
+    resident_number VARCHAR(20),
+    is_deleted BOOLEAN NOT NULL DEFAULT false,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_by BIGINT,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by BIGINT,
+    deleted_at TIMESTAMP,
+    deleted_by BIGINT
 );
+
+-- 직원 테이블 코멘트
+COMMENT ON TABLE employees IS '직원 정보 테이블';
+COMMENT ON COLUMN employees.id IS '직원 ID (Primary Key)';
+COMMENT ON COLUMN employees.employee_number IS '사번 (고유값)';
+COMMENT ON COLUMN employees.name IS '성명 (한글)';
+COMMENT ON COLUMN employees.name_en IS '성명 (영문)';
+COMMENT ON COLUMN employees.email IS '이메일';
+COMMENT ON COLUMN employees.phone IS '전화번호';
+COMMENT ON COLUMN employees.mobile IS '휴대폰번호';
+COMMENT ON COLUMN employees.birth_date IS '생년월일';
+COMMENT ON COLUMN employees.gender IS '성별 (MALE/FEMALE)';
+COMMENT ON COLUMN employees.address IS '주소';
+COMMENT ON COLUMN employees.address_detail IS '상세주소';
+COMMENT ON COLUMN employees.postal_code IS '우편번호';
+COMMENT ON COLUMN employees.hire_date IS '입사일';
+COMMENT ON COLUMN employees.termination_date IS '퇴사일';
+COMMENT ON COLUMN employees.department_id IS '소속 부서 ID';
+COMMENT ON COLUMN employees.position_id IS '직급 ID';
+COMMENT ON COLUMN employees.company_id IS '소속 회사 ID';
+COMMENT ON COLUMN employees.employment_status IS '근무 상태 (ACTIVE/ON_LEAVE/INACTIVE/SUSPENDED/TERMINATED)';
+COMMENT ON COLUMN employees.employment_type IS '고용 형태 (FULL_TIME/PART_TIME/TEMPORARY/CONTRACT)';
+COMMENT ON COLUMN employees.salary IS '기본급 (원 단위, 정수)';
+COMMENT ON COLUMN employees.bank_name IS '은행명';
+COMMENT ON COLUMN employees.account_number IS '계좌번호';
+COMMENT ON COLUMN employees.account_holder IS '예금주명';
+COMMENT ON COLUMN employees.emergency_contact IS '비상연락처';
+COMMENT ON COLUMN employees.emergency_relation IS '비상연락처 관계';
+COMMENT ON COLUMN employees.education IS '학력';
+COMMENT ON COLUMN employees.major IS '전공';
+COMMENT ON COLUMN employees.career IS '경력사항';
+COMMENT ON COLUMN employees.skills IS '보유 기술';
+COMMENT ON COLUMN employees.certifications IS '자격증';
+COMMENT ON COLUMN employees.memo IS '메모';
+COMMENT ON COLUMN employees.profile_image_url IS '프로필 이미지 URL';
+COMMENT ON COLUMN employees.resident_number IS '주민등록번호 (암호화)';
+COMMENT ON COLUMN employees.is_deleted IS '삭제 여부';
+COMMENT ON COLUMN employees.created_at IS '생성일시';
+COMMENT ON COLUMN employees.created_by IS '생성자 ID';
+COMMENT ON COLUMN employees.updated_at IS '수정일시';
+COMMENT ON COLUMN employees.updated_by IS '수정자 ID';
+COMMENT ON COLUMN employees.deleted_at IS '삭제일시';
+COMMENT ON COLUMN employees.deleted_by IS '삭제자 ID';
 
 -- 사용자 테이블
 CREATE TABLE users (
@@ -112,6 +226,28 @@ CREATE TABLE users (
     updated_by BIGINT,
     is_deleted BOOLEAN NOT NULL DEFAULT false
 );
+
+-- 사용자 테이블 코멘트
+COMMENT ON TABLE users IS '시스템 사용자 계정 테이블';
+COMMENT ON COLUMN users.id IS '사용자 ID (Primary Key)';
+COMMENT ON COLUMN users.username IS '사용자명 (로그인 ID, 고유값)';
+COMMENT ON COLUMN users.password IS '비밀번호 (암호화)';
+COMMENT ON COLUMN users.email IS '이메일 (고유값)';
+COMMENT ON COLUMN users.full_name IS '전체 이름';
+COMMENT ON COLUMN users.phone IS '전화번호';
+COMMENT ON COLUMN users.role IS '사용자 역할 (SUPER_ADMIN/ADMIN/MANAGER/USER/READONLY)';
+COMMENT ON COLUMN users.is_active IS '활성 여부';
+COMMENT ON COLUMN users.is_locked IS '잠금 여부';
+COMMENT ON COLUMN users.is_password_expired IS '비밀번호 만료 여부';
+COMMENT ON COLUMN users.company_id IS '소속 회사 ID';
+COMMENT ON COLUMN users.department_id IS '소속 부서 ID';
+COMMENT ON COLUMN users.last_login_at IS '마지막 로그인 일시';
+COMMENT ON COLUMN users.password_changed_at IS '비밀번호 변경 일시';
+COMMENT ON COLUMN users.created_at IS '생성일시';
+COMMENT ON COLUMN users.updated_at IS '수정일시';
+COMMENT ON COLUMN users.created_by IS '생성자 ID';
+COMMENT ON COLUMN users.updated_by IS '수정자 ID';
+COMMENT ON COLUMN users.is_deleted IS '삭제 여부';
 
 -- 부서 관리자 외래키 추가 (순환 참조 해결)
 ALTER TABLE departments ADD CONSTRAINT fk_departments_manager 
@@ -282,8 +418,11 @@ CREATE INDEX idx_employees_employee_number ON employees(employee_number);
 CREATE INDEX idx_employees_email ON employees(email);
 CREATE INDEX idx_employees_department_id ON employees(department_id);
 CREATE INDEX idx_employees_position_id ON employees(position_id);
-CREATE INDEX idx_employees_status ON employees(status);
+CREATE INDEX idx_employees_company_id ON employees(company_id);
+CREATE INDEX idx_employees_employment_status ON employees(employment_status);
+CREATE INDEX idx_employees_employment_type ON employees(employment_type);
 CREATE INDEX idx_employees_hire_date ON employees(hire_date);
+CREATE INDEX idx_employees_is_deleted ON employees(is_deleted);
 
 -- 제품 관련 인덱스
 CREATE INDEX idx_products_code ON products(product_code);
@@ -350,12 +489,9 @@ CREATE TRIGGER update_orders_updated_at BEFORE UPDATE ON orders
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- ==============================================
--- 6. 테이블 코멘트
+-- 6. 테이블 코멘트 (추가 테이블들)
 -- ==============================================
 
-COMMENT ON TABLE departments IS '부서 정보 테이블';
-COMMENT ON TABLE positions IS '직급 정보 테이블';
-COMMENT ON TABLE employees IS '직원 정보 테이블';
 COMMENT ON TABLE product_categories IS '제품 카테고리 테이블';
 COMMENT ON TABLE products IS '제품 정보 테이블';
 COMMENT ON TABLE stock_movements IS '재고 이동 이력 테이블';

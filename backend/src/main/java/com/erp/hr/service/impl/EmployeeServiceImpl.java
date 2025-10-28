@@ -8,21 +8,37 @@ import com.erp.common.utils.ExceptionUtils;
 import com.erp.hr.dto.EmployeeCreateDto;
 import com.erp.hr.dto.EmployeeDto;
 import com.erp.hr.dto.EmployeeUpdateDto;
+import com.erp.hr.dto.ImportResult;
 import com.erp.hr.entity.Employee;
 import com.erp.hr.entity.Position;
 import com.erp.hr.repository.EmployeeRepository;
 import com.erp.hr.repository.PositionRepository;
 import com.erp.hr.service.EmployeeService;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
+import com.opencsv.CSVWriter;
+import com.opencsv.exceptions.CsvValidationException;
 
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -92,7 +108,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         employee.setHireDate(createDto.hireDate());
         employee.setEmploymentStatus(createDto.employmentStatus());
         employee.setEmploymentType(createDto.employmentType());
-        // employee.setBaseSalary(createDto.baseSalary()); // baseSalary 필드 제거됨
+        employee.setBaseSalary(createDto.baseSalary());
         employee.setBankName(createDto.bankName());
         employee.setAccountNumber(createDto.accountNumber());
         employee.setAccountHolder(createDto.accountHolder());
@@ -154,7 +170,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         if (updateDto.postalCode() != null) employee.setPostalCode(updateDto.postalCode());
         if (updateDto.employmentStatus() != null) employee.setEmploymentStatus(updateDto.employmentStatus());
         if (updateDto.employmentType() != null) employee.setEmploymentType(updateDto.employmentType());
-        // if (updateDto.baseSalary() != null) employee.setBaseSalary(updateDto.baseSalary()); // baseSalary 필드 제거됨
+        if (updateDto.baseSalary() != null) employee.setBaseSalary(updateDto.baseSalary());
         if (updateDto.bankName() != null) employee.setBankName(updateDto.bankName());
         if (updateDto.accountNumber() != null) employee.setAccountNumber(updateDto.accountNumber());
         if (updateDto.accountHolder() != null) employee.setAccountHolder(updateDto.accountHolder());
@@ -205,18 +221,28 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public Page<EmployeeDto> getAllEmployees(Pageable pageable) {
-        log.info("전체 직원 목록 조회: 페이지 {}", pageable.getPageNumber());
+    public Page<EmployeeDto> getAllEmployees(Pageable pageable, Employee.EmploymentStatus employmentStatus) {
+        log.info("전체 직원 목록 조회: 페이지 {}, 상태 {}", pageable.getPageNumber(), employmentStatus);
 
-        Page<Employee> employees = employeeRepository.findAllWithDetails(pageable);
+        Page<Employee> employees;
+        if (employmentStatus != null) {
+            employees = employeeRepository.findAllWithDetailsByStatus(employmentStatus, pageable);
+        } else {
+            employees = employeeRepository.findAllWithDetails(pageable);
+        }
         return employees.map(EmployeeDto::from);
     }
 
     @Override
-    public Page<EmployeeDto> getEmployeesByCompany(Long companyId, Pageable pageable) {
-        log.info("회사별 직원 목록 조회: 회사 ID {}", companyId);
+    public Page<EmployeeDto> getEmployeesByCompany(Long companyId, Pageable pageable, Employee.EmploymentStatus employmentStatus) {
+        log.info("회사별 직원 목록 조회: 회사 ID {}, 상태 {}", companyId, employmentStatus);
 
-        Page<Employee> employees = employeeRepository.findByCompanyIdWithDetails(companyId, pageable);
+        Page<Employee> employees;
+        if (employmentStatus != null) {
+            employees = employeeRepository.findByCompanyIdWithDetailsByStatus(companyId, employmentStatus, pageable);
+        } else {
+            employees = employeeRepository.findByCompanyIdWithDetails(companyId, pageable);
+        }
         return employees.map(EmployeeDto::from);
     }
 
@@ -374,5 +400,289 @@ public class EmployeeServiceImpl implements EmployeeService {
     public List<Object[]> getEmployeeCountByGender() {
         log.info("성별 직원 수 통계 조회");
         return employeeRepository.getEmployeeCountByGender();
+    }
+
+    @Override
+    public List<EmployeeDto> getRecentEmployeesByCompany(Long companyId) {
+        log.info("회사별 최근 직원 목록 조회: 회사 ID {}", companyId);
+        
+        Pageable pageable = PageRequest.of(0, 5);
+        List<Employee> employees = employeeRepository.findTop5ByCompanyIdOrderByEmployeeNumberDesc(companyId, pageable);
+        
+        return employees.stream()
+                .map(employee -> EmployeeDto.from(employee))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public ByteArrayResource exportToExcel(Long companyId) {
+        log.info("엑셀 내보내기: 회사 ID {}", companyId);
+        
+        try {
+            List<Employee> employees;
+            if (companyId == null) {
+                employees = employeeRepository.findAll();
+            } else {
+                employees = employeeRepository.findByCompanyId(companyId);
+            }
+            
+            Workbook workbook = new XSSFWorkbook();
+            Sheet sheet = workbook.createSheet("직원 목록");
+            
+            // 헤더 생성
+            Row headerRow = sheet.createRow(0);
+            String[] headers = {"사번", "이름", "이메일", "전화번호", "회사", "부서", "직급", "입사일", "재직상태"};
+            for (int i = 0; i < headers.length; i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(headers[i]);
+            }
+            
+            // 데이터 행 생성
+            int rowNum = 1;
+            for (Employee employee : employees) {
+                Row row = sheet.createRow(rowNum++);
+                row.createCell(0).setCellValue(employee.getEmployeeNumber() != null ? employee.getEmployeeNumber() : "");
+                row.createCell(1).setCellValue(employee.getName() != null ? employee.getName() : "");
+                row.createCell(2).setCellValue(employee.getEmail() != null ? employee.getEmail() : "");
+                row.createCell(3).setCellValue(employee.getPhone() != null ? employee.getPhone() : "");
+                row.createCell(4).setCellValue(employee.getCompany() != null ? employee.getCompany().getName() : "");
+                row.createCell(5).setCellValue(employee.getDepartment() != null ? employee.getDepartment().getName() : "");
+                row.createCell(6).setCellValue(employee.getPosition() != null ? employee.getPosition().getName() : "");
+                row.createCell(7).setCellValue(employee.getHireDate() != null ? employee.getHireDate().toString() : "");
+                row.createCell(8).setCellValue(employee.getEmploymentStatus() != null ? employee.getEmploymentStatus().toString() : "");
+            }
+            
+            // 파일로 변환
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            workbook.write(outputStream);
+            workbook.close();
+            
+            return new ByteArrayResource(outputStream.toByteArray());
+        } catch (IOException e) {
+            log.error("엑셀 내보내기 실패", e);
+            throw new RuntimeException("엑셀 내보내기 실패", e);
+        }
+    }
+
+    @Override
+    public ByteArrayResource exportToCsv(Long companyId) {
+        log.info("CSV 내보내기: 회사 ID {}", companyId);
+        
+        try {
+            List<Employee> employees;
+            if (companyId == null) {
+                employees = employeeRepository.findAll();
+            } else {
+                employees = employeeRepository.findByCompanyId(companyId);
+            }
+            
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            
+            // UTF-8 BOM 추가 (Excel 한글 호환)
+            outputStream.write(0xEF);
+            outputStream.write(0xBB);
+            outputStream.write(0xBF);
+            
+            try (Writer writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8);
+                 CSVWriter csvWriter = new CSVWriter(writer)) {
+                
+                // 헤더 작성
+                String[] headers = {"사번", "이름", "이메일", "전화번호", "회사", "부서", "직급", "입사일", "재직상태"};
+                csvWriter.writeNext(headers);
+                
+                // 데이터 작성
+                for (Employee employee : employees) {
+                    String[] row = {
+                        employee.getEmployeeNumber() != null ? employee.getEmployeeNumber() : "",
+                        employee.getName() != null ? employee.getName() : "",
+                        employee.getEmail() != null ? employee.getEmail() : "",
+                        employee.getPhone() != null ? employee.getPhone() : "",
+                        employee.getCompany() != null ? employee.getCompany().getName() : "",
+                        employee.getDepartment() != null ? employee.getDepartment().getName() : "",
+                        employee.getPosition() != null ? employee.getPosition().getName() : "",
+                        employee.getHireDate() != null ? employee.getHireDate().toString() : "",
+                        employee.getEmploymentStatus() != null ? employee.getEmploymentStatus().toString() : ""
+                    };
+                    csvWriter.writeNext(row);
+                }
+            }
+            
+            return new ByteArrayResource(outputStream.toByteArray());
+        } catch (IOException e) {
+            log.error("CSV 내보내기 실패", e);
+            throw new RuntimeException("CSV 내보내기 실패", e);
+        }
+    }
+
+    @Override
+    @Transactional
+    public ImportResult importFromExcel(MultipartFile file, Long companyId) {
+        log.info("엑셀 가져오기: 회사 ID {}, 파일명 {}", companyId, file.getOriginalFilename());
+        
+        if (companyId == null) {
+            throw new IllegalArgumentException("가져오기 시 회사 ID는 필수입니다");
+        }
+        
+        List<String> errors = new ArrayList<>();
+        int successCount = 0;
+        int totalRows = 0;
+        
+        try (InputStream inputStream = file.getInputStream();
+             Workbook workbook = new XSSFWorkbook(inputStream)) {
+            
+            Sheet sheet = workbook.getSheetAt(0);
+            
+            // 첫 행은 헤더로 스킵
+            for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+                Row row = sheet.getRow(i);
+                if (row == null) continue;
+                
+                totalRows++;
+                
+                try {
+                    String employeeNumber = getCellValueAsString(row.getCell(0));
+                    String name = getCellValueAsString(row.getCell(1));
+                    String email = getCellValueAsString(row.getCell(2));
+                    
+                    if (employeeNumber == null || employeeNumber.trim().isEmpty()) {
+                        errors.add(String.format("%d행: 사번이 없습니다", i + 1));
+                        continue;
+                    }
+                    
+                    // 중복 체크
+                    if (employeeRepository.existsByEmployeeNumber(employeeNumber)) {
+                        errors.add(String.format("%d행: 사번 %s가 이미 존재합니다", i + 1, employeeNumber));
+                        continue;
+                    }
+                    
+                    // 간단한 직원 생성 (실제로는 더 많은 필드가 필요)
+                    Company company = companyRepository.findById(companyId)
+                            .orElseThrow(() -> ExceptionUtils.entityNotFound("회사를 찾을 수 없습니다"));
+                    
+                    Employee employee = new Employee();
+                    employee.setEmployeeNumber(employeeNumber);
+                    employee.setName(name);
+                    employee.setEmail(email);
+                    employee.setCompany(company);
+                    employeeRepository.save(employee);
+                    
+                    successCount++;
+                } catch (Exception e) {
+                    errors.add(String.format("%d행: %s", i + 1, e.getMessage()));
+                }
+            }
+        } catch (IOException e) {
+            log.error("엑셀 가져오기 실패", e);
+            throw new RuntimeException("엑셀 가져오기 실패", e);
+        }
+        
+        return new ImportResult(totalRows, successCount, totalRows - successCount, errors);
+    }
+
+    @Override
+    @Transactional
+    public ImportResult importFromCsv(MultipartFile file, Long companyId) {
+        log.info("CSV 가져오기: 회사 ID {}, 파일명 {}", companyId, file.getOriginalFilename());
+        
+        if (companyId == null) {
+            throw new IllegalArgumentException("가져오기 시 회사 ID는 필수입니다");
+        }
+        
+        List<String> errors = new ArrayList<>();
+        int successCount = 0;
+        int totalRows = 0;
+        
+        try (Reader reader = new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8);
+             CSVReader csvReader = new CSVReaderBuilder(reader).withSkipLines(1).build()) {
+            
+            String[] line;
+            try {
+                while ((line = csvReader.readNext()) != null) {
+                    totalRows++;
+                    
+                    try {
+                        if (line.length < 3) {
+                            errors.add(String.format("%d행: 필수 정보가 부족합니다", totalRows));
+                            continue;
+                        }
+                        
+                        String employeeNumber = line[0] != null ? line[0].trim() : "";
+                        String name = line[1] != null ? line[1].trim() : "";
+                        String email = line[2] != null ? line[2].trim() : "";
+                        
+                        if (employeeNumber.isEmpty()) {
+                            errors.add(String.format("%d행: 사번이 없습니다", totalRows));
+                            continue;
+                        }
+                        
+                        // 중복 체크
+                        if (employeeRepository.existsByEmployeeNumber(employeeNumber)) {
+                            errors.add(String.format("%d행: 사번 %s가 이미 존재합니다", totalRows, employeeNumber));
+                            continue;
+                        }
+                        
+                        Company company = companyRepository.findById(companyId)
+                                .orElseThrow(() -> ExceptionUtils.entityNotFound("회사를 찾을 수 없습니다"));
+                        
+                        Employee employee = new Employee();
+                        employee.setEmployeeNumber(employeeNumber);
+                        employee.setName(name);
+                        employee.setEmail(email);
+                        employee.setCompany(company);
+                        employeeRepository.save(employee);
+                        
+                        successCount++;
+                    } catch (Exception e) {
+                        errors.add(String.format("%d행: %s", totalRows, e.getMessage()));
+                    }
+                }
+            } catch (CsvValidationException e) {
+                errors.add("CSV 파일 형식 오류: " + e.getMessage());
+            }
+        } catch (IOException e) {
+            log.error("CSV 가져오기 실패", e);
+            throw new RuntimeException("CSV 가져오기 실패", e);
+        }
+        
+        return new ImportResult(totalRows, successCount, totalRows - successCount, errors);
+    }
+
+    @Override
+    public Map<String, Long> getEmployeeCountsByAllStatuses() {
+        List<Object[]> results = employeeRepository.countByAllEmploymentStatuses();
+        Map<String, Long> counts = new HashMap<>();
+        
+        // 모든 상태를 0으로 초기화
+        for (Employee.EmploymentStatus status : Employee.EmploymentStatus.values()) {
+            counts.put(status.name(), 0L);
+        }
+        
+        // 실제 데이터로 덮어쓰기
+        for (Object[] result : results) {
+            Employee.EmploymentStatus status = (Employee.EmploymentStatus) result[0];
+            Long count = (Long) result[1];
+            counts.put(status.name(), count);
+        }
+        
+        return counts;
+    }
+    
+    private String getCellValueAsString(Cell cell) {
+        if (cell == null) return null;
+        
+        switch (cell.getCellType()) {
+            case STRING:
+                return cell.getStringCellValue();
+            case NUMERIC:
+                if (DateUtil.isCellDateFormatted(cell)) {
+                    return cell.getDateCellValue().toString();
+                } else {
+                    return String.valueOf((long) cell.getNumericCellValue());
+                }
+            case BOOLEAN:
+                return String.valueOf(cell.getBooleanCellValue());
+            default:
+                return null;
+        }
     }
 }
