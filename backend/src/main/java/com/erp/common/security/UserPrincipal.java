@@ -161,6 +161,18 @@ public class UserPrincipal implements UserDetails {
     }
 
     /**
+     * 직원 ID 반환
+     * User 테이블에는 직원 ID가 없지만, 향후 User와 Employee 간 관계 설정 시 사용
+     * 현재는 null 반환 (추후 User 엔티티에 employeeId 필드 추가 필요)
+     * 
+     * @return 직원 ID
+     */
+    public Long getEmployeeId() {
+        // TODO: User 엔티티에 employeeId 필드 추가 후 구현
+        return null;
+    }
+
+    /**
      * 특정 권한을 가지고 있는지 확인
      * 
      * @param authority 확인할 권한
@@ -291,6 +303,111 @@ public class UserPrincipal implements UserDetails {
         
         // 일반 사용자는 자신의 부서만 접근 가능
         return belongsToDepartment(targetDepartmentId);
+    }
+
+    /**
+     * 사용자 계정 관리 권한 확인
+     * SUPER_ADMIN, ADMIN, 또는 HR팀 MANAGER만 가능
+     * 
+     * @return 사용자 계정 관리 권한 보유 여부
+     */
+    public boolean hasUserManagementPermission() {
+        // SUPER_ADMIN 또는 ADMIN은 항상 가능
+        if (user.getRole() == User.UserRole.SUPER_ADMIN || user.getRole() == User.UserRole.ADMIN) {
+            return true;
+        }
+        
+        // MANAGER + HR팀인 경우 가능
+        if (user.getRole() == User.UserRole.MANAGER && user.getDepartment() != null) {
+            String deptName = user.getDepartment().getName();
+            return deptName.contains("인사") || deptName.contains("HR") || deptName.contains("인력");
+        }
+        
+        return false;
+    }
+
+    /**
+     * 직원 관리 권한 확인
+     * SUPER_ADMIN, ADMIN, 또는 HR팀 MANAGER만 가능
+     * 
+     * @return 직원 관리 권한 보유 여부
+     */
+    public boolean hasEmployeeManagementPermission() {
+        return hasUserManagementPermission(); // 사용자 관리 권한과 동일
+    }
+
+    /**
+     * 영업 승인 권한 확인
+     * SUPER_ADMIN, ADMIN, 또는 영업팀 MANAGER만 가능
+     * 
+     * @return 영업 승인 권한 보유 여부
+     */
+    public boolean hasSalesApprovalPermission() {
+        // SUPER_ADMIN 또는 ADMIN은 항상 가능
+        if (user.getRole() == User.UserRole.SUPER_ADMIN || user.getRole() == User.UserRole.ADMIN) {
+            return true;
+        }
+        
+        // MANAGER + 영업팀인 경우 가능
+        if (user.getRole() == User.UserRole.MANAGER && user.getDepartment() != null) {
+            String deptName = user.getDepartment().getName();
+            return deptName.contains("영업") || deptName.contains("Sales") || deptName.contains("판매");
+        }
+        
+        return false;
+    }
+
+    /**
+     * 재고 승인 권한 확인
+     * SUPER_ADMIN, ADMIN, 또는 재고팀/창고팀 MANAGER만 가능
+     * 
+     * @return 재고 승인 권한 보유 여부
+     */
+    public boolean hasInventoryApprovalPermission() {
+        // SUPER_ADMIN 또는 ADMIN은 항상 가능
+        if (user.getRole() == User.UserRole.SUPER_ADMIN || user.getRole() == User.UserRole.ADMIN) {
+            return true;
+        }
+        
+        // MANAGER + 재고팀/창고팀인 경우 가능
+        if (user.getRole() == User.UserRole.MANAGER && user.getDepartment() != null) {
+            String deptName = user.getDepartment().getName();
+            return deptName.contains("재고") || deptName.contains("창고") || 
+                   deptName.contains("Inventory") || deptName.contains("Warehouse");
+        }
+        
+        return false;
+    }
+
+    /**
+     * 재무 수정 권한 확인
+     * SUPER_ADMIN, ADMIN, 또는 회계팀 MANAGER만 가능
+     * 
+     * @return 재무 수정 권한 보유 여부
+     */
+    public boolean hasFinanceEditPermission() {
+        // SUPER_ADMIN 또는 ADMIN은 항상 가능
+        if (user.getRole() == User.UserRole.SUPER_ADMIN || user.getRole() == User.UserRole.ADMIN) {
+            return true;
+        }
+        
+        // MANAGER + 회계팀인 경우 가능
+        if (user.getRole() == User.UserRole.MANAGER && user.getDepartment() != null) {
+            String deptName = user.getDepartment().getName();
+            return deptName.contains("회계") || deptName.contains("재무") || 
+                   deptName.contains("Finance") || deptName.contains("Accounting");
+        }
+        
+        return false;
+    }
+
+    /**
+     * SUPER_ADMIN 권한 확인
+     * 
+     * @return SUPER_ADMIN 권한 보유 여부
+     */
+    public boolean isSuperAdmin() {
+        return user.getRole() == User.UserRole.SUPER_ADMIN;
     }
 
     @Override

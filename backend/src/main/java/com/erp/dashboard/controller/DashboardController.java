@@ -41,7 +41,7 @@ public class DashboardController {
     private final UserRepository userRepository;
 
     @GetMapping("/overview/{companyId}")
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "전체 현황 요약 조회", description = "대시보드 전체 현황 요약 정보를 조회합니다")
     public ResponseEntity<ApiResponse<DashboardDto.OverviewSummaryDto>> getOverviewSummary(
             @Parameter(description = "회사 ID") @PathVariable Long companyId,
@@ -65,7 +65,7 @@ public class DashboardController {
     }
 
     @GetMapping("/charts/revenue/{companyId}")
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "매출 차트 데이터 조회", description = "매출 관련 차트 데이터를 조회합니다")
     public ResponseEntity<ApiResponse<DashboardDto.RevenueChartDto>> getRevenueChartData(
             @Parameter(description = "회사 ID") @PathVariable Long companyId,
@@ -89,7 +89,7 @@ public class DashboardController {
     }
 
     @GetMapping("/charts/orders/{companyId}")
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "주문 차트 데이터 조회", description = "주문 관련 차트 데이터를 조회합니다")
     public ResponseEntity<ApiResponse<DashboardDto.OrderChartDto>> getOrderChartData(
             @Parameter(description = "회사 ID") @PathVariable Long companyId,
@@ -113,7 +113,7 @@ public class DashboardController {
     }
 
     @GetMapping("/charts/inventory/{companyId}")
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "재고 차트 데이터 조회", description = "재고 관련 차트 데이터를 조회합니다")
     public ResponseEntity<ApiResponse<DashboardDto.InventoryChartDto>> getInventoryChartData(
             @Parameter(description = "회사 ID") @PathVariable Long companyId,
@@ -160,7 +160,7 @@ public class DashboardController {
     }
 
     @GetMapping("/activities/{companyId}")
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "최근 활동 로그 조회", description = "최근 활동 로그를 조회합니다")
     public ResponseEntity<ApiResponse<List<DashboardDto.ActivityLogDto>>> getRecentActivities(
             @Parameter(description = "회사 ID") @PathVariable Long companyId,
@@ -179,7 +179,7 @@ public class DashboardController {
     }
 
     @GetMapping("/notifications/{userId}")
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "사용자 알림 조회", description = "사용자의 알림 목록을 조회합니다")
     public ResponseEntity<ApiResponse<List<DashboardDto.NotificationDto>>> getUserNotifications(
             @Parameter(description = "사용자 ID") @PathVariable Long userId,
@@ -198,7 +198,7 @@ public class DashboardController {
     }
 
     @GetMapping("/todos/{userId}")
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "사용자 할일 목록 조회", description = "사용자의 할일 목록을 조회합니다")
     public ResponseEntity<ApiResponse<List<DashboardDto.TodoItemDto>>> getUserTodoItems(
             @Parameter(description = "사용자 ID") @PathVariable Long userId,
@@ -217,7 +217,7 @@ public class DashboardController {
     }
 
     @GetMapping("/quick-actions")
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "빠른 액션 조회", description = "사용자 역할에 따른 빠른 액션 목록을 조회합니다")
     public ResponseEntity<ApiResponse<List<DashboardDto.QuickActionDto>>> getQuickActions(
             @Parameter(description = "사용자 역할") @RequestParam String userRole) {
@@ -258,7 +258,7 @@ public class DashboardController {
     }
 
     @GetMapping("/config/{userId}")
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "사용자 대시보드 설정 조회", description = "사용자의 대시보드 설정을 조회합니다")
     public ResponseEntity<ApiResponse<DashboardDto.UserDashboardConfigDto>> getUserDashboardConfig(
             @Parameter(description = "사용자 ID") @PathVariable Long userId) {
@@ -275,7 +275,7 @@ public class DashboardController {
     }
 
     @PutMapping("/config/{userId}")
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "사용자 대시보드 설정 저장", description = "사용자의 대시보드 설정을 저장합니다")
     public ResponseEntity<ApiResponse<DashboardDto.UserDashboardConfigDto>> saveUserDashboardConfig(
             @Parameter(description = "사용자 ID") @PathVariable Long userId,
@@ -293,7 +293,7 @@ public class DashboardController {
     }
 
     @GetMapping("/data/{companyId}")
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "대시보드 전체 데이터 조회", description = "대시보드의 모든 데이터를 한번에 조회합니다")
     public ResponseEntity<ApiResponse<DashboardDto.DashboardDataDto>> getDashboardData(
             @Parameter(description = "회사 ID") @PathVariable Long companyId,
@@ -319,7 +319,7 @@ public class DashboardController {
     }
 
     @GetMapping("/notifications/stats/{userId}")
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "알림 통계 조회", description = "사용자의 알림 통계를 조회합니다")
     public ResponseEntity<ApiResponse<DashboardDto.NotificationStatsDto>> getNotificationStats(
             @Parameter(description = "사용자 ID") @PathVariable Long userId) {
@@ -336,7 +336,7 @@ public class DashboardController {
     }
 
     @GetMapping("/notifications/unread-count")
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "읽지 않은 알림 개수 조회", description = "현재 사용자의 읽지 않은 알림 개수를 조회합니다")
     public ResponseEntity<ApiResponse<Long>> getUnreadNotificationCount(Authentication authentication) {
         try {
@@ -361,7 +361,7 @@ public class DashboardController {
     }
 
     @PutMapping("/notifications/{notificationId}/read")
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "알림 읽음 처리", description = "특정 알림을 읽음 처리합니다")
     public ResponseEntity<ApiResponse<Void>> markNotificationAsRead(
             @Parameter(description = "알림 ID") @PathVariable Long notificationId,
@@ -379,7 +379,7 @@ public class DashboardController {
     }
 
     @PutMapping("/notifications/read-all/{userId}")
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "모든 알림 읽음 처리", description = "사용자의 모든 알림을 읽음 처리합니다")
     public ResponseEntity<ApiResponse<Void>> markAllNotificationsAsRead(
             @Parameter(description = "사용자 ID") @PathVariable Long userId) {
@@ -396,7 +396,7 @@ public class DashboardController {
     }
 
     @PutMapping("/todos/{todoId}/status")
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "할일 상태 변경", description = "할일의 상태를 변경합니다")
     public ResponseEntity<ApiResponse<DashboardDto.TodoItemDto>> updateTodoStatus(
             @Parameter(description = "할일 ID") @PathVariable Long todoId,
@@ -415,7 +415,7 @@ public class DashboardController {
     }
 
     @PostMapping("/todos")
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "새 할일 생성", description = "새로운 할일을 생성합니다")
     public ResponseEntity<ApiResponse<DashboardDto.TodoItemDto>> createTodoItem(
             @Valid @RequestBody DashboardDto.TodoItemDto todoItem,
@@ -449,7 +449,7 @@ public class DashboardController {
     }
 
     @GetMapping("/widget/{widgetId}/refresh")
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "위젯 데이터 새로고침", description = "특정 위젯의 데이터를 새로고침합니다")
     public ResponseEntity<ApiResponse<Object>> refreshWidgetData(
             @Parameter(description = "위젯 ID") @PathVariable String widgetId,

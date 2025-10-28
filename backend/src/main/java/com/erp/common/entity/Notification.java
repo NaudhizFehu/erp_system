@@ -1,5 +1,6 @@
 package com.erp.common.entity;
 
+import com.erp.hr.entity.Department;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -19,7 +20,10 @@ import java.time.LocalDateTime;
 @Table(name = "notifications", indexes = {
     @Index(name = "idx_notifications_user_id", columnList = "user_id"),
     @Index(name = "idx_notifications_is_read", columnList = "is_read"),
-    @Index(name = "idx_notifications_created_at", columnList = "created_at")
+    @Index(name = "idx_notifications_created_at", columnList = "created_at"),
+    @Index(name = "idx_notifications_scope", columnList = "scope"),
+    @Index(name = "idx_notifications_company_id", columnList = "company_id"),
+    @Index(name = "idx_notifications_department_id", columnList = "department_id")
 })
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -77,6 +81,43 @@ public class Notification extends BaseEntity {
      */
     @Column(name = "read_at")
     private LocalDateTime readAt;
+
+    /**
+     * 알림 범위
+     */
+    @NotNull(message = "알림 범위는 필수입니다")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "scope", nullable = false, length = 20)
+    private NotificationScope scope = NotificationScope.USER;
+
+    /**
+     * 알림 우선순위
+     */
+    @NotNull(message = "알림 우선순위는 필수입니다")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "priority", nullable = false, length = 20)
+    private NotificationPriority priority = NotificationPriority.NORMAL;
+
+    /**
+     * 대상 회사 (scope가 COMPANY, DEPARTMENT일 때 사용)
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_id")
+    private Company company;
+
+    /**
+     * 대상 부서 (scope가 DEPARTMENT일 때 사용)
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "department_id")
+    private Department department;
+
+    /**
+     * 알림 카테고리 (선택적)
+     */
+    @Size(max = 50, message = "알림 카테고리는 50자 이하여야 합니다")
+    @Column(name = "category", length = 50)
+    private String category;
 
     /**
      * 알림 타입 열거형

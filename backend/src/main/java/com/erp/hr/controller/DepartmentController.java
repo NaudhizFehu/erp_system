@@ -34,7 +34,7 @@ public class DepartmentController {
      * 전체 부서 목록 조회 (페이징)
      */
     @GetMapping
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "부서 목록 조회", description = "전체 부서 목록을 조회합니다")
     public ResponseEntity<ApiResponse<Page<DepartmentDto>>> getAllDepartments(
             @PageableDefault(size = 20, sort = "name") Pageable pageable) {
@@ -54,7 +54,7 @@ public class DepartmentController {
      * 회사별 부서 목록 조회 (페이징)
      */
     @GetMapping("/company/{companyId}")
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "회사별 부서 목록 조회", description = "특정 회사의 부서 목록을 조회합니다")
     public ResponseEntity<ApiResponse<Page<DepartmentDto>>> getDepartmentsByCompany(
             @Parameter(description = "회사 ID") @PathVariable Long companyId,
@@ -93,7 +93,7 @@ public class DepartmentController {
      * 부서 등록
      */
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "부서 등록", description = "새로운 부서를 등록합니다")
     public ResponseEntity<ApiResponse<DepartmentDto>> createDepartment(
             @Valid @RequestBody DepartmentDto.DepartmentCreateDto createDto) {
@@ -112,7 +112,7 @@ public class DepartmentController {
      * 부서 수정
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "부서 수정", description = "부서 정보를 수정합니다")
     public ResponseEntity<ApiResponse<DepartmentDto>> updateDepartment(
             @Parameter(description = "부서 ID") @PathVariable Long id,
@@ -132,7 +132,7 @@ public class DepartmentController {
      * 부서 삭제
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "부서 삭제", description = "부서를 삭제합니다")
     public ResponseEntity<ApiResponse<Void>> deleteDepartment(
             @Parameter(description = "부서 ID") @PathVariable Long id) {
@@ -151,7 +151,7 @@ public class DepartmentController {
      * 부서 검색
      */
     @GetMapping("/search")
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "부서 검색", description = "부서명으로 부서를 검색합니다")
     public ResponseEntity<ApiResponse<Page<DepartmentDto>>> searchDepartments(
             @Parameter(description = "검색어") @RequestParam String searchTerm,
@@ -171,7 +171,7 @@ public class DepartmentController {
      * 회사별 부서 검색
      */
     @GetMapping("/search/company/{companyId}")
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "회사별 부서 검색", description = "특정 회사의 부서를 검색합니다")
     public ResponseEntity<ApiResponse<Page<DepartmentDto>>> searchDepartmentsByCompany(
             @Parameter(description = "회사 ID") @PathVariable Long companyId,

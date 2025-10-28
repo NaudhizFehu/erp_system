@@ -34,7 +34,7 @@ public class SwaggerConfig {
                 .info(apiInfo())
                 .servers(List.of(
                         new Server()
-                                .url("http://localhost:8080" + contextPath)
+                                .url("http://localhost:9961" + contextPath)
                                 .description("개발 서버"),
                         new Server()
                                 .url("https://api.erp-system.com" + contextPath)

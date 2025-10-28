@@ -93,7 +93,9 @@ public class Employee extends BaseEntity {
     @Column(name = "employment_type", nullable = false)
     private EmploymentType employmentType = EmploymentType.FULL_TIME;
 
-    // base_salary 필드가 데이터베이스에 존재하지 않아 제거됨
+    @Min(value = 0, message = "급여는 0 이상이어야 합니다")
+    @Column(name = "salary", nullable = true)
+    private Long baseSalary;
 
     @Size(max = 50, message = "은행명은 50자 이하여야 합니다")
     @Column(name = "bank_name", length = 50)
@@ -176,15 +178,17 @@ public class Employee extends BaseEntity {
      */
     public enum EmploymentStatus {
         ACTIVE("재직"),
-        INACTIVE("휴직"),
-        TERMINATED("퇴사");
-
+        ON_LEAVE("휴가"),       // 추가 - 단기 휴가/연차
+        INACTIVE("휴직"),       // 기존 - 장기 휴직
+        SUSPENDED("정직"),      // 추가 - 징계
+        TERMINATED("퇴직");     // 기존
+        
         private final String description;
-
+        
         EmploymentStatus(String description) {
             this.description = description;
         }
-
+        
         public String getDescription() {
             return description;
         }

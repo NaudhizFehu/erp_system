@@ -212,6 +212,16 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     Page<Employee> findAllWithDetails(Pageable pageable);
 
     /**
+     * 전체 직원 목록 조회 (페이징, 상태 필터)
+     */
+    @Query("SELECT e FROM Employee e " +
+           "JOIN FETCH e.company c " +
+           "JOIN FETCH e.department d " +
+           "JOIN FETCH e.position p " +
+           "WHERE e.isDeleted = false AND e.employmentStatus = :status")
+    Page<Employee> findAllWithDetailsByStatus(@Param("status") Employee.EmploymentStatus status, Pageable pageable);
+
+    /**
      * 회사별 전체 직원 목록 조회 (페이징)
      */
     @Query("SELECT e FROM Employee e " +
@@ -220,6 +230,16 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
            "JOIN FETCH e.position p " +
            "WHERE e.company.id = :companyId AND e.isDeleted = false")
     Page<Employee> findByCompanyIdWithDetails(@Param("companyId") Long companyId, Pageable pageable);
+
+    /**
+     * 회사별 직원 목록 조회 (페이징, 상태 필터)
+     */
+    @Query("SELECT e FROM Employee e " +
+           "JOIN FETCH e.company c " +
+           "JOIN FETCH e.department d " +
+           "JOIN FETCH e.position p " +
+           "WHERE e.company.id = :companyId AND e.isDeleted = false AND e.employmentStatus = :status")
+    Page<Employee> findByCompanyIdWithDetailsByStatus(@Param("companyId") Long companyId, @Param("status") Employee.EmploymentStatus status, Pageable pageable);
 
     /**
      * 부서별 전체 직원 목록 조회 (페이징)
@@ -358,4 +378,18 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
            "JOIN FETCH e.position p " +
            "WHERE e.company.id = :companyId AND LOWER(e.name) LIKE LOWER(CONCAT('%', :name, '%')) AND e.isDeleted = false")
     List<Employee> findByCompanyIdAndNameContainingIgnoreCase(@Param("companyId") Long companyId, @Param("name") String name);
+
+    /**
+     * 회사별 마지막 사번 조회
+     */
+    @Query("SELECT e FROM Employee e " +
+           "WHERE e.company.id = :companyId AND e.isDeleted = false " +
+           "ORDER BY e.employeeNumber DESC")
+    List<Employee> findTop5ByCompanyIdOrderByEmployeeNumberDesc(@Param("companyId") Long companyId, Pageable pageable);
+
+    /**
+     * 모든 상태별 직원 수 조회
+     */
+    @Query("SELECT e.employmentStatus, COUNT(e) FROM Employee e WHERE e.isDeleted = false GROUP BY e.employmentStatus")
+    List<Object[]> countByAllEmploymentStatuses();
 }

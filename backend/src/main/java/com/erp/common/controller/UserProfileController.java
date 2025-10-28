@@ -36,7 +36,7 @@ public class UserProfileController {
      * 현재 사용자 정보 조회
      */
     @GetMapping("/me")
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "현재 사용자 정보 조회", description = "현재 로그인한 사용자의 정보를 조회합니다")
     public ResponseEntity<ApiResponse<UserProfileDto>> getCurrentUser(Authentication authentication) {
         try {
@@ -67,7 +67,7 @@ public class UserProfileController {
      * 사용자 프로필 업데이트
      */
     @PutMapping("/profile")
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Transactional
     @Operation(summary = "사용자 프로필 업데이트", description = "현재 사용자의 프로필 정보를 업데이트합니다")
     public ResponseEntity<ApiResponse<UserProfileDto>> updateProfile(
@@ -152,7 +152,7 @@ public class UserProfileController {
      * 비밀번호 변경
      */
     @PutMapping("/change-password")
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "비밀번호 변경", description = "현재 사용자의 비밀번호를 변경합니다")
     public ResponseEntity<ApiResponse<Void>> changePassword(
             @Valid @RequestBody PasswordChangeDto passwordData,
@@ -190,7 +190,7 @@ public class UserProfileController {
      * 계정 비활성화
      */
     @PutMapping("/deactivate")
-    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "계정 비활성화", description = "현재 사용자의 계정을 비활성화합니다")
     public ResponseEntity<ApiResponse<Void>> deactivateAccount(Authentication authentication) {
         try {

@@ -20,22 +20,15 @@ public record UserProfileUpdateDto(
         @Pattern(regexp = "^(01[016789]-?\\d{3,4}-?\\d{4}|0[2-6]\\d?-?\\d{3,4}-?\\d{4}|\\d{4}-?\\d{4}|\\d{10,11}|\\d{8})$", message = "올바른 휴대폰번호 형식이어야 합니다")
         String phoneNumber,
         
-        @NotBlank(message = "부서는 필수입니다")
+        // 부서는 선택사항 (SUPER_ADMIN은 부서가 없을 수 있음)
+        @Size(max = 100, message = "부서는 100자 이하여야 합니다")
         String department,
         
-        @NotBlank(message = "직책은 필수입니다")
+        // 직책은 선택사항 (SUPER_ADMIN은 직책이 없을 수 있음)
         @Size(max = 50, message = "직책은 50자 이하여야 합니다")
         String position
 ) {
     public UserProfileUpdateDto {
-        // 부서와 직책은 필수값으로 검증
-        if (department != null && department.trim().isEmpty()) {
-            throw new IllegalArgumentException("부서는 필수입니다");
-        }
-        if (position != null && position.trim().isEmpty()) {
-            throw new IllegalArgumentException("직책은 필수입니다");
-        }
-        
         // 전화번호 정규화
         if (phone != null && !phone.trim().isEmpty()) {
             phone = phone.trim();
@@ -52,6 +45,14 @@ public record UserProfileUpdateDto(
         // 실명 정규화
         if (fullName != null && !fullName.trim().isEmpty()) {
             fullName = fullName.trim();
+        }
+        
+        // 부서/직책 정규화 (빈 문자열을 null로 변환)
+        if (department != null && department.trim().isEmpty()) {
+            department = null;
+        }
+        if (position != null && position.trim().isEmpty()) {
+            position = null;
         }
     }
 }
