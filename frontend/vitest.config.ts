@@ -80,7 +80,7 @@ export default defineConfig({
     },
     
     // 리포터 설정
-    reporter: ['verbose', 'html'],
+    reporters: ['verbose', 'html'],
     outputFile: {
       html: './coverage/test-results.html',
     },

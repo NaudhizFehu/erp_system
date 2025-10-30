@@ -52,7 +52,7 @@ import {
 } from '../../hooks/useInventory'
 import { KOREAN_LABELS } from '../../types/inventory'
 import { formatCurrency, formatNumber, formatDate } from '../../utils/format'
-import LoadingSpinner from '../common/LoadingSpinner'
+import { LoadingSpinner } from '../common/LoadingSpinner'
 
 interface InventoryDashboardProps {
   companyId: number
@@ -217,8 +217,8 @@ function InventoryDashboard({ companyId }: InventoryDashboardProps) {
   }))
 
   // 재고 가치 분포 차트 데이터 (상위 10개 상품)
-  const topValueProducts = productStatsData?.topValueProducts?.slice(0, 10) || []
-  const valueDistributionData = topValueProducts.map((product, index) => ({
+  const topValueProducts = Array.isArray(productStatsData?.totalProducts) ? productStatsData.totalProducts.slice(0, 10) : []
+  const valueDistributionData = topValueProducts.map((product: any, index: number) => ({
     name: product.productName?.substring(0, 15) + (product.productName?.length > 15 ? '...' : ''),
     value: product.totalStockValue,
     color: CHART_COLORS[index % CHART_COLORS.length],

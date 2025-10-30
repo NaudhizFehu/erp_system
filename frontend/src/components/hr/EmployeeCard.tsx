@@ -54,13 +54,15 @@ export function EmployeeCard({
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
       case 'ACTIVE':
-        return 'default'
+        return 'default'          // 재직 - 파랑
       case 'ON_LEAVE':
-        return 'secondary'
-      case 'TERMINATED':
-        return 'destructive'
+        return 'secondary'        // 휴가 - 회색
+      case 'INACTIVE':
+        return 'purple'           // 휴직 - 연보라색
       case 'SUSPENDED':
-        return 'outline'
+        return 'black'            // 정직 - 검은색
+      case 'TERMINATED':
+        return 'destructive'      // 퇴직 - 빨강
       default:
         return 'secondary'
     }
@@ -164,13 +166,13 @@ export function EmployeeCard({
           {/* 회사 정보 */}
           <div className="flex items-center space-x-2">
             <Building className="h-4 w-4 text-muted-foreground" />
-            <span>{employee.company.companyName}</span>
+            <span>{employee.company.name}</span>
           </div>
 
           {/* 부서 정보 */}
           <div className="flex items-center space-x-2">
             <Users className="h-4 w-4 text-muted-foreground" />
-            <span>{employee.department.departmentName}</span>
+            <span>{employee.department.name}</span>
           </div>
 
           {/* 직급 정보 */}

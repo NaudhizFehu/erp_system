@@ -54,7 +54,7 @@ function parseArray(value: string | undefined, defaultValue: string[] = []): str
 export const config: AppConfig = {
   title: import.meta.env.VITE_APP_TITLE || 'ERP 시스템',
   version: import.meta.env.VITE_APP_VERSION || '1.0.0',
-  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api',
+  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:9961/api',
   debug: parseBoolean(import.meta.env.VITE_DEBUG, false),
   logLevel: (import.meta.env.VITE_LOG_LEVEL as AppConfig['logLevel']) || 'info',
   

@@ -4,9 +4,8 @@
  */
 
 import api from './api'
+import type { ApiResponse, PageResponse } from '@/types/common'
 import type {
-  ApiResponse,
-  PageResponse,
   Account,
   Transaction,
   Budget,

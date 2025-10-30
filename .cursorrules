@@ -664,3 +664,440 @@ mvn test
 - ✅ 백엔드 관련 작업 시 사용자와 소통
 - ✅ PostgreSQL 범위 내에서만 DB 관련 조언
 - ✅ IDE 기반 Maven 작업 안내
+
+# 문서화 및 작업 관리 규칙
+
+## 문서 저장 위치
+```
+project-root/
+└── docs/
+    ├── commands/
+    │   └── initial-analysis.md      # 초기 프로젝트 분석 명령어
+    ├── project-status.md            # 현재 구현 상태 (초기 1회)
+    ├── todo-list.md                 # 전체 작업 목록
+    ├── implementation-plans/        # 기능별 구현 계획
+    │   ├── user-management.md
+    │   ├── order-management.md
+    │   └── ...
+    └── work-logs/                   # 작업 완료 로그
+        ├── 2025-01/
+        │   ├── 2025-01-15-user-crud.md
+        │   └── 2025-01-20-auth-jwt.md
+        └── 2025-02/
+```
+
+## 문서 작성 규칙
+
+### 1. TODO 목록 관리 (docs/todo-list.md)
+
+**작성 시점:**
+- 프로젝트 초기 분석 후 1회 생성
+- 새로운 요구사항 발생 시 업데이트
+- 주요 기능 완료 시 상태 업데이트
+
+**작성 형식:**
+```markdown
+# ERP 시스템 TODO 목록
+
+## 진행 상태 요약
+- 완료: 3개
+- 진행중: 2개
+- 대기: 5개
+
+## 우선순위별 작업 목록
+
+### High Priority (필수 기능)
+- [ ] 사용자 관리 (User Management)
+  - [x] 엔티티 설계
+  - [x] CRUD API 구현
+  - [ ] 프론트엔드 화면
+  - 관련 문서: `implementation-plans/user-management.md`
+
+- [ ] 인증/인가 (Authentication)
+  - [ ] JWT 토큰 구현
+  - [ ] Spring Security 설정
+  - 시작 예정일: 2025-01-25
+
+### Medium Priority
+...
+
+### Low Priority
+...
+
+## 최근 업데이트
+- 2025-01-15: 사용자 CRUD API 완료
+- 2025-01-10: 초기 프로젝트 구조 설정
+```
+
+**업데이트 트리거:**
+- 사용자가 "TODO 업데이트" 또는 "진행 상황 확인" 요청 시
+- 새 기능 완료 시 자동으로 체크박스 업데이트 제안
+
+---
+
+### 2. 구현 계획 문서 (docs/implementation-plans/{기능명}.md)
+
+**작성 시점:**
+- 새로운 기능 구현 시작 전 **반드시** 작성
+- 사용자가 명시적으로 요청하지 않아도 AI가 작성 제안
+
+**작성 트리거:**
+- "○○ 기능 구현해줘"
+- "△△ 만들어줘"
+- TODO 목록의 항목 시작 시
+
+**작성 형식:**
+```markdown
+# {기능명} 구현 계획
+
+## 기능 개요
+- 기능 설명
+- 목적 및 요구사항
+
+## 백엔드 구현
+
+### 1. Entity 설계
+```java
+// 예상 Entity 구조
+```
+
+### 2. Repository
+- 필요한 커스텀 쿼리 목록
+
+### 3. Service
+- 비즈니스 로직 흐름
+- 트랜잭션 처리 범위
+
+### 4. Controller
+- API 엔드포인트 설계
+  - POST /api/users - 사용자 생성
+  - GET /api/users/{id} - 사용자 조회
+  - ...
+
+### 5. DTO
+```java
+// Request/Response DTO 구조
+```
+
+## 프론트엔드 구현
+
+### 1. 페이지 구조
+- 목록 페이지: /users
+- 상세 페이지: /users/:id
+- 등록/수정 폼: /users/new, /users/:id/edit
+
+### 2. 컴포넌트 설계
+```
+UserManagement/
+├── UserList.tsx
+├── UserDetail.tsx
+├── UserForm.tsx
+└── components/
+    ├── UserTable.tsx
+    └── UserFilter.tsx
+```
+
+### 3. API 연동
+- React Query hooks
+- 타입 인터페이스 정의
+
+### 4. 상태 관리
+- 필요한 전역 상태
+- 로컬 상태 관리 방식
+
+## DB 스키마
+
+```sql
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  username VARCHAR(50) NOT NULL,
+  ...
+);
+```
+
+## 구현 순서
+
+### Phase 1: 백엔드 기반 (1일)
+1. Entity 및 Repository 작성
+2. Service 레이어 구현
+3. 단위 테스트 작성
+
+### Phase 2: API 개발 (1일)
+1. Controller 구현
+2. DTO 정의
+3. 통합 테스트
+
+### Phase 3: 프론트엔드 (2일)
+1. 타입 및 API 서비스 작성
+2. UI 컴포넌트 개발
+3. 페이지 통합
+
+### Phase 4: 테스트 및 최적화 (0.5일)
+1. E2E 테스트
+2. 성능 최적화
+3. 문서화
+
+## 예상 이슈 및 해결 방안
+
+### 이슈 1: N+1 문제
+- 원인: 연관 엔티티 조회
+- 해결: @EntityGraph 사용
+
+### 이슈 2: ...
+
+## 체크리스트
+
+### 백엔드
+- [ ] Entity 작성
+- [ ] Repository 작성
+- [ ] Service 구현
+- [ ] Controller 구현
+- [ ] DTO 정의
+- [ ] 단위 테스트
+- [ ] 통합 테스트
+
+### 프론트엔드
+- [ ] 타입 정의
+- [ ] API 서비스 작성
+- [ ] 컴포넌트 개발
+- [ ] 페이지 통합
+- [ ] E2E 테스트
+
+### 문서화
+- [ ] API 문서 작성
+- [ ] 작업 로그 업데이트
+- [ ] TODO 목록 업데이트
+
+## 참고 사항
+- 관련 문서: docs/todo-list.md
+- 시작일: 2025-01-20
+- 예상 완료일: 2025-01-25
+```
+
+**AI 동작:**
+```
+사용자: "사용자 관리 기능 만들어줘"
+
+AI 응답:
+"사용자 관리 기능을 구현하기 전에 구현 계획 문서를 작성하겠습니다.
+
+docs/implementation-plans/user-management.md 파일을 생성했습니다.
+계획을 검토해주시고, 수정이 필요한 부분이 있다면 말씀해주세요.
+
+계획이 확정되면 Phase 1부터 순차적으로 진행하겠습니다."
+```
+
+---
+
+### 3. 작업 로그 (docs/work-logs/{YYYY-MM}/{날짜-기능명}.md)
+
+**작성 시점:**
+- 기능 구현 완료 시 **자동 생성**
+- 사용자가 "완료" 또는 "구현 끝" 언급 시
+
+**작성 형식:**
+```markdown
+# 사용자 CRUD API 구현 완료
+
+**작업일**: 2025-01-15
+**작업자**: [개발자명]
+**소요시간**: 4시간
+**관련 문서**: docs/implementation-plans/user-management.md
+
+## 구현 내용
+
+### 백엔드
+- ✅ User Entity 생성
+  - 파일: `backend/src/main/java/entity/User.java`
+  - 주요 필드: id, username, email, password, createdAt
+  
+- ✅ UserRepository 구현
+  - 파일: `backend/src/main/java/repository/UserRepository.java`
+  - 커스텀 쿼리: findByUsername, existsByEmail
+
+- ✅ UserService 구현
+  - 파일: `backend/src/main/java/service/UserServiceImpl.java`
+  - 메서드: createUser, getUser, updateUser, deleteUser
+
+- ✅ UserController 구현
+  - 파일: `backend/src/main/java/controller/UserController.java`
+  - API 엔드포인트:
+    - POST /api/users - 사용자 생성
+    - GET /api/users/{id} - 사용자 조회
+    - PUT /api/users/{id} - 사용자 수정
+    - DELETE /api/users/{id} - 사용자 삭제
+
+### 프론트엔드
+- ⏳ 다음 작업으로 예정
+
+## 발생한 이슈 및 해결
+
+### 이슈 1: 이메일 중복 검증
+**문제**: 이메일 중복 시 500 에러 발생
+**해결**: Service 레이어에서 사전 검증 추가
+```java
+if (userRepository.existsByEmail(email)) {
+  throw new DuplicateEmailException("이미 사용중인 이메일입니다");
+}
+```
+
+### 이슈 2: ...
+
+## 테스트 결과
+- ✅ 단위 테스트: 12/12 통과
+- ✅ 통합 테스트: 4/4 통과
+- ⚠️ E2E 테스트: 프론트엔드 구현 후 예정
+
+## 다음 작업
+1. 프론트엔드 사용자 관리 화면 구현
+2. JWT 인증 추가
+3. 권한 관리 기능
+
+## Git 커밋
+- GitLab: `feat: 사용자 CRUD API 구현 완료` (commit: abc123)
+- GitHub: 미동기화 (프론트 완료 후 일괄 처리)
+
+## 참고 사항
+- API 테스트용 Postman Collection 추가
+- 개발 환경 테스트 계정 생성 (admin/admin123)
+```
+
+**AI 동작:**
+```
+사용자: "백엔드 완료했어"
+
+AI 응답:
+"작업 로그를 생성하겠습니다.
+
+docs/work-logs/2025-01/2025-01-15-user-crud-api.md 파일을 생성했습니다.
+
+주요 내용:
+- User Entity, Repository, Service, Controller 구현 완료
+- 이메일 중복 검증 이슈 해결
+- 단위/통합 테스트 모두 통과
+
+다음 작업은 프론트엔드 화면 구현입니다. 진행할까요?"
+```
+
+---
+
+## AI 작업 프로세스
+
+### 새 기능 시작 시
+
+```
+1. 사용자 요청 파악
+   "○○ 기능 구현해줘"
+
+2. TODO 확인
+   docs/todo-list.md에서 해당 기능 확인
+
+3. 구현 계획 생성 제안
+   "○○ 기능 구현 계획을 작성하겠습니다"
+   → docs/implementation-plans/○○.md 생성
+
+4. 사용자 확인
+   "계획을 검토해주세요. 수정사항이 있으면 말씀해주세요"
+
+5. 구현 시작
+   계획의 Phase별로 순차 진행
+```
+
+### 작업 완료 시
+
+```
+1. 완료 신호 감지
+   "완료", "끝", "다 했어" 등
+
+2. 작업 로그 생성
+   docs/work-logs/{월}/{날짜-기능}.md 자동 생성
+
+3. TODO 업데이트 제안
+   "TODO 목록을 업데이트할까요?"
+
+4. 다음 작업 안내
+   "다음은 ○○ 작업입니다. 진행할까요?"
+```
+
+---
+
+## 문서 업데이트 트리거
+
+### AI가 자동으로 문서 작업을 제안하는 경우
+
+**구현 계획 생성:**
+- "○○ 만들어줘"
+- "△△ 구현해줘"
+- "□□ 기능 추가"
+
+**작업 로그 생성:**
+- "완료했어"
+- "끝났어"
+- "구현 끝"
+- "다 됐어"
+
+**TODO 업데이트:**
+- "진행 상황 알려줘"
+- "뭐 남았어?"
+- "다음 할 일은?"
+
+---
+
+## 문서 작성 원칙
+
+### 1. 명확성
+- 누가 봐도 이해 가능한 설명
+- 코드 예시 포함
+- 파일 경로 명시
+
+### 2. 추적 가능성
+- 날짜 기록
+- 커밋 정보 포함
+- 이슈 및 해결 방법 상세 기록
+
+### 3. 일관성
+- 문서 형식 통일
+- 용어 통일
+- 마크다운 스타일 일관
+
+### 4. 최신성
+- 변경 시 즉시 업데이트
+- 구현과 문서의 불일치 방지
+
+---
+
+## 문서 검증 체크리스트
+
+### 구현 계획 작성 시
+- [ ] 백엔드/프론트엔드 구분 명확
+- [ ] 구현 순서 논리적
+- [ ] 예상 이슈 분석
+- [ ] 체크리스트 완전
+
+### 작업 로그 작성 시
+- [ ] 구현 내용 구체적
+- [ ] 이슈 및 해결 방법 기록
+- [ ] 테스트 결과 포함
+- [ ] 다음 작업 명시
+
+### TODO 업데이트 시
+- [ ] 진행 상태 정확
+- [ ] 완료/미완료 명확
+- [ ] 우선순위 적절
+- [ ] 관련 문서 링크
+
+---
+
+## 예외 처리
+
+### 문서 작성이 불필요한 경우
+- 단순 버그 수정
+- 코드 리팩토링만 진행
+- 설정 파일 조정
+
+이런 경우 작업 로그 대신 간단한 커밋 메시지로 대체
+
+### 긴급 작업
+사용자가 "빠르게" 또는 "문서 없이" 요청 시:
+1. 즉시 구현 진행
+2. 완료 후 간략한 로그만 작성

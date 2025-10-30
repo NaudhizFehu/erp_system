@@ -310,7 +310,7 @@ function ProductDetail() {
       </Card>
 
       {/* 물리적 특성 */}
-      {(product.weight || product.dimensions) && (
+      {product.weight && (
         <Card>
           <CardHeader>
             <CardTitle>물리적 특성</CardTitle>
@@ -321,12 +321,6 @@ function ProductDetail() {
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">무게</label>
                   <p className="text-sm">{product.weight}kg</p>
-                </div>
-              )}
-              {product.dimensions && (
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">치수</label>
-                  <p className="text-sm">{product.dimensions}</p>
                 </div>
               )}
             </div>

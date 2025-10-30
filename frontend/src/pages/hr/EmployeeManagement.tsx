@@ -61,21 +61,28 @@ import {
   useDeleteEmployee,
   useTerminateEmployee,
   useEmployeeStatistics,
+  useBirthdayEmployeesThisMonth,
+  useEmployeeCountsByStatus,
   useHrPermissions,
   useCompanies,
   useDepartments,
-  usePositions
+  usePositions,
+  useExportEmployees,
+  useImportEmployees
 } from '@/hooks/useEmployees'
 import type { 
   Employee, 
   EmployeeCreateRequest, 
   EmployeeUpdateRequest,
-  SearchParams
+  SearchParams,
+  ImportResult,
+  ExportFormat
 } from '@/types/hr'
 import { EmploymentStatus } from '@/types/hr'
 import { KOREAN_LABELS } from '@/types/hr'
 import toast from 'react-hot-toast'
 import { useDebounce } from '@/hooks/useDebounce'
+import { useAuth } from '@/contexts/AuthContext'
 
 /**
  * 직원 관리 페이지 컴포넌트
@@ -94,6 +101,15 @@ export function EmployeeManagement() {
   const [showTerminateDialog, setShowTerminateDialog] = useState(false)
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null)
   const [formMode, setFormMode] = useState<'create' | 'edit'>('create')
+  
+  // 내보내기/가져오기 상태
+  const [showExportDialog, setShowExportDialog] = useState(false)
+  const [showImportDialog, setShowImportDialog] = useState(false)
+  const [showImportResultDialog, setShowImportResultDialog] = useState(false)
+  const [importResult, setImportResult] = useState<ImportResult | null>(null)
+  const [selectedCompanyForExport, setSelectedCompanyForExport] = useState<number | undefined>()
+  const [selectedCompanyForImport, setSelectedCompanyForImport] = useState<number | undefined>()
+  const [selectedFormat, setSelectedFormat] = useState<ExportFormat>('excel')
   
   // 검색어 디바운싱
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
@@ -120,10 +136,13 @@ export function EmployeeManagement() {
   } = debouncedSearchTerm 
     ? useEmployeeSearch(debouncedSearchTerm, searchParamsObj)
     : useEmployees(searchParamsObj)
+  
+  // 현재 사용자 정보 가져오기
+  const { user } = useAuth()
 
-  // 통계용 전체 데이터 (검색 필터와 무관)
-  const { data: allEmployeesData } = useEmployees({ page: 0, size: 1000 })
-  const { data: activeEmployees } = useActiveEmployees()
+  // 통계용 데이터
+  const { data: statusCounts } = useEmployeeCountsByStatus()
+  const { data: birthdayEmployees } = useBirthdayEmployeesThisMonth()
   const { 
     positionStats, 
     departmentStats, 
@@ -134,13 +153,16 @@ export function EmployeeManagement() {
   // 폼용 데이터
   const { data: companies = [] } = useCompanies()
   const { data: departments = [] } = useDepartments()
-  const { data: positions = [] } = usePositions()
+  const { data: positions = [], isLoading: positionsLoading, error: positionsError } = usePositions()
+  
 
   // 뮤테이션 훅들
   const createEmployeeMutation = useCreateEmployee()
   const updateEmployeeMutation = useUpdateEmployee()
   const deleteEmployeeMutation = useDeleteEmployee()
   const terminateEmployeeMutation = useTerminateEmployee()
+  const exportMutation = useExportEmployees()
+  const importMutation = useImportEmployees()
 
   // 검색 처리
   const handleSearch = useCallback((value: string) => {
@@ -255,10 +277,76 @@ export function EmployeeManagement() {
     }
   }
 
-  // 통계 데이터 계산 (전체 데이터 기반)
-  const totalEmployees = allEmployeesData?.totalElements || 0
-  const activeCount = activeEmployees?.length || 0
-  const inactiveCount = totalEmployees - activeCount
+  // 내보내기 핸들러
+  const handleExport = () => {
+    setShowExportDialog(true)
+  }
+
+  const confirmExport = () => {
+    exportMutation.mutate({
+      format: selectedFormat,
+      companyId: user?.role === 'SUPER_ADMIN' ? selectedCompanyForExport : undefined
+    })
+    setShowExportDialog(false)
+  }
+
+  // 가져오기 핸들러
+  const handleImport = () => {
+    setShowImportDialog(true)
+  }
+
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+    
+    // SUPER_ADMIN은 회사 선택 필수
+    let targetCompanyId = user?.company?.id
+    if (user?.role === 'SUPER_ADMIN') {
+      if (!selectedCompanyForImport) {
+        toast.error('가져올 회사를 선택해주세요')
+        return
+      }
+      targetCompanyId = selectedCompanyForImport
+    }
+    
+    if (!targetCompanyId) {
+      toast.error('회사 정보가 없습니다')
+      return
+    }
+    
+    try {
+      const result = await importMutation.mutateAsync({
+        file,
+        format: selectedFormat,
+        companyId: targetCompanyId
+      })
+      
+      setImportResult(result)
+      setShowImportDialog(false)
+      setShowImportResultDialog(true)
+    } catch (error) {
+      console.error('가져오기 오류:', error)
+    }
+    
+    // 파일 input 초기화
+    event.target.value = ''
+  }
+
+  // 통계 데이터 계산
+  // 총 직원수 = ACTIVE + ON_LEAVE + INACTIVE + SUSPENDED (퇴직자 제외)
+  const totalEmployees = (statusCounts?.ACTIVE || 0) + 
+                         (statusCounts?.ON_LEAVE || 0) + 
+                         (statusCounts?.INACTIVE || 0) + 
+                         (statusCounts?.SUSPENDED || 0)
+
+  // 근무자수 = ACTIVE만 (실제 출근하여 근무 중)
+  const activeCount = statusCounts?.ACTIVE || 0
+
+  // 퇴직자수 = TERMINATED만
+  const terminatedCount = statusCounts?.TERMINATED || 0
+
+  // 이번달 생일자수
+  const birthdayCount = birthdayEmployees?.length || 0
 
   return (
     <div className="space-y-6">
@@ -273,18 +361,18 @@ export function EmployeeManagement() {
         <div className="flex items-center gap-2">
           {canManage && (
             <>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={handleExport}>
                 <Download className="mr-2 h-4 w-4" />
                 내보내기
               </Button>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={handleImport}>
                 <Upload className="mr-2 h-4 w-4" />
                 가져오기
               </Button>
             </>
           )}
           {canCreate && (
-            <Button onClick={handleCreateEmployee}>
+            <Button size="sm" onClick={handleCreateEmployee}>
               <Plus className="mr-2 h-4 w-4" />
               직원 등록
             </Button>
@@ -294,22 +382,24 @@ export function EmployeeManagement() {
 
       {/* 통계 카드 */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* 총 직원 */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">전체 직원</CardTitle>
+            <CardTitle className="text-sm font-medium">총 직원</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalEmployees.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">
-              등록된 전체 직원 수
+              재직/휴가/휴직/정직
             </p>
           </CardContent>
         </Card>
 
+        {/* 근무자 (ACTIVE만) */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">재직자</CardTitle>
+            <CardTitle className="text-sm font-medium">근무자</CardTitle>
             <UserCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -317,11 +407,12 @@ export function EmployeeManagement() {
               {activeCount.toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground">
-              현재 재직 중인 직원
+              현재 출근 근무 중
             </p>
           </CardContent>
         </Card>
 
+        {/* 퇴직자 */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">퇴직자</CardTitle>
@@ -329,23 +420,26 @@ export function EmployeeManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
-              {inactiveCount.toLocaleString()}
+              {terminatedCount.toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground">
-              퇴직한 직원 수
+              퇴사 처리 완료
             </p>
           </CardContent>
         </Card>
 
+        {/* 이번달 생일 */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">이번 달 생일</CardTitle>
+            <CardTitle className="text-sm font-medium">이번달 생일</CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">12</div>
+            <div className="text-2xl font-bold text-blue-600">
+              {birthdayCount.toLocaleString()}
+            </div>
             <p className="text-xs text-muted-foreground">
-              이번 달 생일인 직원
+              생일 축하 대상
             </p>
           </CardContent>
         </Card>
@@ -375,10 +469,11 @@ export function EmployeeManagement() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">전체</SelectItem>
-                <SelectItem value="ACTIVE">재직</SelectItem>
-                <SelectItem value="ON_LEAVE">휴직</SelectItem>
-                <SelectItem value="TERMINATED">퇴직</SelectItem>
-                <SelectItem value="SUSPENDED">정직</SelectItem>
+                <SelectItem value={EmploymentStatus.ACTIVE}>재직</SelectItem>
+                <SelectItem value={EmploymentStatus.ON_LEAVE}>휴가</SelectItem>
+                <SelectItem value={EmploymentStatus.INACTIVE}>휴직</SelectItem>
+                <SelectItem value={EmploymentStatus.SUSPENDED}>정직</SelectItem>
+                <SelectItem value={EmploymentStatus.TERMINATED}>퇴직</SelectItem>
               </SelectContent>
             </Select>
 
@@ -576,6 +671,184 @@ export function EmployeeManagement() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* 내보내기 다이얼로그 */}
+      <Dialog open={showExportDialog} onOpenChange={setShowExportDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>직원 데이터 내보내기</DialogTitle>
+            <DialogDescription>
+              내보낼 파일 형식을 선택하세요
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {/* 형식 선택 */}
+            <div>
+              <label className="text-sm font-medium mb-2 block">파일 형식</label>
+              <Select value={selectedFormat} onValueChange={(value) => setSelectedFormat(value as ExportFormat)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="excel">Excel (.xlsx)</SelectItem>
+                  <SelectItem value="csv">CSV (.csv)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* SUPER_ADMIN만 회사 선택 */}
+            {user?.role === 'SUPER_ADMIN' && (
+              <div>
+                <label className="text-sm font-medium mb-2 block">회사 선택</label>
+                <Select 
+                  value={selectedCompanyForExport?.toString()} 
+                  onValueChange={(value) => setSelectedCompanyForExport(value === 'all' ? undefined : Number(value))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="전체 회사" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">전체 회사</SelectItem>
+                    {companies.map((company) => (
+                      <SelectItem key={company.id} value={company.id.toString()}>
+                        {company.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" onClick={() => setShowExportDialog(false)}>
+              취소
+            </Button>
+            <Button onClick={confirmExport} disabled={exportMutation.isPending}>
+              내보내기
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* 가져오기 다이얼로그 */}
+      <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>직원 데이터 가져오기</DialogTitle>
+            <DialogDescription>
+              가져올 파일을 선택하세요
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {/* 형식 선택 */}
+            <div>
+              <label className="text-sm font-medium mb-2 block">파일 형식</label>
+              <Select value={selectedFormat} onValueChange={(value) => setSelectedFormat(value as ExportFormat)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="excel">Excel (.xlsx)</SelectItem>
+                  <SelectItem value="csv">CSV (.csv)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* SUPER_ADMIN은 회사 선택 필수 */}
+            {user?.role === 'SUPER_ADMIN' && (
+              <div>
+                <label className="text-sm font-medium mb-2 block">
+                  가져올 회사 <span className="text-red-500">*</span>
+                </label>
+                <Select 
+                  value={selectedCompanyForImport?.toString()} 
+                  onValueChange={(value) => setSelectedCompanyForImport(Number(value))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="회사를 선택하세요" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {companies.map((company) => (
+                      <SelectItem key={company.id} value={company.id.toString()}>
+                        {company.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* 파일 선택 */}
+            <div>
+              <label className="text-sm font-medium mb-2 block">파일 선택</label>
+              <Input
+                type="file"
+                accept={selectedFormat === 'excel' ? '.xlsx' : '.csv'}
+                onChange={handleFileSelect}
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end mt-4">
+            <Button variant="outline" onClick={() => setShowImportDialog(false)}>
+              취소
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* 가져오기 결과 다이얼로그 */}
+      <Dialog open={showImportResultDialog} onOpenChange={setShowImportResultDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>가져오기 결과</DialogTitle>
+            <DialogDescription>
+              데이터 가져오기 결과를 확인하세요
+            </DialogDescription>
+          </DialogHeader>
+          
+          {importResult && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">전체 행</p>
+                  <p className="text-2xl font-bold">{importResult.totalRows}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">성공</p>
+                  <p className="text-2xl font-bold text-green-600">{importResult.successCount}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">실패</p>
+                  <p className="text-2xl font-bold text-red-600">{importResult.failCount}</p>
+                </div>
+              </div>
+
+              {importResult.errors.length > 0 && (
+                <div>
+                  <p className="text-sm font-medium mb-2">에러 목록</p>
+                  <div className="max-h-48 overflow-y-auto border rounded p-2">
+                    {importResult.errors.map((error, index) => (
+                      <p key={index} className="text-sm text-red-600 py-1">
+                        {error}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="flex justify-end mt-4">
+            <Button onClick={() => setShowImportResultDialog(false)}>
+              확인
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

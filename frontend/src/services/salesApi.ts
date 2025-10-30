@@ -3,7 +3,7 @@
  * 백엔드 API와 통신하는 서비스 레이어입니다
  */
 
-import api from './api'
+import axios, { AxiosResponse } from 'axios'
 import type {
   ApiResponse,
   PageResponse,
@@ -23,9 +23,9 @@ import type {
   Contract
 } from '@/types/sales'
 
-// API 기본 설정
-const api = api.create({
-  baseURL: '/api/sales',
+// API 기본 설정 (api.ts에서 이미 /api가 설정되어 있음)
+const salesApi = axios.create({
+  baseURL: '/sales',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json'
@@ -33,7 +33,7 @@ const api = api.create({
 })
 
 // 요청 인터셉터 - 인증 토큰 추가
-api.interceptors.request.use((config) => {
+salesApi.interceptors.request.use((config) => {
   const token = localStorage.getItem('accessToken')
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
@@ -42,7 +42,7 @@ api.interceptors.request.use((config) => {
 })
 
 // 응답 인터셉터 - 에러 처리
-api.interceptors.response.use(
+salesApi.interceptors.response.use(
   (response) => response,
   (error) => {
     console.error('API Error:', error)
@@ -64,7 +64,7 @@ export const customerApi = {
    * 고객 생성
    */
   create: async (data: CustomerCreateRequest): Promise<Customer> => {
-    const response: AxiosResponse<ApiResponse<Customer>> = await api.post('/customers', data)
+    const response: AxiosResponse<ApiResponse<Customer>> = await salesApi.post('/customers', data)
     return response.data.data!
   },
 
@@ -72,7 +72,7 @@ export const customerApi = {
    * 고객 수정
    */
   update: async (customerId: number, data: CustomerUpdateRequest): Promise<Customer> => {
-    const response: AxiosResponse<ApiResponse<Customer>> = await api.put(`/customers/${customerId}`, data)
+    const response: AxiosResponse<ApiResponse<Customer>> = await salesApi.put(`/customers/${customerId}`, data)
     return response.data.data!
   },
 
@@ -80,14 +80,14 @@ export const customerApi = {
    * 고객 삭제
    */
   delete: async (customerId: number): Promise<void> => {
-    await api.delete(`/customers/${customerId}`)
+    await salesApi.delete(`/customers/${customerId}`)
   },
 
   /**
    * 고객 상세 조회
    */
   getById: async (customerId: number): Promise<Customer> => {
-    const response: AxiosResponse<ApiResponse<Customer>> = await api.get(`/customers/${customerId}`)
+    const response: AxiosResponse<ApiResponse<Customer>> = await salesApi.get(`/customers/${customerId}`)
     return response.data.data!
   },
 
@@ -95,7 +95,7 @@ export const customerApi = {
    * 고객코드로 조회
    */
   getByCode: async (customerCode: string): Promise<Customer> => {
-    const response: AxiosResponse<ApiResponse<Customer>> = await api.get(`/customers/code/${customerCode}`)
+    const response: AxiosResponse<ApiResponse<Customer>> = await salesApi.get(`/customers/code/${customerCode}`)
     return response.data.data!
   },
 
@@ -106,7 +106,7 @@ export const customerApi = {
     companyId: number, 
     params?: PaginationParams
   ): Promise<PageResponse<CustomerSummary>> => {
-    const response: AxiosResponse<ApiResponse<PageResponse<CustomerSummary>>> = await api.get(
+    const response: AxiosResponse<ApiResponse<PageResponse<CustomerSummary>>> = await salesApi.get(
       `/customers/company/${companyId}`,
       { params }
     )
@@ -121,7 +121,7 @@ export const customerApi = {
     searchTerm: string,
     params?: PaginationParams
   ): Promise<PageResponse<CustomerSummary>> => {
-    const response: AxiosResponse<ApiResponse<PageResponse<CustomerSummary>>> = await api.get(
+    const response: AxiosResponse<ApiResponse<PageResponse<CustomerSummary>>> = await salesApi.get(
       `/customers/company/${companyId}/search`,
       { params: { searchTerm, ...params } }
     )
@@ -136,7 +136,7 @@ export const customerApi = {
     searchParams: CustomerSearchParams,
     params?: PaginationParams
   ): Promise<PageResponse<CustomerSummary>> => {
-    const response: AxiosResponse<ApiResponse<PageResponse<CustomerSummary>>> = await api.post(
+    const response: AxiosResponse<ApiResponse<PageResponse<CustomerSummary>>> = await salesApi.post(
       `/customers/company/${companyId}/search/advanced?${new URLSearchParams(params as any).toString()}`,
       searchParams
     )
@@ -150,7 +150,7 @@ export const customerApi = {
     salesManagerId: number,
     params?: PaginationParams
   ): Promise<PageResponse<CustomerSummary>> => {
-    const response: AxiosResponse<ApiResponse<PageResponse<CustomerSummary>>> = await api.get(
+    const response: AxiosResponse<ApiResponse<PageResponse<CustomerSummary>>> = await salesApi.get(
       `/customers/sales-manager/${salesManagerId}`,
       { params }
     )
@@ -165,7 +165,7 @@ export const customerApi = {
     customerType: string,
     params?: PaginationParams
   ): Promise<PageResponse<CustomerSummary>> => {
-    const response: AxiosResponse<ApiResponse<PageResponse<CustomerSummary>>> = await api.get(
+    const response: AxiosResponse<ApiResponse<PageResponse<CustomerSummary>>> = await salesApi.get(
       `/customers/company/${companyId}/type/${customerType}`,
       { params }
     )
@@ -180,7 +180,7 @@ export const customerApi = {
     customerStatus: string,
     params?: PaginationParams
   ): Promise<PageResponse<CustomerSummary>> => {
-    const response: AxiosResponse<ApiResponse<PageResponse<CustomerSummary>>> = await api.get(
+    const response: AxiosResponse<ApiResponse<PageResponse<CustomerSummary>>> = await salesApi.get(
       `/customers/company/${companyId}/status/${customerStatus}`,
       { params }
     )
@@ -195,7 +195,7 @@ export const customerApi = {
     customerGrade: string,
     params?: PaginationParams
   ): Promise<PageResponse<CustomerSummary>> => {
-    const response: AxiosResponse<ApiResponse<PageResponse<CustomerSummary>>> = await api.get(
+    const response: AxiosResponse<ApiResponse<PageResponse<CustomerSummary>>> = await salesApi.get(
       `/customers/company/${companyId}/grade/${customerGrade}`,
       { params }
     )
@@ -206,7 +206,7 @@ export const customerApi = {
    * VIP 고객 조회
    */
   getVipCustomers: async (companyId: number): Promise<CustomerSummary[]> => {
-    const response: AxiosResponse<ApiResponse<CustomerSummary[]>> = await api.get(
+    const response: AxiosResponse<ApiResponse<CustomerSummary[]>> = await salesApi.get(
       `/customers/company/${companyId}/vip`
     )
     return response.data.data!
@@ -216,7 +216,7 @@ export const customerApi = {
    * 휴면 고객 조회
    */
   getDormantCustomers: async (companyId: number, dormantDays: number = 90): Promise<CustomerSummary[]> => {
-    const response: AxiosResponse<ApiResponse<CustomerSummary[]>> = await api.get(
+    const response: AxiosResponse<ApiResponse<CustomerSummary[]>> = await salesApi.get(
       `/customers/company/${companyId}/dormant`,
       { params: { dormantDays } }
     )
@@ -230,7 +230,7 @@ export const customerApi = {
     companyId: number,
     params?: PaginationParams
   ): Promise<PageResponse<CustomerSummary>> => {
-    const response: AxiosResponse<ApiResponse<PageResponse<CustomerSummary>>> = await api.get(
+    const response: AxiosResponse<ApiResponse<PageResponse<CustomerSummary>>> = await salesApi.get(
       `/customers/company/${companyId}/outstanding`,
       { params }
     )
@@ -244,7 +244,7 @@ export const customerApi = {
     companyId: number,
     params?: PaginationParams
   ): Promise<PageResponse<CustomerSummary>> => {
-    const response: AxiosResponse<ApiResponse<PageResponse<CustomerSummary>>> = await api.get(
+    const response: AxiosResponse<ApiResponse<PageResponse<CustomerSummary>>> = await salesApi.get(
       `/customers/company/${companyId}/over-credit-limit`,
       { params }
     )
@@ -258,7 +258,7 @@ export const customerApi = {
     companyId: number,
     params?: PaginationParams
   ): Promise<PageResponse<CustomerSummary>> => {
-    const response: AxiosResponse<ApiResponse<PageResponse<CustomerSummary>>> = await api.get(
+    const response: AxiosResponse<ApiResponse<PageResponse<CustomerSummary>>> = await salesApi.get(
       `/customers/company/${companyId}/top`,
       { params }
     )
@@ -269,7 +269,7 @@ export const customerApi = {
    * 고객 통계 조회
    */
   getStatistics: async (companyId: number): Promise<CustomerStats> => {
-    const response: AxiosResponse<ApiResponse<CustomerStats>> = await api.get(
+    const response: AxiosResponse<ApiResponse<CustomerStats>> = await salesApi.get(
       `/customers/company/${companyId}/statistics`
     )
     return response.data.data!
@@ -285,7 +285,7 @@ export const customerApi = {
     website?: string
     lastContactDate?: string
   }): Promise<Customer> => {
-    const response: AxiosResponse<ApiResponse<Customer>> = await api.put(
+    const response: AxiosResponse<ApiResponse<Customer>> = await salesApi.put(
       `/customers/${customerId}/contact`,
       data
     )
@@ -303,7 +303,7 @@ export const customerApi = {
     district?: string
     country?: string
   }): Promise<Customer> => {
-    const response: AxiosResponse<ApiResponse<Customer>> = await api.put(
+    const response: AxiosResponse<ApiResponse<Customer>> = await salesApi.put(
       `/customers/${customerId}/address`,
       data
     )
@@ -320,7 +320,7 @@ export const customerApi = {
     discountRate?: number
     taxRate?: number
   }): Promise<Customer> => {
-    const response: AxiosResponse<ApiResponse<Customer>> = await api.put(
+    const response: AxiosResponse<ApiResponse<Customer>> = await salesApi.put(
       `/customers/${customerId}/terms`,
       data
     )
@@ -334,7 +334,7 @@ export const customerApi = {
     customerGrade: string
     reason?: string
   }): Promise<Customer> => {
-    const response: AxiosResponse<ApiResponse<Customer>> = await api.put(
+    const response: AxiosResponse<ApiResponse<Customer>> = await salesApi.put(
       `/customers/${customerId}/grade`,
       data
     )
@@ -348,7 +348,7 @@ export const customerApi = {
     customerStatus: string
     reason?: string
   }): Promise<Customer> => {
-    const response: AxiosResponse<ApiResponse<Customer>> = await api.put(
+    const response: AxiosResponse<ApiResponse<Customer>> = await salesApi.put(
       `/customers/${customerId}/status`,
       data
     )
@@ -359,7 +359,7 @@ export const customerApi = {
    * 고객 활성화 토글
    */
   toggleActive: async (customerId: number): Promise<Customer> => {
-    const response: AxiosResponse<ApiResponse<Customer>> = await api.put(
+    const response: AxiosResponse<ApiResponse<Customer>> = await salesApi.put(
       `/customers/${customerId}/toggle-active`
     )
     return response.data.data!
@@ -373,7 +373,7 @@ export const customerApi = {
     customerCode: string,
     excludeCustomerId?: number
   ): Promise<boolean> => {
-    const response: AxiosResponse<ApiResponse<boolean>> = await api.get(
+    const response: AxiosResponse<ApiResponse<boolean>> = await salesApi.get(
       '/customers/check-duplicate/code',
       { params: { companyId, customerCode, excludeCustomerId } }
     )
@@ -384,21 +384,21 @@ export const customerApi = {
    * 고객 주문 통계 일괄 업데이트
    */
   updateAllOrderStatistics: async (companyId: number): Promise<void> => {
-    await api.post(`/customers/company/${companyId}/update-order-statistics`)
+    await salesApi.post(`/customers/company/${companyId}/update-order-statistics`)
   },
 
   /**
    * 고객 등급 자동 업데이트
    */
   updateGradesBasedOnOrderAmount: async (companyId: number): Promise<void> => {
-    await api.post(`/customers/company/${companyId}/update-grades`)
+    await salesApi.post(`/customers/company/${companyId}/update-grades`)
   },
 
   /**
    * 휴면 고객 자동 전환
    */
   convertDormantCustomers: async (companyId: number, dormantDays: number = 90): Promise<number> => {
-    const response: AxiosResponse<ApiResponse<number>> = await api.post(
+    const response: AxiosResponse<ApiResponse<number>> = await salesApi.post(
       `/customers/company/${companyId}/convert-dormant`,
       null,
       { params: { dormantDays } }
@@ -410,7 +410,7 @@ export const customerApi = {
    * 고객 라이프타임 가치 계산
    */
   calculateLifetimeValue: async (customerId: number): Promise<number> => {
-    const response: AxiosResponse<ApiResponse<number>> = await api.get(
+    const response: AxiosResponse<ApiResponse<number>> = await salesApi.get(
       `/customers/${customerId}/lifetime-value`
     )
     return response.data.data!
@@ -420,7 +420,7 @@ export const customerApi = {
    * 이탈 위험 고객 분석
    */
   getChurnRiskCustomers: async (companyId: number): Promise<CustomerSummary[]> => {
-    const response: AxiosResponse<ApiResponse<CustomerSummary[]>> = await api.get(
+    const response: AxiosResponse<ApiResponse<CustomerSummary[]>> = await salesApi.get(
       `/customers/company/${companyId}/churn-risk`
     )
     return response.data.data!
@@ -436,7 +436,7 @@ export const orderApi = {
    * 주문 생성
    */
   create: async (data: OrderCreateRequest): Promise<Order> => {
-    const response: AxiosResponse<ApiResponse<Order>> = await api.post('/orders', data)
+    const response: AxiosResponse<ApiResponse<Order>> = await salesApi.post('/orders', data)
     return response.data.data!
   },
 
@@ -453,7 +453,7 @@ export const orderApi = {
     specialInstructions?: string
     remarks?: string
   }): Promise<Order> => {
-    const response: AxiosResponse<ApiResponse<Order>> = await api.post('/orders/from-quote', data)
+    const response: AxiosResponse<ApiResponse<Order>> = await salesApi.post('/orders/from-quote', data)
     return response.data.data!
   },
 
@@ -461,7 +461,7 @@ export const orderApi = {
    * 주문 수정
    */
   update: async (orderId: number, data: Partial<OrderCreateRequest>): Promise<Order> => {
-    const response: AxiosResponse<ApiResponse<Order>> = await api.put(`/orders/${orderId}`, data)
+    const response: AxiosResponse<ApiResponse<Order>> = await salesApi.put(`/orders/${orderId}`, data)
     return response.data.data!
   },
 
@@ -469,14 +469,14 @@ export const orderApi = {
    * 주문 삭제
    */
   delete: async (orderId: number): Promise<void> => {
-    await api.delete(`/orders/${orderId}`)
+    await salesApi.delete(`/orders/${orderId}`)
   },
 
   /**
    * 주문 상세 조회
    */
   getById: async (orderId: number): Promise<Order> => {
-    const response: AxiosResponse<ApiResponse<Order>> = await api.get(`/orders/${orderId}`)
+    const response: AxiosResponse<ApiResponse<Order>> = await salesApi.get(`/orders/${orderId}`)
     return response.data.data!
   },
 
@@ -484,7 +484,7 @@ export const orderApi = {
    * 주문번호로 조회
    */
   getByNumber: async (orderNumber: string): Promise<Order> => {
-    const response: AxiosResponse<ApiResponse<Order>> = await api.get(`/orders/number/${orderNumber}`)
+    const response: AxiosResponse<ApiResponse<Order>> = await salesApi.get(`/orders/number/${orderNumber}`)
     return response.data.data!
   },
 
@@ -495,7 +495,7 @@ export const orderApi = {
     companyId: number,
     params?: PaginationParams
   ): Promise<PageResponse<OrderSummary>> => {
-    const response: AxiosResponse<ApiResponse<PageResponse<OrderSummary>>> = await api.get(
+    const response: AxiosResponse<ApiResponse<PageResponse<OrderSummary>>> = await salesApi.get(
       `/orders/company/${companyId}`,
       { params }
     )
@@ -509,7 +509,7 @@ export const orderApi = {
     customerId: number,
     params?: PaginationParams
   ): Promise<PageResponse<OrderSummary>> => {
-    const response: AxiosResponse<ApiResponse<PageResponse<OrderSummary>>> = await api.get(
+    const response: AxiosResponse<ApiResponse<PageResponse<OrderSummary>>> = await salesApi.get(
       `/orders/customer/${customerId}`,
       { params }
     )
@@ -523,7 +523,7 @@ export const orderApi = {
     salesRepId: number,
     params?: PaginationParams
   ): Promise<PageResponse<OrderSummary>> => {
-    const response: AxiosResponse<ApiResponse<PageResponse<OrderSummary>>> = await api.get(
+    const response: AxiosResponse<ApiResponse<PageResponse<OrderSummary>>> = await salesApi.get(
       `/orders/sales-rep/${salesRepId}`,
       { params }
     )
@@ -538,7 +538,7 @@ export const orderApi = {
     searchTerm: string,
     params?: PaginationParams
   ): Promise<PageResponse<OrderSummary>> => {
-    const response: AxiosResponse<ApiResponse<PageResponse<OrderSummary>>> = await api.get(
+    const response: AxiosResponse<ApiResponse<PageResponse<OrderSummary>>> = await salesApi.get(
       `/orders/company/${companyId}/search`,
       { params: { searchTerm, ...params } }
     )
@@ -553,7 +553,7 @@ export const orderApi = {
     searchParams: OrderSearchParams,
     params?: PaginationParams
   ): Promise<PageResponse<OrderSummary>> => {
-    const response: AxiosResponse<ApiResponse<PageResponse<OrderSummary>>> = await api.post(
+    const response: AxiosResponse<ApiResponse<PageResponse<OrderSummary>>> = await salesApi.post(
       `/orders/company/${companyId}/search/advanced?${new URLSearchParams(params as any).toString()}`,
       searchParams
     )
@@ -568,7 +568,7 @@ export const orderApi = {
     orderStatus: string,
     params?: PaginationParams
   ): Promise<PageResponse<OrderSummary>> => {
-    const response: AxiosResponse<ApiResponse<PageResponse<OrderSummary>>> = await api.get(
+    const response: AxiosResponse<ApiResponse<PageResponse<OrderSummary>>> = await salesApi.get(
       `/orders/company/${companyId}/status/${orderStatus}`,
       { params }
     )
@@ -583,7 +583,7 @@ export const orderApi = {
     orderType: string,
     params?: PaginationParams
   ): Promise<PageResponse<OrderSummary>> => {
-    const response: AxiosResponse<ApiResponse<PageResponse<OrderSummary>>> = await api.get(
+    const response: AxiosResponse<ApiResponse<PageResponse<OrderSummary>>> = await salesApi.get(
       `/orders/company/${companyId}/type/${orderType}`,
       { params }
     )
@@ -598,7 +598,7 @@ export const orderApi = {
     paymentStatus: string,
     params?: PaginationParams
   ): Promise<PageResponse<OrderSummary>> => {
-    const response: AxiosResponse<ApiResponse<PageResponse<OrderSummary>>> = await api.get(
+    const response: AxiosResponse<ApiResponse<PageResponse<OrderSummary>>> = await salesApi.get(
       `/orders/company/${companyId}/payment-status/${paymentStatus}`,
       { params }
     )
@@ -612,7 +612,7 @@ export const orderApi = {
     companyId: number,
     params?: PaginationParams
   ): Promise<PageResponse<OrderSummary>> => {
-    const response: AxiosResponse<ApiResponse<PageResponse<OrderSummary>>> = await api.get(
+    const response: AxiosResponse<ApiResponse<PageResponse<OrderSummary>>> = await salesApi.get(
       `/orders/company/${companyId}/outstanding`,
       { params }
     )
@@ -626,7 +626,7 @@ export const orderApi = {
     companyId: number,
     params?: PaginationParams
   ): Promise<PageResponse<OrderSummary>> => {
-    const response: AxiosResponse<ApiResponse<PageResponse<OrderSummary>>> = await api.get(
+    const response: AxiosResponse<ApiResponse<PageResponse<OrderSummary>>> = await salesApi.get(
       `/orders/company/${companyId}/overdue`,
       { params }
     )
@@ -637,7 +637,7 @@ export const orderApi = {
    * 긴급 주문 조회
    */
   getUrgentOrders: async (companyId: number): Promise<OrderSummary[]> => {
-    const response: AxiosResponse<ApiResponse<OrderSummary[]>> = await api.get(
+    const response: AxiosResponse<ApiResponse<OrderSummary[]>> = await salesApi.get(
       `/orders/company/${companyId}/urgent`
     )
     return response.data.data!
@@ -647,7 +647,7 @@ export const orderApi = {
    * 배송 지연 주문 조회
    */
   getDelayedOrders: async (companyId: number): Promise<OrderSummary[]> => {
-    const response: AxiosResponse<ApiResponse<OrderSummary[]>> = await api.get(
+    const response: AxiosResponse<ApiResponse<OrderSummary[]>> = await salesApi.get(
       `/orders/company/${companyId}/delayed`
     )
     return response.data.data!
@@ -660,7 +660,7 @@ export const orderApi = {
     companyId: number,
     params?: PaginationParams
   ): Promise<PageResponse<OrderSummary>> => {
-    const response: AxiosResponse<ApiResponse<PageResponse<OrderSummary>>> = await api.get(
+    const response: AxiosResponse<ApiResponse<PageResponse<OrderSummary>>> = await salesApi.get(
       `/orders/company/${companyId}/top`,
       { params }
     )
@@ -674,7 +674,7 @@ export const orderApi = {
     companyId: number,
     params?: PaginationParams
   ): Promise<PageResponse<OrderSummary>> => {
-    const response: AxiosResponse<ApiResponse<PageResponse<OrderSummary>>> = await api.get(
+    const response: AxiosResponse<ApiResponse<PageResponse<OrderSummary>>> = await salesApi.get(
       `/orders/company/${companyId}/recent`,
       { params }
     )
@@ -685,7 +685,7 @@ export const orderApi = {
    * 오늘 주문 조회
    */
   getTodayOrders: async (companyId: number): Promise<OrderSummary[]> => {
-    const response: AxiosResponse<ApiResponse<OrderSummary[]>> = await api.get(
+    const response: AxiosResponse<ApiResponse<OrderSummary[]>> = await salesApi.get(
       `/orders/company/${companyId}/today`
     )
     return response.data.data!
@@ -695,7 +695,7 @@ export const orderApi = {
    * 배송 예정 주문 조회
    */
   getOrdersForDelivery: async (companyId: number): Promise<OrderSummary[]> => {
-    const response: AxiosResponse<ApiResponse<OrderSummary[]>> = await api.get(
+    const response: AxiosResponse<ApiResponse<OrderSummary[]>> = await salesApi.get(
       `/orders/company/${companyId}/for-delivery`
     )
     return response.data.data!
@@ -705,7 +705,7 @@ export const orderApi = {
    * 주문 통계 조회
    */
   getStatistics: async (companyId: number): Promise<OrderStats> => {
-    const response: AxiosResponse<ApiResponse<OrderStats>> = await api.get(
+    const response: AxiosResponse<ApiResponse<OrderStats>> = await salesApi.get(
       `/orders/company/${companyId}/statistics`
     )
     return response.data.data!
@@ -718,7 +718,7 @@ export const orderApi = {
     orderStatus: string
     reason?: string
   }): Promise<Order> => {
-    const response: AxiosResponse<ApiResponse<Order>> = await api.put(
+    const response: AxiosResponse<ApiResponse<Order>> = await salesApi.put(
       `/orders/${orderId}/status`,
       data
     )
@@ -729,7 +729,7 @@ export const orderApi = {
    * 주문 확정
    */
   confirm: async (orderId: number): Promise<Order> => {
-    const response: AxiosResponse<ApiResponse<Order>> = await api.put(`/orders/${orderId}/confirm`)
+    const response: AxiosResponse<ApiResponse<Order>> = await salesApi.put(`/orders/${orderId}/confirm`)
     return response.data.data!
   },
 
@@ -742,7 +742,7 @@ export const orderApi = {
     shippedDate?: string
     remarks?: string
   }): Promise<Order> => {
-    const response: AxiosResponse<ApiResponse<Order>> = await api.put(
+    const response: AxiosResponse<ApiResponse<Order>> = await salesApi.put(
       `/orders/${orderId}/ship`,
       data
     )
@@ -753,7 +753,7 @@ export const orderApi = {
    * 주문 배송완료 처리
    */
   markAsDelivered: async (orderId: number): Promise<Order> => {
-    const response: AxiosResponse<ApiResponse<Order>> = await api.put(`/orders/${orderId}/delivered`)
+    const response: AxiosResponse<ApiResponse<Order>> = await salesApi.put(`/orders/${orderId}/delivered`)
     return response.data.data!
   },
 
@@ -761,7 +761,7 @@ export const orderApi = {
    * 주문 완료 처리
    */
   complete: async (orderId: number): Promise<Order> => {
-    const response: AxiosResponse<ApiResponse<Order>> = await api.put(`/orders/${orderId}/complete`)
+    const response: AxiosResponse<ApiResponse<Order>> = await salesApi.put(`/orders/${orderId}/complete`)
     return response.data.data!
   },
 
@@ -771,7 +771,7 @@ export const orderApi = {
   cancel: async (orderId: number, data: {
     cancellationReason: string
   }): Promise<Order> => {
-    const response: AxiosResponse<ApiResponse<Order>> = await api.put(
+    const response: AxiosResponse<ApiResponse<Order>> = await salesApi.put(
       `/orders/${orderId}/cancel`,
       data
     )
@@ -788,7 +788,7 @@ export const orderApi = {
     paymentReference?: string
     remarks?: string
   }): Promise<Order> => {
-    const response: AxiosResponse<ApiResponse<Order>> = await api.put(
+    const response: AxiosResponse<ApiResponse<Order>> = await salesApi.put(
       `/orders/${orderId}/payment`,
       data
     )
@@ -799,7 +799,7 @@ export const orderApi = {
    * 주문번호 중복 확인
    */
   checkNumberDuplicate: async (companyId: number, orderNumber: string): Promise<boolean> => {
-    const response: AxiosResponse<ApiResponse<boolean>> = await api.get(
+    const response: AxiosResponse<ApiResponse<boolean>> = await salesApi.get(
       '/orders/check-duplicate/number',
       { params: { companyId, orderNumber } }
     )
@@ -810,7 +810,7 @@ export const orderApi = {
    * 주문번호 생성
    */
   generateNumber: async (companyId: number): Promise<string> => {
-    const response: AxiosResponse<ApiResponse<string>> = await api.get(
+    const response: AxiosResponse<ApiResponse<string>> = await salesApi.get(
       `/orders/company/${companyId}/generate-number`
     )
     return response.data.data!
@@ -820,7 +820,7 @@ export const orderApi = {
    * 영업담당자별 주문 통계
    */
   getStatsBySalesRep: async (companyId: number): Promise<any[]> => {
-    const response: AxiosResponse<ApiResponse<any[]>> = await api.get(
+    const response: AxiosResponse<ApiResponse<any[]>> = await salesApi.get(
       `/orders/company/${companyId}/stats/sales-rep`
     )
     return response.data.data!
@@ -830,7 +830,7 @@ export const orderApi = {
    * 월별 주문 통계
    */
   getStatsByMonth: async (companyId: number, fromDate?: string): Promise<any[]> => {
-    const response: AxiosResponse<ApiResponse<any[]>> = await api.get(
+    const response: AxiosResponse<ApiResponse<any[]>> = await salesApi.get(
       `/orders/company/${companyId}/stats/monthly`,
       { params: { fromDate } }
     )
@@ -841,7 +841,7 @@ export const orderApi = {
    * 고객별 주문 통계
    */
   getStatsByCustomer: async (companyId: number): Promise<any[]> => {
-    const response: AxiosResponse<ApiResponse<any[]>> = await api.get(
+    const response: AxiosResponse<ApiResponse<any[]>> = await salesApi.get(
       `/orders/company/${companyId}/stats/customer`
     )
     return response.data.data!
@@ -855,7 +855,7 @@ export const orderApi = {
 export const quoteApi = {
   // TODO: 견적서 API 구현
   getById: async (quoteId: number): Promise<Quote> => {
-    const response: AxiosResponse<ApiResponse<Quote>> = await api.get(`/quotes/${quoteId}`)
+    const response: AxiosResponse<ApiResponse<Quote>> = await salesApi.get(`/quotes/${quoteId}`)
     return response.data.data!
   }
 }
@@ -867,7 +867,7 @@ export const quoteApi = {
 export const contractApi = {
   // TODO: 계약 API 구현
   getById: async (contractId: number): Promise<Contract> => {
-    const response: AxiosResponse<ApiResponse<Contract>> = await api.get(`/contracts/${contractId}`)
+    const response: AxiosResponse<ApiResponse<Contract>> = await salesApi.get(`/contracts/${contractId}`)
     return response.data.data!
   }
 }

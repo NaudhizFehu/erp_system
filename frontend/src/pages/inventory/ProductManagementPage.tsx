@@ -183,7 +183,7 @@ function ProductManagementPage({ companyId }: ProductManagementPageProps) {
   // 상품 상세보기 핸들러
   const handleViewProduct = (product: Product) => {
     // 상품 상세 페이지로 이동하거나 모달 열기
-    toast.info('상품 상세보기 기능은 준비중입니다')
+    toast('상품 상세보기 기능은 준비중입니다')
   }
 
   // 상품 활성화/비활성화 핸들러
@@ -238,26 +238,26 @@ function ProductManagementPage({ companyId }: ProductManagementPageProps) {
   // 일괄 작업 핸들러
   const handleBulkAction = (action: string) => {
     if (selectedProducts.length === 0) {
-      toast.warning('선택된 상품이 없습니다')
+      toast('선택된 상품이 없습니다')
       return
     }
 
     switch (action) {
       case 'activate':
         // 일괄 활성화 로직
-        toast.info('일괄 활성화 기능은 준비중입니다')
+        toast('일괄 활성화 기능은 준비중입니다')
         break
       case 'deactivate':
         // 일괄 비활성화 로직
-        toast.info('일괄 비활성화 기능은 준비중입니다')
+        toast('일괄 비활성화 기능은 준비중입니다')
         break
       case 'delete':
         // 일괄 삭제 로직
-        toast.info('일괄 삭제 기능은 준비중입니다')
+        toast('일괄 삭제 기능은 준비중입니다')
         break
       case 'export':
         // 선택된 상품 내보내기
-        toast.info('상품 내보내기 기능은 준비중입니다')
+        toast('상품 내보내기 기능은 준비중입니다')
         break
     }
   }

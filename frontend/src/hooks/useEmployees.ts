@@ -15,7 +15,9 @@ import type {
   StatisticsData,
   Company,
   Department,
-  Position
+  Position,
+  ImportResult,
+  ExportFormat
 } from '@/types/hr'
 
 /**
@@ -36,7 +38,8 @@ export const EMPLOYEE_QUERY_KEYS = {
   byBirthday: (month: number, day: number) => [...EMPLOYEE_QUERY_KEYS.all, 'birthday', month, day] as const,
   birthdayThisMonth: () => [...EMPLOYEE_QUERY_KEYS.all, 'birthdayThisMonth'] as const,
   statistics: () => [...EMPLOYEE_QUERY_KEYS.all, 'statistics'] as const,
-  check: () => [...EMPLOYEE_QUERY_KEYS.all, 'check'] as const
+  check: () => [...EMPLOYEE_QUERY_KEYS.all, 'check'] as const,
+  countsByStatus: () => [...EMPLOYEE_QUERY_KEYS.all, 'counts', 'byStatus'] as const
 }
 
 /**
@@ -211,6 +214,18 @@ export function useBirthdayEmployeesThisMonth() {
 }
 
 /**
+ * 상태별 직원 수 훅
+ */
+export function useEmployeeCountsByStatus() {
+  return useQuery({
+    queryKey: EMPLOYEE_QUERY_KEYS.countsByStatus(),
+    queryFn: () => employeeApi.getCountsByStatus(),
+    staleTime: 60 * 1000, // 1분
+    retry: 3
+  })
+}
+
+/**
  * 직원 통계 훅
  */
 export function useEmployeeStatistics() {
@@ -277,19 +292,19 @@ export function useHrPermissions() {
   
   return {
     // 조회 권한 (모든 사용자)
-    canView: user?.role && ['ADMIN', 'MANAGER', 'USER'].includes(user.role),
+    canView: user?.role && ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'USER'].includes(user.role),
     
-    // 수정 권한 (MANAGER, ADMIN)
-    canEdit: user?.role && ['ADMIN', 'MANAGER'].includes(user.role),
+    // 수정 권한 (SUPER_ADMIN, MANAGER, ADMIN)
+    canEdit: user?.role && ['SUPER_ADMIN', 'ADMIN', 'MANAGER'].includes(user.role),
     
-    // 관리 권한 (ADMIN만)
-    canManage: user?.role === 'ADMIN',
+    // 관리 권한 (SUPER_ADMIN, ADMIN, MANAGER) - 내보내기/가져오기 포함
+    canManage: user?.role && ['SUPER_ADMIN', 'ADMIN', 'MANAGER'].includes(user.role),
     
-    // 직원 등록 권한 (ADMIN만)
-    canCreate: user?.role === 'ADMIN',
+    // 직원 등록 권한 (SUPER_ADMIN, ADMIN, MANAGER)
+    canCreate: user?.role && ['SUPER_ADMIN', 'ADMIN', 'MANAGER'].includes(user.role),
     
-    // 직원 삭제 권한 (ADMIN만)
-    canDelete: user?.role === 'ADMIN'
+    // 직원 삭제 권한 (SUPER_ADMIN, ADMIN, MANAGER) - MANAGER도 직원 관리 가능
+    canDelete: user?.role && ['SUPER_ADMIN', 'ADMIN', 'MANAGER'].includes(user.role)
   }
 }
 
@@ -469,9 +484,9 @@ export function useDepartmentsByCompany(companyId: number) {
  */
 export function usePositions() {
   return useQuery({
-    queryKey: ['positions'],
+    queryKey: ['positions', 'all'],
     queryFn: positionApi.getAllPositions,
-    staleTime: 10 * 60 * 1000, // 10분
+    staleTime: 5 * 60 * 1000, // 5분
     retry: 2
   })
 }
@@ -486,6 +501,81 @@ export function usePositionsByCompany(companyId: number) {
     enabled: !!companyId,
     staleTime: 10 * 60 * 1000, // 10분
     retry: 2
+  })
+}
+
+/**
+ * 회사별 최근 직원 목록 조회 훅 (사번 중복 방지용)
+ */
+export function useRecentEmployeesByCompany(companyId: number) {
+  return useQuery({
+    queryKey: ['employees', 'recent', 'company', companyId],
+    queryFn: () => employeeApi.getRecentEmployeesByCompany(companyId),
+    enabled: !!companyId && companyId > 0,
+    staleTime: 5 * 60 * 1000, // 5분
+    retry: 2
+  })
+}
+
+/**
+ * 직원 데이터 내보내기 훅
+ */
+export function useExportEmployees() {
+  return useMutation({
+    mutationFn: async ({ format, companyId }: { format: ExportFormat; companyId?: number }) => {
+      const blob = format === 'excel' 
+        ? await employeeApi.exportToExcel(companyId)
+        : await employeeApi.exportToCsv(companyId)
+      
+      // 파일 다운로드
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `employees_${new Date().toISOString().split('T')[0]}.${format === 'excel' ? 'xlsx' : 'csv'}`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+    },
+    onSuccess: () => {
+      toast.success('직원 데이터를 성공적으로 내보냈습니다')
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || '내보내기 실패'
+      toast.error(message)
+    }
+  })
+}
+
+/**
+ * 직원 데이터 가져오기 훅
+ */
+export function useImportEmployees() {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: async ({ file, format, companyId }: { file: File; format: ExportFormat; companyId: number }): Promise<ImportResult> => {
+      return format === 'excel'
+        ? await employeeApi.importFromExcel(file, companyId)
+        : await employeeApi.importFromCsv(file, companyId)
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: EMPLOYEE_QUERY_KEYS.all })
+      
+      if (result.successCount > 0) {
+        toast.success(`${result.successCount}개 데이터를 성공적으로 가져왔습니다`)
+      }
+      
+      if (result.failCount > 0) {
+        toast.error(`${result.failCount}개 데이터 가져오기에 실패했습니다`)
+      }
+      
+      return result
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || '가져오기 실패'
+      toast.error(message)
+    }
   })
 }
 

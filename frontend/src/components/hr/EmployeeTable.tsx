@@ -4,6 +4,7 @@
  */
 
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Table,
   TableBody,
@@ -67,9 +68,22 @@ export function EmployeeTable({
   showSelection = false,
   className = ''
 }: EmployeeTableProps) {
+  const navigate = useNavigate()
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   const [sortField, setSortField] = useState<SortField>('employeeNumber')
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
+
+  /**
+   * 직원 행 클릭 시 상세 페이지로 이동
+   */
+  const handleRowClick = (employeeId: number, event: React.MouseEvent) => {
+    // 액션 버튼이나 체크박스 클릭 시에는 상세 페이지로 이동하지 않음
+    const target = event.target as HTMLElement
+    if (target.closest('button') || target.closest('[role="checkbox"]') || target.closest('a')) {
+      return
+    }
+    navigate(`/hr/employees/${employeeId}`)
+  }
 
   // 정렬 처리
   const handleSort = (field: SortField) => {
@@ -96,8 +110,8 @@ export function EmployeeTable({
         bValue = b.employeeNumber
         break
       case 'department':
-        aValue = a.department.departmentName
-        bValue = b.department.departmentName
+        aValue = a.department.name
+        bValue = b.department.name
         break
       case 'position':
         aValue = a.position.name
@@ -147,13 +161,15 @@ export function EmployeeTable({
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
       case 'ACTIVE':
-        return 'default'
+        return 'default'          // 재직 - 파랑
       case 'ON_LEAVE':
-        return 'secondary'
-      case 'TERMINATED':
-        return 'destructive'
+        return 'secondary'        // 휴가 - 회색
+      case 'INACTIVE':
+        return 'purple'           // 휴직 - 연보라색
       case 'SUSPENDED':
-        return 'outline'
+        return 'black'            // 정직 - 검은색
+      case 'TERMINATED':
+        return 'destructive'      // 퇴직 - 빨강
       default:
         return 'secondary'
     }
@@ -289,7 +305,10 @@ export function EmployeeTable({
             sortedEmployees.map((employee) => (
               <TableRow 
                 key={employee.id}
-                className={selectedIds.includes(employee.id) ? 'bg-muted/50' : ''}
+                onClick={(e) => handleRowClick(employee.id, e)}
+                className={`cursor-pointer hover:bg-muted/50 transition-colors ${
+                  selectedIds.includes(employee.id) ? 'bg-muted/50' : ''
+                }`}
               >
                 {showSelection && (
                   <TableCell>
@@ -332,7 +351,7 @@ export function EmployeeTable({
                 </TableCell>
 
                 {/* 부서 */}
-                <TableCell>{employee.department.departmentName}</TableCell>
+                <TableCell>{employee.department.name}</TableCell>
 
                 {/* 직급 */}
                 <TableCell>

@@ -236,8 +236,9 @@ function RevenueChart({
           <TabsContent value="monthly" className="space-y-4">
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
-                {chartType === 'line' && (
-                  <LineChart data={monthlyData}>
+                <div>
+                  {chartType === 'line' ? (
+                    <LineChart data={monthlyData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                     <XAxis 
                       dataKey="name" 
@@ -261,8 +262,8 @@ function RevenueChart({
                       name="매출액"
                     />
                   </LineChart>
-                )}
-                {chartType === 'bar' && (
+                ) : null}
+                {chartType === 'bar' ? (
                   <BarChart data={monthlyData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                     <XAxis 
@@ -284,8 +285,8 @@ function RevenueChart({
                       name="매출액"
                     />
                   </BarChart>
-                )}
-                {chartType === 'area' && (
+                ) : null}
+                {chartType === 'area' ? (
                   <AreaChart data={monthlyData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                     <XAxis 
@@ -310,7 +311,8 @@ function RevenueChart({
                       name="매출액"
                     />
                   </AreaChart>
-                )}
+                ) : null}
+                </div>
               </ResponsiveContainer>
             </div>
           </TabsContent>

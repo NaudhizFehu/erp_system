@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Save, Eye, EyeOff, User, Mail, Phone, Building } from 'lucide-react'
+import { ArrowLeft, Save, Eye, EyeOff, User, Building } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -36,6 +36,8 @@ function UserProfilePage() {
     currentPassword?: string
     newPassword?: string
     confirmPassword?: string
+    departmentName?: string
+    positionName?: string
   }>({})
   
   const [formData, setFormData] = useState({
@@ -188,14 +190,14 @@ function UserProfilePage() {
       }
     }
 
-    // 부서 검증 (필수)
-    if (!formData.departmentName?.trim()) {
+    // 부서 검증 (SUPER_ADMIN은 제외)
+    if (user?.role !== 'SUPER_ADMIN' && !formData.departmentName?.trim()) {
       errors.departmentName = '부서는 필수입니다.'
       hasErrors = true
     }
     
-    // 직급 검증 (필수)
-    if (!formData.positionName?.trim()) {
+    // 직급 검증 (SUPER_ADMIN은 제외)
+    if (user?.role !== 'SUPER_ADMIN' && !formData.positionName?.trim()) {
       errors.positionName = '직급은 필수입니다.'
       hasErrors = true
     }
@@ -304,10 +306,11 @@ function UserProfilePage() {
       // 전역 상태 업데이트 - department 객체를 올바르게 구성
       const updatedUserWithDepartment = {
         ...updatedUser,
+        role: (updatedUser as any).role || 'USER',
         department: selectedDepartment ? {
           id: selectedDepartment.id,
           name: selectedDepartment.name,
-          departmentCode: selectedDepartment.departmentCode || ''
+          departmentCode: ''
         } : null
       }
       updateUser(updatedUserWithDepartment)

@@ -24,6 +24,8 @@ export interface Department {
   }
   level: number
   status: string
+  location?: string
+  budgetAmount?: number
   createdAt: string
   updatedAt: string
 }
@@ -59,6 +61,29 @@ class DepartmentService {
     } catch (error) {
       console.error('부서 목록 조회 오류:', error)
       throw new Error('부서 목록을 불러오는 중 오류가 발생했습니다.')
+    }
+  }
+
+  /**
+   * 특정 부서 상세 정보 조회
+   */
+  async getDepartmentById(departmentId: number): Promise<Department> {
+    try {
+      console.log('부서 상세 조회 API 호출:', `${this.baseUrl}/${departmentId}`)
+      const response = await api.get(`${this.baseUrl}/${departmentId}`)
+      console.log('부서 상세 조회 API 응답:', response)
+      
+      // 응답에서 부서 정보 추출
+      const department = response.data?.data || response.data
+      
+      if (!department) {
+        throw new Error('부서 정보를 찾을 수 없습니다.')
+      }
+      
+      return department
+    } catch (error) {
+      console.error('부서 상세 조회 오류:', error)
+      throw new Error('부서 정보를 불러오는 중 오류가 발생했습니다.')
     }
   }
 

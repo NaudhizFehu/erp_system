@@ -41,6 +41,13 @@ function NotificationProvider({ children }: NotificationProviderProps) {
       return
     }
 
+    // 토큰이 실제로 저장되어 있는지 확인
+    const token = localStorage.getItem('accessToken')
+    if (!token) {
+      console.log('토큰이 아직 저장되지 않음, 알림 갱신 건너뜀')
+      return
+    }
+
     try {
       console.log('알림 개수 갱신 시작')
       const count = await notificationService.getUnreadCount()
@@ -97,8 +104,10 @@ function NotificationProvider({ children }: NotificationProviderProps) {
     console.log('알림 폴링 시작')
     setIsPolling(true)
     
-    // 즉시 한 번 실행
-    refreshNotifications()
+    // 토큰이 localStorage에 저장될 시간을 주기 위해 약간의 딜레이 후 실행
+    setTimeout(() => {
+      refreshNotifications()
+    }, 1000) // 1초 딜레이
     
     // 30초마다 갱신
     const interval = setInterval(() => {

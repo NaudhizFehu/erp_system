@@ -1244,6 +1244,10 @@ public class DataInitializer {
         try {
             log.info("테스트 알림 생성 시작");
 
+            // superadmin 사용자 조회
+            User superadminUser = userRepository.findByUsername("superadmin")
+                    .orElseThrow(() -> new RuntimeException("superadmin 사용자를 찾을 수 없습니다"));
+
             // admin 사용자 조회
             User adminUser = userRepository.findByUsername("admin")
                     .orElseThrow(() -> new RuntimeException("admin 사용자를 찾을 수 없습니다"));
@@ -1253,8 +1257,12 @@ public class DataInitializer {
                     .orElseThrow(() -> new RuntimeException("user 사용자를 찾을 수 없습니다"));
 
             // 기존 알림 데이터 삭제 (테스트 환경에서만)
+            deleteExistingNotifications(superadminUser.getId());
             deleteExistingNotifications(adminUser.getId());
             deleteExistingNotifications(normalUser.getId());
+
+            // superadmin 공용 알림 생성 (관리자와 공통으로 받아야 하는 항목)
+            createSuperadminCommonNotifications(superadminUser);
 
             // admin 전용 알림 생성
             createAdminNotifications(adminUser);
@@ -1262,7 +1270,7 @@ public class DataInitializer {
             // user 전용 알림 생성
             createUserNotifications(normalUser);
 
-            log.info("테스트 알림 생성 완료: admin용 4개, user용 4개");
+            log.info("테스트 알림 생성 완료: superadmin 공용 2개, admin용 4개, user용 4개");
         } catch (Exception e) {
             log.error("테스트 알림 생성 실패: {}", e.getMessage(), e);
         }
@@ -1369,5 +1377,42 @@ public class DataInitializer {
         }
 
         log.info("user 전용 알림 생성 완료: {}개", userTitles.length);
+    }
+
+    /**
+     * superadmin 공용 알림 생성 (admin과 공통으로 수신해야 하는 중요 알림만 포함)
+     */
+    private void createSuperadminCommonNotifications(User superadminUser) {
+        String[] titles = {
+            "시스템 보안 경고",
+            "데이터베이스 백업 완료"
+        };
+
+        String[] messages = {
+            "의심스러운 로그인 시도가 감지되었습니다. (IP: 192.168.1.100)",
+            "일일 데이터베이스 백업이 성공적으로 완료되었습니다."
+        };
+
+        Notification.NotificationType[] types = {
+            Notification.NotificationType.WARNING,
+            Notification.NotificationType.SUCCESS
+        };
+
+        String[] actionUrls = {
+            "/admin/security/logs",
+            null
+        };
+
+        for (int i = 0; i < titles.length; i++) {
+            notificationService.createNotification(
+                superadminUser,
+                titles[i],
+                messages[i],
+                types[i],
+                actionUrls[i]
+            );
+        }
+
+        log.info("superadmin 공용 알림 생성 완료: {}개", titles.length);
     }
 }

@@ -579,51 +579,17 @@ export const KOREAN_LABELS = {
 
   // 증빙서류 유형
   [DocumentType.TAX_INVOICE]: '세금계산서',
-  [DocumentType.CASH_RECEIPT]: '현금영수증',
-  [DocumentType.CREDIT_CARD]: '신용카드',
-  [DocumentType.BANK_TRANSFER]: '계좌이체',
-  [DocumentType.PROMISSORY_NOTE]: '약속어음',
-  [DocumentType.RECEIPT]: '영수증',
-  [DocumentType.CONTRACT]: '계약서',
   [DocumentType.OTHER]: '기타',
 
   // 예산 기간
-  [BudgetPeriod.ANNUAL]: '연간',
-  [BudgetPeriod.QUARTERLY]: '분기',
-  [BudgetPeriod.MONTHLY]: '월간',
 
   // 예산 유형
-  [BudgetType.REVENUE]: '수익예산',
-  [BudgetType.EXPENSE]: '비용예산',
-  [BudgetType.CAPITAL]: '자본예산',
-  [BudgetType.CASH_FLOW]: '현금흐름예산',
 
   // 예산 상태
-  [BudgetStatus.DRAFT]: '임시저장',
-  [BudgetStatus.SUBMITTED]: '제출',
-  [BudgetStatus.APPROVED]: '승인',
-  [BudgetStatus.ACTIVE]: '활성',
-  [BudgetStatus.CLOSED]: '마감',
-  [BudgetStatus.CANCELLED]: '취소',
 
   // 보고서 유형
-  [ReportType.BALANCE_SHEET]: '재무상태표',
-  [ReportType.INCOME_STATEMENT]: '손익계산서',
-  [ReportType.CASH_FLOW_STATEMENT]: '현금흐름표',
-  [ReportType.EQUITY_STATEMENT]: '자본변동표',
-  [ReportType.TRIAL_BALANCE]: '시산표',
-  [ReportType.GENERAL_LEDGER]: '총계정원장',
-  [ReportType.BUDGET_REPORT]: '예산보고서',
-  [ReportType.VARIANCE_ANALYSIS]: '차이분석표',
-  [ReportType.AGING_REPORT]: '연령분석표',
-  [ReportType.TAX_REPORT]: '세무보고서',
 
   // 보고서 상태
-  [ReportStatus.DRAFT]: '임시저장',
-  [ReportStatus.GENERATED]: '생성완료',
-  [ReportStatus.REVIEWED]: '검토완료',
-  [ReportStatus.APPROVED]: '승인완료',
-  [ReportStatus.PUBLISHED]: '공시완료'
 } as const
 
 

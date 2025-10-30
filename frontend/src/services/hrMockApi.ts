@@ -108,7 +108,7 @@ export const mockEmployeeApi = {
              emp.employeeNumber.toLowerCase().includes(term) ||
              emp.email.toLowerCase().includes(term) ||
              emp.department.name.toLowerCase().includes(term) ||
-             emp.position.positionName.toLowerCase().includes(term)
+             emp.position.name.toLowerCase().includes(term)
     })
     
     return createMockPageResponse(
@@ -180,7 +180,7 @@ export const mockEmployeeApi = {
       email: employee.email,
       phone: employee.phone || '',
       mobile: employee.mobile || '',
-      birthDate: employee.birthDate?.toISOString().split('T')[0] || '',
+      birthDate: employee.birthDate?.toString().split('T')[0] || '',
       gender: employee.gender,
       address: employee.address || '',
       addressDetail: employee.addressDetail || '',
@@ -188,7 +188,7 @@ export const mockEmployeeApi = {
       company: mockCompanies[0],
       department: mockDepartments.find(d => d.id === employee.departmentId)!,
       position: mockPositions.find(p => p.id === employee.positionId)!,
-      hireDate: employee.hireDate.toISOString().split('T')[0],
+      hireDate: employee.hireDate.toString().split('T')[0],
       employmentStatus: employee.employmentStatus || EmploymentStatus.ACTIVE,
       employmentType: employee.employmentType || 'FULL_TIME' as any,
       baseSalary: employee.baseSalary || 0,
@@ -205,7 +205,8 @@ export const mockEmployeeApi = {
       memo: employee.memo || '',
       profileImageUrl: employee.profileImageUrl || '',
       terminationDate: null,
-      terminationReason: null,
+      yearsOfService: Math.floor(Math.random() * 10) + 1,
+      age: Math.floor(Math.random() * 20) + 25,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     }
@@ -301,6 +302,17 @@ export const mockEmployeeApi = {
   getEmployeeCountByAgeGroup: async (): Promise<StatisticsData[]> => {
     await new Promise(resolve => setTimeout(resolve, 300))
     return mockAgeGroupStats
+  },
+
+  /**
+   * 회사별 최근 직원 목록 조회 (사번 중복 방지용)
+   */
+  getRecentEmployeesByCompany: async (companyId: number): Promise<Employee[]> => {
+    await new Promise(resolve => setTimeout(resolve, 300))
+    return mockEmployees
+      .filter(emp => emp.company.id === companyId)
+      .sort((a, b) => b.employeeNumber.localeCompare(a.employeeNumber))
+      .slice(0, 5)
   }
 }
 
@@ -330,7 +342,7 @@ export const mockPositionApi = {
    */
   getPositionsByCompany: async (companyId: number): Promise<Position[]> => {
     await new Promise(resolve => setTimeout(resolve, 300))
-    return mockPositions.filter(pos => pos.companyId === companyId)
+    return mockPositions.filter(pos => pos.company.id === companyId)
   },
 
   /**

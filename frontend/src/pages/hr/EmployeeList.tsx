@@ -1,84 +1,75 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Plus, Search, Filter, Edit, Trash2 } from 'lucide-react'
-import { Employee, EmployeeStatus, EmployeeStatusLabels } from '@/types/hr'
+import { Employee, EmploymentStatus } from '@/types/hr'
 import { formatDate, formatCurrency } from '@/lib/utils'
+import { useEmployees } from '@/hooks/useEmployees'
+import { useAuth } from '@/contexts/AuthContext'
 
 /**
  * 직원 목록 페이지
  * 직원 정보를 조회하고 관리하는 페이지입니다
  */
 function EmployeeList() {
+  const navigate = useNavigate()
+  const { user } = useAuth()
   const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState<EmployeeStatus | ''>('')
+  const [statusFilter, setStatusFilter] = useState<EmploymentStatus | ''>('')
 
-  // 임시 데이터 (실제로는 API에서 가져옴)
-  const employees: Employee[] = [
-    {
-      id: 1,
-      employeeNumber: 'EMP001',
-      name: '김철수',
-      email: 'kim@company.com',
-      phone: '010-1234-5678',
-      hireDate: '2023-01-15',
-      department: {
-        id: 1,
-        departmentCode: 'DEV',
-        name: '개발팀',
-        createdAt: '2023-01-01',
-        updatedAt: '2023-01-01'
-      },
-      position: {
-        id: 1,
-        positionCode: 'SENIOR',
-        name: '선임',
-        levelOrder: 3,
-        createdAt: '2023-01-01',
-        updatedAt: '2023-01-01'
-      },
-      salary: 4500000,
-      status: EmployeeStatus.ACTIVE,
-      createdAt: '2023-01-15T09:00:00',
-      updatedAt: '2023-01-15T09:00:00'
-    },
-    {
-      id: 2,
-      employeeNumber: 'EMP002',
-      name: '이영희',
-      email: 'lee@company.com',
-      phone: '010-2345-6789',
-      hireDate: '2023-03-20',
-      department: {
-        id: 2,
-        departmentCode: 'MKT',
-        name: '마케팅팀',
-        createdAt: '2023-01-01',
-        updatedAt: '2023-01-01'
-      },
-      position: {
-        id: 2,
-        positionCode: 'JUNIOR',
-        name: '주니어',
-        levelOrder: 1,
-        createdAt: '2023-01-01',
-        updatedAt: '2023-01-01'
-      },
-      salary: 3200000,
-      status: EmployeeStatus.ACTIVE,
-      createdAt: '2023-03-20T09:00:00',
-      updatedAt: '2023-03-20T09:00:00'
-    },
-  ]
+  // API를 통해 직원 목록 조회
+  const { data: employeesData, isLoading, error } = useEmployees()
+  const employees = employeesData?.content || []
+
+  /**
+   * 직원 상세 페이지로 이동
+   */
+  const handleRowClick = (employeeId: number, event: React.MouseEvent) => {
+    // 액션 버튼 클릭 시에는 상세 페이지로 이동하지 않음
+    const target = event.target as HTMLElement
+    if (target.closest('button') || target.closest('a')) {
+      return
+    }
+    navigate(`/hr/employees/${employeeId}`)
+  }
 
   const filteredEmployees = employees.filter(employee => {
     const matchesSearch = employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          employee.employeeNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          employee.email.toLowerCase().includes(searchTerm.toLowerCase())
     
-    const matchesStatus = !statusFilter || employee.status === statusFilter
+    const matchesStatus = !statusFilter || employee.employmentStatus === statusFilter
     
     return matchesSearch && matchesStatus
   })
+
+  // 로딩 상태 처리
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">직원 목록을 불러오는 중...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // 에러 상태 처리
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <p className="text-destructive mb-4">직원 목록을 불러올 수 없습니다.</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="btn btn-primary"
+          >
+            다시 시도
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -90,10 +81,12 @@ function EmployeeList() {
             직원 정보를 조회하고 관리할 수 있습니다
           </p>
         </div>
-        <Link to="/hr/employees/new" className="btn btn-primary">
-          <Plus className="mr-2 h-4 w-4" />
-          직원 등록
-        </Link>
+        {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'MANAGER') && (
+          <Link to="/hr/employees/new" className="btn btn-primary">
+            <Plus className="mr-2 h-4 w-4" />
+            직원 등록
+          </Link>
+        )}
       </div>
 
       {/* 검색 및 필터 */}
@@ -113,13 +106,13 @@ function EmployeeList() {
           <Filter className="h-4 w-4 text-muted-foreground" />
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as EmployeeStatus | '')}
+            onChange={(e) => setStatusFilter(e.target.value as EmploymentStatus | '')}
             className="form-input"
           >
             <option value="">전체 상태</option>
-            {Object.entries(EmployeeStatusLabels).map(([status, label]) => (
-              <option key={status} value={status}>{label}</option>
-            ))}
+            <option value={EmploymentStatus.ACTIVE}>재직</option>
+            <option value={EmploymentStatus.INACTIVE}>휴직</option>
+            <option value={EmploymentStatus.TERMINATED}>퇴사</option>
           </select>
         </div>
       </div>
@@ -143,25 +136,30 @@ function EmployeeList() {
           </thead>
           <tbody>
             {filteredEmployees.map((employee) => (
-              <tr key={employee.id}>
+              <tr 
+                key={employee.id}
+                onClick={(e) => handleRowClick(employee.id, e)}
+                className="cursor-pointer hover:bg-muted/50 transition-colors"
+              >
                 <td className="font-medium">{employee.employeeNumber}</td>
                 <td className="font-medium">{employee.name}</td>
                 <td>{employee.email}</td>
                 <td>{employee.phone || '-'}</td>
                 <td>{employee.department?.name || '-'}</td>
                 <td>{employee.position?.name || '-'}</td>
-                <td>{employee.salary ? formatCurrency(employee.salary) : '-'}</td>
+                <td>-</td>
                 <td>
                   <span
                     className={`inline-flex items-center justify-center rounded-full px-2 py-1 text-xs font-medium w-16 ${
-                      employee.status === EmployeeStatus.ACTIVE
+                      employee.employmentStatus === EmploymentStatus.ACTIVE
                         ? 'bg-green-100 text-green-800'
-                        : employee.status === EmployeeStatus.INACTIVE
+                        : employee.employmentStatus === EmploymentStatus.INACTIVE
                         ? 'bg-yellow-100 text-yellow-800'
                         : 'bg-red-100 text-red-800'
                     }`}
                   >
-                    {EmployeeStatusLabels[employee.status]}
+                    {employee.employmentStatus === EmploymentStatus.ACTIVE ? '재직' :
+                     employee.employmentStatus === EmploymentStatus.INACTIVE ? '휴직' : '퇴사'}
                   </span>
                 </td>
                 <td>{formatDate(employee.hireDate)}</td>

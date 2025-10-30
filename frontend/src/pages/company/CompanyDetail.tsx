@@ -58,10 +58,10 @@ function CompanyDetail() {
       
       const response = await api.get(`/companies/${companyId}`)
       
-      if (response.success) {
+      if (response.data.success) {
         setCompany(response.data)
       } else {
-        setError(response.message || '회사 정보를 불러올 수 없습니다')
+        setError(response.data.message || '회사 정보를 불러올 수 없습니다')
       }
     } catch (error: any) {
       console.error('회사 정보 조회 오류:', error)

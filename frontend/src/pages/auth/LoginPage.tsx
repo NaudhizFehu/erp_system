@@ -183,13 +183,45 @@ export function LoginPage() {
             </form>
 
             {/* 개발용 테스트 계정 정보 */}
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-              <h3 className="text-sm font-medium text-blue-900 mb-2">
-                개발용 테스트 계정
+            <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <h3 className="text-sm font-semibold text-blue-900 mb-3 pb-2 border-b border-blue-200">
+                🔐 개발용 테스트 계정 (총 9개)
               </h3>
-              <div className="text-xs text-blue-700 space-y-1">
-                <p><strong>관리자:</strong> admin / admin123</p>
-                <p><strong>사용자:</strong> user / user123</p>
+              <div className="text-xs text-blue-800 space-y-3">
+                {/* 시스템 관리자 */}
+                <div className="bg-blue-100 p-2 rounded">
+                  <p className="font-semibold text-blue-900 mb-1">🔑 시스템 관리자</p>
+                  <p className="pl-2"><strong>superadmin</strong> / super123 (전체 관리)</p>
+                </div>
+                
+                {/* ABC기업 */}
+                <div>
+                  <p className="font-semibold text-blue-900 mb-1">👔 ABC기업 (4개)</p>
+                  <div className="pl-2 space-y-0.5">
+                    <p><strong>admin</strong> / admin123 (회사 관리자)</p>
+                    <p><strong>hr_manager</strong> / hr123 (인사팀 매니저)</p>
+                    <p><strong>manager</strong> / manager123 (개발팀 매니저)</p>
+                    <p><strong>user</strong> / user123 (일반 사용자)</p>
+                  </div>
+                </div>
+                
+                {/* XYZ그룹 */}
+                <div>
+                  <p className="font-semibold text-blue-900 mb-1">🏢 XYZ그룹 (2개)</p>
+                  <div className="pl-2 space-y-0.5">
+                    <p><strong>xyz_admin</strong> / xyz123 (회사 관리자)</p>
+                    <p><strong>xyz_manager</strong> / xyz123 (인사팀 매니저)</p>
+                  </div>
+                </div>
+                
+                {/* DEF코퍼레이션 */}
+                <div>
+                  <p className="font-semibold text-blue-900 mb-1">🏭 DEF코퍼레이션 (2개)</p>
+                  <div className="pl-2 space-y-0.5">
+                    <p><strong>def_admin</strong> / def123 (회사 관리자)</p>
+                    <p><strong>def_user</strong> / def123 (일반 사용자)</p>
+                  </div>
+                </div>
               </div>
             </div>
           </CardContent>

@@ -3,7 +3,7 @@
  * 백엔드 재고 관리 API와 통신하는 서비스 레이어입니다
  */
 
-import api from './api'
+import axios from 'axios'
 import { 
   Product, 
   Inventory, 
@@ -27,11 +27,11 @@ import {
 } from '../types/inventory'
 import { ApiResponse, PageResponse } from '../types/common'
 
-// API 기본 URL
-const API_BASE_URL = '/api'
+// API 기본 URL (api.ts에서 이미 /api가 설정되어 있음)
+const API_BASE_URL = ''
 
 // Axios 인스턴스 생성
-const apiClient = api.create({
+const inventoryApiClient = axios.create({
   baseURL: API_BASE_URL,
   timeout: 30000,
   headers: {
@@ -40,7 +40,7 @@ const apiClient = api.create({
 })
 
 // 요청 인터셉터: 인증 토큰 추가
-apiClient.interceptors.request.use(
+inventoryApiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('accessToken')
     if (token) {
@@ -54,7 +54,7 @@ apiClient.interceptors.request.use(
 )
 
 // 응답 인터셉터: 에러 처리
-apiClient.interceptors.response.use(
+inventoryApiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
@@ -74,7 +74,7 @@ export const productApi = {
    * 상품 생성
    */
   async createProduct(productData: ProductCreateRequest): Promise<ApiResponse<Product>> {
-    const response = await apiClient.post('/products', productData)
+    const response = await inventoryApiClient.post('/products', productData)
     return response.data
   },
 
@@ -82,7 +82,7 @@ export const productApi = {
    * 상품 수정
    */
   async updateProduct(id: number, productData: Partial<ProductCreateRequest>): Promise<ApiResponse<Product>> {
-    const response = await apiClient.put(`/products/${id}`, productData)
+    const response = await inventoryApiClient.put(`/products/${id}`, productData)
     return response.data
   },
 
@@ -90,7 +90,7 @@ export const productApi = {
    * 상품 삭제
    */
   async deleteProduct(id: number): Promise<ApiResponse<void>> {
-    const response = await apiClient.delete(`/products/${id}`)
+    const response = await inventoryApiClient.delete(`/products/${id}`)
     return response.data
   },
 
@@ -98,7 +98,7 @@ export const productApi = {
    * 상품 조회 (ID)
    */
   async getProductById(id: number): Promise<ApiResponse<Product>> {
-    const response = await apiClient.get(`/products/${id}`)
+    const response = await inventoryApiClient.get(`/products/${id}`)
     return response.data
   },
 
@@ -109,7 +109,7 @@ export const productApi = {
     companyId: number, 
     params?: InventorySearchParams
   ): Promise<ApiResponse<PageResponse<Product>>> {
-    const response = await apiClient.get(`/products/companies/${companyId}`, { params })
+    const response = await inventoryApiClient.get(`/products/companies/${companyId}`, { params })
     return response.data
   },
 
@@ -120,7 +120,7 @@ export const productApi = {
     categoryId: number, 
     params?: InventorySearchParams
   ): Promise<ApiResponse<PageResponse<Product>>> {
-    const response = await apiClient.get(`/products/categories/${categoryId}`, { params })
+    const response = await inventoryApiClient.get(`/products/categories/${categoryId}`, { params })
     return response.data
   },
 
@@ -132,7 +132,7 @@ export const productApi = {
     searchTerm: string, 
     params?: InventorySearchParams
   ): Promise<ApiResponse<PageResponse<Product>>> {
-    const response = await apiClient.get(`/products/companies/${companyId}/search`, {
+    const response = await inventoryApiClient.get(`/products/companies/${companyId}/search`, {
       params: { searchTerm, ...params }
     })
     return response.data
@@ -145,7 +145,7 @@ export const productApi = {
     companyId: number, 
     searchParams: InventorySearchParams
   ): Promise<ApiResponse<PageResponse<Product>>> {
-    const response = await apiClient.post(`/products/companies/${companyId}/search/advanced`, searchParams)
+    const response = await inventoryApiClient.post(`/products/companies/${companyId}/search/advanced`, searchParams)
     return response.data
   },
 
@@ -153,7 +153,7 @@ export const productApi = {
    * 바코드로 상품 조회
    */
   async getProductByBarcode(barcode: string): Promise<ApiResponse<Product>> {
-    const response = await apiClient.get(`/products/barcode/${barcode}`)
+    const response = await inventoryApiClient.get(`/products/barcode/${barcode}`)
     return response.data
   },
 
@@ -161,7 +161,7 @@ export const productApi = {
    * 안전재고 미달 상품 조회
    */
   async getLowStockProducts(companyId: number): Promise<ApiResponse<Product[]>> {
-    const response = await apiClient.get(`/products/companies/${companyId}/low-stock`)
+    const response = await inventoryApiClient.get(`/products/companies/${companyId}/low-stock`)
     return response.data
   },
 
@@ -169,7 +169,7 @@ export const productApi = {
    * 재고없음 상품 조회
    */
   async getOutOfStockProducts(companyId: number): Promise<ApiResponse<Product[]>> {
-    const response = await apiClient.get(`/products/companies/${companyId}/out-of-stock`)
+    const response = await inventoryApiClient.get(`/products/companies/${companyId}/out-of-stock`)
     return response.data
   },
 
@@ -177,7 +177,7 @@ export const productApi = {
    * 재주문 필요 상품 조회
    */
   async getReorderNeededProducts(companyId: number): Promise<ApiResponse<Product[]>> {
-    const response = await apiClient.get(`/products/companies/${companyId}/reorder-needed`)
+    const response = await inventoryApiClient.get(`/products/companies/${companyId}/reorder-needed`)
     return response.data
   },
 
@@ -185,7 +185,7 @@ export const productApi = {
    * 상품 통계 조회
    */
   async getProductStats(companyId: number): Promise<ApiResponse<ProductStats>> {
-    const response = await apiClient.get(`/products/companies/${companyId}/statistics`)
+    const response = await inventoryApiClient.get(`/products/companies/${companyId}/statistics`)
     return response.data
   },
 
@@ -193,7 +193,7 @@ export const productApi = {
    * 브랜드별 상품 통계
    */
   async getBrandStatistics(companyId: number): Promise<ApiResponse<Array<{brand: string, count: number}>>> {
-    const response = await apiClient.get(`/products/companies/${companyId}/brands/statistics`)
+    const response = await inventoryApiClient.get(`/products/companies/${companyId}/brands/statistics`)
     return response.data
   },
 
@@ -201,7 +201,7 @@ export const productApi = {
    * 상품 재고 현황 조회
    */
   async getProductStockStatus(id: number): Promise<ApiResponse<any>> {
-    const response = await apiClient.get(`/products/${id}/stock-status`)
+    const response = await inventoryApiClient.get(`/products/${id}/stock-status`)
     return response.data
   },
 
@@ -209,7 +209,7 @@ export const productApi = {
    * 상품 활성화/비활성화
    */
   async toggleProductActive(id: number): Promise<ApiResponse<Product>> {
-    const response = await apiClient.put(`/products/${id}/toggle-active`)
+    const response = await inventoryApiClient.put(`/products/${id}/toggle-active`)
     return response.data
   },
 
@@ -221,7 +221,7 @@ export const productApi = {
     productCode: string, 
     excludeId?: number
   ): Promise<ApiResponse<boolean>> {
-    const response = await apiClient.get(`/products/companies/${companyId}/check-code/${productCode}`, {
+    const response = await inventoryApiClient.get(`/products/companies/${companyId}/check-code/${productCode}`, {
       params: { excludeId }
     })
     return response.data
@@ -231,7 +231,7 @@ export const productApi = {
    * 바코드 중복 확인
    */
   async checkBarcodeDuplicate(barcode: string, excludeId?: number): Promise<ApiResponse<boolean>> {
-    const response = await apiClient.get(`/products/check-barcode/${barcode}`, {
+    const response = await inventoryApiClient.get(`/products/check-barcode/${barcode}`, {
       params: { excludeId }
     })
     return response.data
@@ -246,7 +246,7 @@ export const inventoryApi = {
    * 재고 생성
    */
   async createInventory(inventoryData: any): Promise<ApiResponse<Inventory>> {
-    const response = await apiClient.post('/inventory', inventoryData)
+    const response = await inventoryApiClient.post('/inventory', inventoryData)
     return response.data
   },
 
@@ -254,7 +254,7 @@ export const inventoryApi = {
    * 재고 수정
    */
   async updateInventory(id: number, inventoryData: any): Promise<ApiResponse<Inventory>> {
-    const response = await apiClient.put(`/inventory/${id}`, inventoryData)
+    const response = await inventoryApiClient.put(`/inventory/${id}`, inventoryData)
     return response.data
   },
 
@@ -262,7 +262,7 @@ export const inventoryApi = {
    * 재고 삭제
    */
   async deleteInventory(id: number): Promise<ApiResponse<void>> {
-    const response = await apiClient.delete(`/inventory/${id}`)
+    const response = await inventoryApiClient.delete(`/inventory/${id}`)
     return response.data
   },
 
@@ -270,7 +270,7 @@ export const inventoryApi = {
    * 재고 조회 (ID)
    */
   async getInventoryById(id: number): Promise<ApiResponse<Inventory>> {
-    const response = await apiClient.get(`/inventory/${id}`)
+    const response = await inventoryApiClient.get(`/inventory/${id}`)
     return response.data
   },
 
@@ -281,7 +281,7 @@ export const inventoryApi = {
     companyId: number, 
     params?: InventorySearchParams
   ): Promise<ApiResponse<PageResponse<Inventory>>> {
-    const response = await apiClient.get(`/inventory/companies/${companyId}`, { params })
+    const response = await inventoryApiClient.get(`/inventory/companies/${companyId}`, { params })
     return response.data
   },
 
@@ -289,7 +289,7 @@ export const inventoryApi = {
    * 상품별 재고 목록 조회
    */
   async getInventoriesByProduct(productId: number): Promise<ApiResponse<Inventory[]>> {
-    const response = await apiClient.get(`/inventory/products/${productId}`)
+    const response = await inventoryApiClient.get(`/inventory/products/${productId}`)
     return response.data
   },
 
@@ -300,7 +300,7 @@ export const inventoryApi = {
     warehouseId: number, 
     params?: InventorySearchParams
   ): Promise<ApiResponse<PageResponse<Inventory>>> {
-    const response = await apiClient.get(`/inventory/warehouses/${warehouseId}`, { params })
+    const response = await inventoryApiClient.get(`/inventory/warehouses/${warehouseId}`, { params })
     return response.data
   },
 
@@ -312,7 +312,7 @@ export const inventoryApi = {
     searchTerm: string, 
     params?: InventorySearchParams
   ): Promise<ApiResponse<PageResponse<Inventory>>> {
-    const response = await apiClient.get(`/inventory/companies/${companyId}/search`, {
+    const response = await inventoryApiClient.get(`/inventory/companies/${companyId}/search`, {
       params: { searchTerm, ...params }
     })
     return response.data
@@ -323,7 +323,7 @@ export const inventoryApi = {
    */
   async receiveStock(request: StockReceiptRequest): Promise<ApiResponse<Inventory>> {
     const { inventoryId, quantity, unitCost, reason } = request
-    const response = await apiClient.post(`/inventory/${inventoryId}/receive`, null, {
+    const response = await inventoryApiClient.post(`/inventory/${inventoryId}/receive`, null, {
       params: { quantity, unitCost, reason }
     })
     return response.data
@@ -334,7 +334,7 @@ export const inventoryApi = {
    */
   async issueStock(request: StockIssueRequest): Promise<ApiResponse<Inventory>> {
     const { inventoryId, quantity, reason } = request
-    const response = await apiClient.post(`/inventory/${inventoryId}/issue`, null, {
+    const response = await inventoryApiClient.post(`/inventory/${inventoryId}/issue`, null, {
       params: { quantity, reason }
     })
     return response.data
@@ -344,7 +344,7 @@ export const inventoryApi = {
    * 재고 예약
    */
   async reserveStock(request: StockReservationRequest): Promise<ApiResponse<Inventory>> {
-    const response = await apiClient.post('/inventory/reserve', request)
+    const response = await inventoryApiClient.post('/inventory/reserve', request)
     return response.data
   },
 
@@ -352,7 +352,7 @@ export const inventoryApi = {
    * 재고 예약 해제
    */
   async unreserveStock(inventoryId: number, quantity: number, reason?: string): Promise<ApiResponse<Inventory>> {
-    const response = await apiClient.post(`/inventory/${inventoryId}/unreserve`, null, {
+    const response = await inventoryApiClient.post(`/inventory/${inventoryId}/unreserve`, null, {
       params: { quantity, reason }
     })
     return response.data
@@ -362,7 +362,7 @@ export const inventoryApi = {
    * 재고 실사 처리
    */
   async performStocktaking(request: StocktakingRequest): Promise<ApiResponse<StocktakingResult>> {
-    const response = await apiClient.post('/inventory/stocktaking', request)
+    const response = await inventoryApiClient.post('/inventory/stocktaking', request)
     return response.data
   },
 
@@ -370,7 +370,7 @@ export const inventoryApi = {
    * 재고 조정
    */
   async adjustInventory(request: any): Promise<ApiResponse<Inventory>> {
-    const response = await apiClient.post('/inventory/adjust', request)
+    const response = await inventoryApiClient.post('/inventory/adjust', request)
     return response.data
   },
 
@@ -378,7 +378,7 @@ export const inventoryApi = {
    * 재고 이동 (창고간)
    */
   async transferInventory(request: InventoryTransferRequest): Promise<ApiResponse<Inventory[]>> {
-    const response = await apiClient.post('/inventory/transfer', request)
+    const response = await inventoryApiClient.post('/inventory/transfer', request)
     return response.data
   },
 
@@ -390,7 +390,7 @@ export const inventoryApi = {
     newLocationCode: string, 
     newLocationDescription?: string
   ): Promise<ApiResponse<Inventory>> {
-    const response = await apiClient.post(`/inventory/${inventoryId}/move-location`, null, {
+    const response = await inventoryApiClient.post(`/inventory/${inventoryId}/move-location`, null, {
       params: { newLocationCode, newLocationDescription }
     })
     return response.data
@@ -400,7 +400,7 @@ export const inventoryApi = {
    * 안전재고 미달 재고 조회
    */
   async getLowStockInventories(companyId: number): Promise<ApiResponse<Inventory[]>> {
-    const response = await apiClient.get(`/inventory/companies/${companyId}/low-stock`)
+    const response = await inventoryApiClient.get(`/inventory/companies/${companyId}/low-stock`)
     return response.data
   },
 
@@ -408,7 +408,7 @@ export const inventoryApi = {
    * 재고없음 재고 조회
    */
   async getOutOfStockInventories(companyId: number): Promise<ApiResponse<Inventory[]>> {
-    const response = await apiClient.get(`/inventory/companies/${companyId}/out-of-stock`)
+    const response = await inventoryApiClient.get(`/inventory/companies/${companyId}/out-of-stock`)
     return response.data
   },
 
@@ -416,7 +416,7 @@ export const inventoryApi = {
    * 재고 통계 조회
    */
   async getInventoryStats(companyId: number): Promise<ApiResponse<InventoryStats>> {
-    const response = await apiClient.get(`/inventory/companies/${companyId}/statistics`)
+    const response = await inventoryApiClient.get(`/inventory/companies/${companyId}/statistics`)
     return response.data
   },
 
@@ -424,7 +424,7 @@ export const inventoryApi = {
    * ABC 분석
    */
   async performAbcAnalysis(companyId: number): Promise<ApiResponse<AbcAnalysisResult[]>> {
-    const response = await apiClient.get(`/inventory/companies/${companyId}/abc-analysis`)
+    const response = await inventoryApiClient.get(`/inventory/companies/${companyId}/abc-analysis`)
     return response.data
   },
 
@@ -432,7 +432,7 @@ export const inventoryApi = {
    * 재고 알림 대상 조회
    */
   async getInventoryAlerts(companyId: number): Promise<ApiResponse<InventoryAlert[]>> {
-    const response = await apiClient.get(`/inventory/companies/${companyId}/alerts`)
+    const response = await inventoryApiClient.get(`/inventory/companies/${companyId}/alerts`)
     return response.data
   }
 }
@@ -448,7 +448,7 @@ export const stockMovementApi = {
     companyId: number, 
     params?: InventorySearchParams
   ): Promise<ApiResponse<PageResponse<StockMovement>>> {
-    const response = await apiClient.get(`/stock-movements/companies/${companyId}`, { params })
+    const response = await inventoryApiClient.get(`/stock-movements/companies/${companyId}`, { params })
     return response.data
   },
 
@@ -456,7 +456,7 @@ export const stockMovementApi = {
    * 재고이동 상세 조회
    */
   async getStockMovementById(id: number): Promise<ApiResponse<StockMovement>> {
-    const response = await apiClient.get(`/stock-movements/${id}`)
+    const response = await inventoryApiClient.get(`/stock-movements/${id}`)
     return response.data
   },
 
@@ -467,7 +467,7 @@ export const stockMovementApi = {
     productId: number, 
     params?: InventorySearchParams
   ): Promise<ApiResponse<PageResponse<StockMovement>>> {
-    const response = await apiClient.get(`/stock-movements/products/${productId}`, { params })
+    const response = await inventoryApiClient.get(`/stock-movements/products/${productId}`, { params })
     return response.data
   },
 
@@ -478,7 +478,7 @@ export const stockMovementApi = {
     warehouseId: number, 
     params?: InventorySearchParams
   ): Promise<ApiResponse<PageResponse<StockMovement>>> {
-    const response = await apiClient.get(`/stock-movements/warehouses/${warehouseId}`, { params })
+    const response = await inventoryApiClient.get(`/stock-movements/warehouses/${warehouseId}`, { params })
     return response.data
   }
 }
@@ -491,7 +491,7 @@ export const warehouseApi = {
    * 창고 목록 조회
    */
   async getWarehouses(companyId: number): Promise<ApiResponse<Warehouse[]>> {
-    const response = await apiClient.get(`/warehouses/companies/${companyId}`)
+    const response = await inventoryApiClient.get(`/warehouses/companies/${companyId}`)
     return response.data
   },
 
@@ -499,7 +499,7 @@ export const warehouseApi = {
    * 창고 상세 조회
    */
   async getWarehouseById(id: number): Promise<ApiResponse<Warehouse>> {
-    const response = await apiClient.get(`/warehouses/${id}`)
+    const response = await inventoryApiClient.get(`/warehouses/${id}`)
     return response.data
   },
 
@@ -507,7 +507,7 @@ export const warehouseApi = {
    * 창고별 재고 현황 조회
    */
   async getWarehouseInventory(warehouseId: number): Promise<ApiResponse<WarehouseInventory>> {
-    const response = await apiClient.get(`/warehouses/${warehouseId}/inventory`)
+    const response = await inventoryApiClient.get(`/warehouses/${warehouseId}/inventory`)
     return response.data
   }
 }
@@ -520,7 +520,7 @@ export const categoryApi = {
    * 분류 목록 조회 (계층구조)
    */
   async getCategories(companyId: number): Promise<ApiResponse<Category[]>> {
-    const response = await apiClient.get(`/products/categories/companies/${companyId}`)
+    const response = await inventoryApiClient.get(`/products/categories/companies/${companyId}`)
     return response.data
   },
 
@@ -528,7 +528,7 @@ export const categoryApi = {
    * 분류 상세 조회
    */
   async getCategoryById(id: number): Promise<ApiResponse<Category>> {
-    const response = await apiClient.get(`/categories/${id}`)
+    const response = await inventoryApiClient.get(`/categories/${id}`)
     return response.data
   }
 }
@@ -541,7 +541,7 @@ export const dashboardApi = {
    * 재고 대시보드 데이터 조회
    */
   async getInventoryDashboard(companyId: number): Promise<ApiResponse<InventoryDashboard>> {
-    const response = await apiClient.get(`/dashboard/inventory/companies/${companyId}`)
+    const response = await inventoryApiClient.get(`/dashboard/inventory/companies/${companyId}`)
     return response.data
   },
 
@@ -549,7 +549,7 @@ export const dashboardApi = {
    * 재고 트렌드 데이터 조회
    */
   async getInventoryTrend(companyId: number, days: number = 30): Promise<ApiResponse<any[]>> {
-    const response = await apiClient.get(`/dashboard/inventory/companies/${companyId}/trend`, {
+    const response = await inventoryApiClient.get(`/dashboard/inventory/companies/${companyId}/trend`, {
       params: { days }
     })
     return response.data
@@ -559,7 +559,7 @@ export const dashboardApi = {
    * 창고 활용도 조회
    */
   async getWarehouseUtilization(companyId: number): Promise<ApiResponse<WarehouseInventory[]>> {
-    const response = await apiClient.get(`/dashboard/inventory/companies/${companyId}/warehouse-utilization`)
+    const response = await inventoryApiClient.get(`/dashboard/inventory/companies/${companyId}/warehouse-utilization`)
     return response.data
   }
 }
