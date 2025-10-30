@@ -16,24 +16,97 @@ export default defineConfig({
     // TypeScript 경로 매핑 지원
     tsconfigPaths(),
     
-    // PWA 플러그인 (Progressive Web App)
+    // PWA 플러그인 (Progressive Web App) - Phase 2: 캐싱 전략 단순화
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        skipWaiting: true,
+        clientsClaim: true,
+        cleanupOutdatedCaches: true,
         runtimeCaching: [
+          // 정적 리소스 캐싱 (Phase 2에서 추가한 내용)
           {
-            urlPattern: /^https:\/\/api\.erp-system\.com\/.*/i,
+            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'api-cache',
+              cacheName: 'google-fonts-cache',
               expiration: {
                 maxEntries: 10,
                 maxAgeSeconds: 60 * 60 * 24 * 365, // 1년
               },
-              cacheKeyWillBeUsed: async ({ request }) => {
-                return `${request.url}?version=1.0.0`
+            },
+          },
+          {
+            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-stylesheets',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 365, // 1년
               },
+            },
+          },
+          // API 캐싱 - 읽기 전용 데이터 (StaleWhileRevalidate)
+          {
+            urlPattern: /^http:\/\/localhost:9961\/api\/hr\/departments\/.*/i,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'hr-data-cache',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24, // 24시간
+              },
+            },
+          },
+          {
+            urlPattern: /^http:\/\/localhost:9961\/api\/hr\/positions\/.*/i,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'hr-data-cache',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24, // 24시간
+              },
+            },
+          },
+          // API 캐싱 - 실시간 데이터 (NetworkFirst)
+          {
+            urlPattern: /^http:\/\/localhost:9961\/api\/hr\/employees\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'employee-data-cache',
+              expiration: {
+                maxEntries: 200,
+                maxAgeSeconds: 60 * 60 * 2, // 2시간
+              },
+              networkTimeoutSeconds: 3,
+            },
+          },
+          // API 캐싱 - 일반 API (NetworkFirst)
+          {
+            urlPattern: /^http:\/\/localhost:9961\/api\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'api-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24, // 24시간
+              },
+              networkTimeoutSeconds: 3,
+            },
+          },
+          {
+            urlPattern: /^https:\/\/api\.erp-system\.com\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'api-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24, // 24시간
+              },
+              networkTimeoutSeconds: 3,
             },
           },
         ],
@@ -45,17 +118,22 @@ export default defineConfig({
         theme_color: '#3b82f6',
         background_color: '#ffffff',
         display: 'standalone',
+        orientation: 'portrait-primary',
+        scope: '/',
+        start_url: '/',
         icons: [
           {
-            src: 'pwa-192x192.png',
+            src: 'icon/icon-192.png',
             sizes: '192x192',
             type: 'image/png',
+            purpose: 'any maskable'
           },
           {
-            src: 'pwa-512x512.png',
+            src: 'icon/icon-512.png',
             sizes: '512x512',
             type: 'image/png',
-          },
+            purpose: 'any maskable'
+          }
         ],
       },
     }),
@@ -77,14 +155,14 @@ export default defineConfig({
   
   // 개발 서버 설정
   server: {
-    port: 3000,
+    port: 9960,
     host: true, // 네트워크 접근 허용
     open: true, // 브라우저 자동 열기
     cors: true,
     proxy: {
       // API 프록시 설정
       '/api': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:9961',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/api/, '/api'),

@@ -33,13 +33,13 @@ export interface UserInfo {
 export interface CompanyInfo {
   id: number
   name: string
-  companyCode: string
+  companyCode?: string | null
 }
 
 export interface DepartmentInfo {
   id: number
   name: string
-  departmentCode: string
+  departmentCode?: string | null
 }
 
 export interface AuthState {

@@ -190,9 +190,10 @@ export enum Gender {
  */
 export enum EmploymentStatus {
   ACTIVE = 'ACTIVE',
+  ON_LEAVE = 'ON_LEAVE',      // 추가
   INACTIVE = 'INACTIVE',
-  TERMINATED = 'TERMINATED',
-  SUSPENDED = 'SUSPENDED'
+  SUSPENDED = 'SUSPENDED',
+  TERMINATED = 'TERMINATED'
 }
 
 /**
@@ -510,7 +511,7 @@ export interface SearchParams {
   companyId?: number
   departmentId?: number
   positionId?: number
-  employmentStatus?: EmploymentStatus
+  employmentStatus?: EmploymentStatus | 'all'
   startDate?: string
   endDate?: string
 }
@@ -534,9 +535,10 @@ export const KOREAN_LABELS = {
   
   // 근무 상태
   [EmploymentStatus.ACTIVE]: '재직',
+  [EmploymentStatus.ON_LEAVE]: '휴가',       // 추가
   [EmploymentStatus.INACTIVE]: '휴직',
-  [EmploymentStatus.TERMINATED]: '퇴직',
   [EmploymentStatus.SUSPENDED]: '정직',
+  [EmploymentStatus.TERMINATED]: '퇴직',
   
   // 고용 형태
   [EmploymentType.FULL_TIME]: '정규직',
@@ -550,12 +552,10 @@ export const KOREAN_LABELS = {
   [PositionCategory.MANAGEMENT]: '관리직',
   [PositionCategory.SENIOR]: '선임',
   [PositionCategory.JUNIOR]: '주니어',
-  [PositionCategory.INTERN]: '인턴',
   
   // 직급 유형
   [PositionType.PERMANENT]: '정규직',
   [PositionType.CONTRACT]: '계약직',
-  [PositionType.TEMPORARY]: '임시직',
   [PositionType.CONSULTANT]: '컨설턴트',
   
   // 근태 상태
@@ -574,19 +574,12 @@ export const KOREAN_LABELS = {
   // 근무 유형
   [WorkType.OFFICE]: '사무실 근무',
   [WorkType.REMOTE]: '재택근무',
-  [WorkType.HYBRID]: '하이브리드',
-  [WorkType.FIELD]: '현장근무',
-  [WorkType.BUSINESS_TRIP]: '출장',
   
   // 승인 상태
-  [ApprovalStatus.PENDING]: '승인대기',
-  [ApprovalStatus.APPROVED]: '승인',
-  [ApprovalStatus.REJECTED]: '반려',
   
   // 지급 상태
   [PaymentStatus.PENDING]: '지급대기',
   [PaymentStatus.CALCULATED]: '계산완료',
-  [PaymentStatus.APPROVED]: '승인완료',
   [PaymentStatus.PAID]: '지급완료',
   [PaymentStatus.CANCELLED]: '취소',
   
@@ -597,3 +590,33 @@ export const KOREAN_LABELS = {
   [SalaryType.BONUS]: '상여금',
   [SalaryType.SEVERANCE]: '퇴직금'
 } as const
+
+// EmployeeStatus 별칭 추가
+export type EmployeeStatus = EmploymentStatus
+
+// EmployeeStatusLabels 추가
+export const EmployeeStatusLabels: Record<EmploymentStatus, string> = {
+  [EmploymentStatus.ACTIVE]: '재직',
+  [EmploymentStatus.ON_LEAVE]: '휴가',
+  [EmploymentStatus.INACTIVE]: '휴직',
+  [EmploymentStatus.SUSPENDED]: '정직',
+  [EmploymentStatus.TERMINATED]: '퇴직',
+}
+
+// EmployeeCreateDto 별칭 추가
+export type EmployeeCreateDto = Omit<Employee, 'id' | 'createdAt' | 'updatedAt'>
+
+/**
+ * 가져오기 결과 타입
+ */
+export interface ImportResult {
+  totalRows: number
+  successCount: number
+  failCount: number
+  errors: string[]
+}
+
+/**
+ * 내보내기 형식 타입
+ */
+export type ExportFormat = 'excel' | 'csv'

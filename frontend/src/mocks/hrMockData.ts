@@ -11,7 +11,7 @@ import type {
   StatisticsData,
   PageResponse
 } from '@/types/hr'
-import { Gender, EmploymentStatus, EmploymentType } from '@/types/hr'
+import { Gender, EmploymentStatus, EmploymentType, PositionCategory, PositionType } from '@/types/hr'
 
 // Mock 회사 데이터
 export const mockCompanies: Company[] = [
@@ -24,10 +24,10 @@ export const mockCompanies: Company[] = [
     phone: '02-1234-5678',
     email: 'info@abc.com',
     website: 'https://abc.com',
-    industry: 'IT',
-    employeeCount: 120,
-    establishedDate: '2020-01-01',
-    description: '혁신적인 IT 솔루션을 제공하는 기업'
+    companyCode: 'ABC001',
+    status: 'ACTIVE',
+    createdAt: '2020-01-01T00:00:00',
+    updatedAt: '2024-01-01T00:00:00'
   }
 ]
 
@@ -35,33 +35,24 @@ export const mockCompanies: Company[] = [
 export const mockDepartments: Department[] = [
   {
     id: 1,
+    departmentCode: 'DEV001',
     name: '개발팀',
-    code: 'DEV',
-    description: '소프트웨어 개발을 담당하는 부서',
-    parentDepartmentId: null,
-    managerId: 1,
-    companyId: 1,
-    isActive: true
+    createdAt: '2020-01-01T00:00:00',
+    updatedAt: '2024-01-01T00:00:00'
   },
   {
     id: 2,
+    departmentCode: 'MKT001',
     name: '마케팅팀',
-    code: 'MKT',
-    description: '마케팅 및 홍보를 담당하는 부서',
-    parentDepartmentId: null,
-    managerId: 2,
-    companyId: 1,
-    isActive: true
+    createdAt: '2020-01-01T00:00:00',
+    updatedAt: '2024-01-01T00:00:00'
   },
   {
     id: 3,
+    departmentCode: 'HR001',
     name: '인사팀',
-    code: 'HR',
-    description: '인사 관리를 담당하는 부서',
-    parentDepartmentId: null,
-    managerId: 3,
-    companyId: 1,
-    isActive: true
+    createdAt: '2020-01-01T00:00:00',
+    updatedAt: '2024-01-01T00:00:00'
   }
 ]
 
@@ -70,38 +61,45 @@ export const mockPositions: Position[] = [
   {
     id: 1,
     positionCode: 'DEV001',
-    positionName: '시니어 개발자',
+    name: '시니어 개발자',
     positionLevel: 5,
-    positionCategory: 'SENIOR',
-    positionType: 'PERMANENT',
-    baseSalary: 5000000,
-    description: '시니어 레벨의 개발자',
-    companyId: 1,
-    isActive: true
+    positionCategory: PositionCategory.SENIOR,
+    positionType: PositionType.PERMANENT,
+    company: mockCompanies[0],
+    sortOrder: 1,
+    isActive: true,
+    employeeCount: 10,
+    createdAt: '2020-01-01T00:00:00',
+    updatedAt: '2024-01-01T00:00:00'
   },
   {
     id: 2,
     positionCode: 'DEV002',
-    positionName: '주니어 개발자',
+    name: '주니어 개발자',
     positionLevel: 3,
-    positionCategory: 'JUNIOR',
-    positionType: 'PERMANENT',
-    baseSalary: 3500000,
-    description: '주니어 레벨의 개발자',
-    companyId: 1,
-    isActive: true
+    positionCategory: PositionCategory.JUNIOR,
+    positionType: PositionType.PERMANENT,
+    company: mockCompanies[0],
+    sortOrder: 2,
+    isActive: true,
+    employeeCount: 8,
+    createdAt: '2020-01-01T00:00:00',
+    updatedAt: '2024-01-01T00:00:00'
   },
   {
     id: 3,
     positionCode: 'MKT001',
-    positionName: '마케팅 매니저',
+    name: '마케팅 매니저',
     positionLevel: 4,
-    positionCategory: 'MANAGEMENT',
-    positionType: 'PERMANENT',
-    baseSalary: 4500000,
+    positionCategory: PositionCategory.MANAGEMENT,
+    positionType: PositionType.PERMANENT,
     description: '마케팅 팀 매니저',
-    companyId: 1,
-    isActive: true
+    company: mockCompanies[0],
+    sortOrder: 1,
+    employeeCount: 5,
+    isActive: true,
+    createdAt: '2020-01-01T00:00:00',
+    updatedAt: '2024-01-01T00:00:00'
   }
 ]
 
@@ -126,7 +124,6 @@ export const mockEmployees: Employee[] = [
     hireDate: '2020-01-01',
     employmentStatus: EmploymentStatus.ACTIVE,
     employmentType: EmploymentType.FULL_TIME,
-    baseSalary: 5000000,
     bankName: '국민은행',
     accountNumber: '123456-78-901234',
     accountHolder: '김철수',
@@ -139,8 +136,9 @@ export const mockEmployees: Employee[] = [
     certifications: '정보처리기사',
     memo: '우수한 개발자',
     profileImageUrl: '',
-    terminationDate: null,
-    terminationReason: null,
+    terminationDate: undefined,
+    yearsOfService: 2,
+    age: 30,
     createdAt: '2020-01-01T00:00:00',
     updatedAt: '2024-01-01T00:00:00'
   },
@@ -163,7 +161,6 @@ export const mockEmployees: Employee[] = [
     hireDate: '2021-03-01',
     employmentStatus: EmploymentStatus.ACTIVE,
     employmentType: EmploymentType.FULL_TIME,
-    baseSalary: 4500000,
     bankName: '신한은행',
     accountNumber: '234567-89-012345',
     accountHolder: '이영희',
@@ -176,8 +173,9 @@ export const mockEmployees: Employee[] = [
     certifications: '마케팅 자격증',
     memo: '창의적인 마케터',
     profileImageUrl: '',
-    terminationDate: null,
-    terminationReason: null,
+    terminationDate: undefined,
+    yearsOfService: 1,
+    age: 28,
     createdAt: '2021-03-01T00:00:00',
     updatedAt: '2024-01-01T00:00:00'
   },
@@ -200,7 +198,6 @@ export const mockEmployees: Employee[] = [
     hireDate: '2022-06-01',
     employmentStatus: EmploymentStatus.ACTIVE,
     employmentType: EmploymentType.FULL_TIME,
-    baseSalary: 3500000,
     bankName: '우리은행',
     accountNumber: '345678-90-123456',
     accountHolder: '박민수',
@@ -213,8 +210,9 @@ export const mockEmployees: Employee[] = [
     certifications: '인사관리사',
     memo: '성실한 인사담당자',
     profileImageUrl: '',
-    terminationDate: null,
-    terminationReason: null,
+    terminationDate: undefined,
+    yearsOfService: 3,
+    age: 32,
     createdAt: '2022-06-01T00:00:00',
     updatedAt: '2024-01-01T00:00:00'
   }
@@ -270,7 +268,12 @@ export function createMockPageResponse<T>(data: T[], page: number = 0, size: num
     size,
     number: page,
     numberOfElements: content.length,
-    empty: content.length === 0
+    empty: content.length === 0,
+    sort: {
+      sorted: false,
+      unsorted: true,
+      empty: true
+    }
   }
 }
 

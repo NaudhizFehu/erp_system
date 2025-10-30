@@ -395,7 +395,7 @@ function DashboardCustomizer({
     if (onReset) {
       onReset()
       setLocalConfig(config)
-      toast.info('설정이 초기화되었습니다')
+      toast('설정이 초기화되었습니다')
     }
   }
 

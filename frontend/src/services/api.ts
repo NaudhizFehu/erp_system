@@ -49,8 +49,8 @@ api.interceptors.request.use(
  */
 api.interceptors.response.use(
   (response: AxiosResponse<ApiResponse>) => {
-    // 성공 응답인 경우 data 필드만 반환
-    return response.data
+    // 성공 응답인 경우 전체 응답 반환
+    return response
   },
   (error) => {
     // 에러 응답 처리

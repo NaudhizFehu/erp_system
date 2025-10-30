@@ -47,10 +47,10 @@ function CompanyList() {
       
       const response = await api.get('/companies')
       
-      if (response.success) {
+      if (response.data.success) {
         setCompanies(response.data || [])
       } else {
-        setError(response.message || '회사 목록을 불러올 수 없습니다')
+        setError(response.data.message || '회사 목록을 불러올 수 없습니다')
       }
     } catch (error: any) {
       console.error('회사 목록 조회 오류:', error)

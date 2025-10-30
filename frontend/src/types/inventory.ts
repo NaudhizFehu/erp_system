@@ -757,36 +757,12 @@ export const KOREAN_LABELS = {
   [MovementType.LOCATION_TRANSFER]: '위치이동',
   [MovementType.STOCKTAKING_INCREASE]: '실사증가',
   [MovementType.STOCKTAKING_DECREASE]: '실사감소',
-  [MovementType.RESERVE]: '예약',
-  [MovementType.UNRESERVE]: '예약해제',
-  [MovementType.QUARANTINE]: '격리',
-  [MovementType.UNQUARANTINE]: '격리해제',
-  [MovementType.DEFECTIVE]: '불량처리',
-  [MovementType.REPAIR]: '수리완료',
 
   // 이동 상태
-  [MovementStatus.DRAFT]: '임시저장',
-  [MovementStatus.PENDING]: '승인대기',
-  [MovementStatus.APPROVED]: '승인완료',
-  [MovementStatus.PROCESSED]: '처리완료',
-  [MovementStatus.CANCELLED]: '취소됨',
-  [MovementStatus.REJECTED]: '반려됨',
 
   // 창고 유형
-  [WarehouseType.MAIN]: '본창고',
-  [WarehouseType.SUB]: '보조창고',
-  [WarehouseType.EXTERNAL]: '외부창고',
-  [WarehouseType.VIRTUAL]: '가상창고',
-  [WarehouseType.CONSIGNMENT]: '위탁창고',
-  [WarehouseType.QUARANTINE]: '격리창고',
-  [WarehouseType.RETURNED]: '반품창고',
-  [WarehouseType.DAMAGED]: '불량창고',
 
   // 창고 상태
-  [WarehouseStatus.ACTIVE]: '운영중',
-  [WarehouseStatus.INACTIVE]: '중단',
-  [WarehouseStatus.MAINTENANCE]: '점검중',
-  [WarehouseStatus.CLOSED]: '폐쇄'
 } as const
 
 

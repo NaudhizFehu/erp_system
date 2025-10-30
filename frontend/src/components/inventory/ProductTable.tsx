@@ -219,7 +219,6 @@ function ProductTable({
             <TableHead className="w-[50px]">
               <Checkbox
                 checked={isAllSelected}
-                indeterminate={isPartiallySelected}
                 onCheckedChange={onSelectAll}
               />
             </TableHead>

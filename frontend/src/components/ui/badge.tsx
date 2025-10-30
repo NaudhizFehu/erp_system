@@ -15,6 +15,10 @@ const badgeVariants = cva(
         destructive:
           "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
         outline: "text-foreground",
+        purple:  // 추가 - 휴직용 연보라색
+          "border-purple-300 bg-purple-100 text-purple-700 hover:bg-purple-100",
+        black:   // 추가 - 정직용 검은색
+          "border-black bg-black text-white hover:bg-black/90",
       },
     },
     defaultVariants: {

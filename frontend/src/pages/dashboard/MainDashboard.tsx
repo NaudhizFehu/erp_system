@@ -42,7 +42,7 @@ import {
   Monitor
 } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { useRouter } from 'next/router'
+import { useNavigate } from 'react-router-dom'
 
 // 컴포넌트 임포트
 import { OverviewWidget } from '@/components/dashboard/widgets/OverviewWidget'
@@ -291,7 +291,7 @@ function MainDashboard({
   userRole,
   className = ''
 }: MainDashboardProps) {
-  const router = useRouter()
+  const navigate = useNavigate()
   
   // 상태 관리
   const [timeRange, setTimeRange] = useState<TimeRange>('this_month')
@@ -355,14 +355,14 @@ function MainDashboard({
    * 데이터 내보내기
    */
   const handleExport = () => {
-    toast.info('데이터 내보내기 기능은 준비 중입니다')
+    toast('데이터 내보내기 기능은 준비 중입니다')
   }
 
   /**
    * 설정 페이지로 이동
    */
   const handleSettings = () => {
-    router.push('/dashboard/settings')
+    navigate('/dashboard/settings')
   }
 
   /**
@@ -378,7 +378,7 @@ function MainDashboard({
     }
     
     if (routes[category]) {
-      router.push(routes[category])
+      navigate(routes[category])
     }
   }
 
@@ -387,7 +387,7 @@ function MainDashboard({
    */
   const handleNotificationClick = (notification: Notification) => {
     if (notification.actionUrl) {
-      router.push(notification.actionUrl)
+      navigate(notification.actionUrl)
     }
   }
 
@@ -424,7 +424,7 @@ function MainDashboard({
    */
   const handleQuickActionClick = (action: QuickAction) => {
     if (action.url) {
-      router.push(action.url)
+      navigate(action.url)
     }
   }
 
@@ -523,7 +523,7 @@ function MainDashboard({
             onMarkAsRead={handleMarkAsRead}
             onMarkAllAsRead={handleMarkAllAsRead}
             onViewAll={(type) => {
-              router.push(type === 'activities' ? '/dashboard/activities' : '/dashboard/notifications')
+              navigate(type === 'activities' ? '/dashboard/activities' : '/dashboard/notifications')
             }}
           />
 
@@ -540,7 +540,7 @@ function MainDashboard({
             onCreateTodo={handleCreateTodo}
             onUpdateTodoStatus={handleUpdateTodoStatus}
             onQuickActionClick={handleQuickActionClick}
-            onViewAll={() => router.push('/dashboard/todos')}
+            onViewAll={() => navigate('/dashboard/todos')}
           />
         </div>
       </div>

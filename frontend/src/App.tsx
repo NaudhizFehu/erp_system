@@ -3,11 +3,13 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { NotificationProvider } from '@/contexts/NotificationContext'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
+import { RoleProtectedRoute } from '@/components/auth/RoleProtectedRoute'
 import { Layout } from '@/components/layout/Layout'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { Dashboard } from '@/pages/Dashboard'
 import { EmployeeManagement } from '@/pages/hr/EmployeeManagement'
 import { EmployeeDetail } from '@/pages/hr/EmployeeDetail'
+import { MyEmployeeProfile } from '@/pages/hr/MyEmployeeProfile'
 import { DepartmentDetail } from '@/pages/hr/DepartmentDetail'
 import { InventoryDashboardPage } from '@/pages/inventory/InventoryDashboardPage'
 import { ProductManagementPage } from '@/pages/inventory/ProductManagementPage'
@@ -43,8 +45,19 @@ function App() {
                 <Route path="/" element={<Dashboard />} />
                 
                 {/* 인사관리 */}
-                <Route path="/hr/employees" element={<EmployeeManagement />} />
-                <Route path="/hr/employees/:id" element={<EmployeeDetail />} />
+                {/* 모든 권한: 본인 정보 조회 */}
+                <Route path="/hr/employees/me" element={<MyEmployeeProfile />} />
+                {/* SUPER_ADMIN, ADMIN, MANAGER: 직원 관리 */}
+                <Route path="/hr/employees" element={
+                  <RoleProtectedRoute requiredRoles={['SUPER_ADMIN', 'ADMIN', 'MANAGER']}>
+                    <EmployeeManagement />
+                  </RoleProtectedRoute>
+                } />
+                <Route path="/hr/employees/:id" element={
+                  <RoleProtectedRoute requiredRoles={['SUPER_ADMIN', 'ADMIN', 'MANAGER']}>
+                    <EmployeeDetail />
+                  </RoleProtectedRoute>
+                } />
                 <Route path="/hr/departments/:id" element={<DepartmentDetail />} />
                 
                 {/* 재고관리 */}

@@ -6,7 +6,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import {
-  dashboardApi,
+  dashboardApiService,
   chartApi,
   activityApi,
   notificationApi,
@@ -52,9 +52,9 @@ export const useDashboardData = (
 ) => {
   return useQuery({
     queryKey: ['dashboard', 'data', companyId, userId, filter],
-    queryFn: () => dashboardApi.getDashboardData(companyId, userId, filter),
+    queryFn: () => dashboardApiService.getDashboardData(companyId, userId, filter),
     staleTime: 5 * 60 * 1000, // 5분
-    cacheTime: 10 * 60 * 1000, // 10분
+    gcTime: 10 * 60 * 1000, // 10분
     refetchOnWindowFocus: false,
     enabled: !!companyId && !!userId
   })
@@ -69,9 +69,9 @@ export const useOverviewSummary = (
 ) => {
   return useQuery({
     queryKey: ['dashboard', 'overview', companyId, filter],
-    queryFn: () => dashboardApi.getOverviewSummary(companyId, filter),
+    queryFn: () => dashboardApiService.getOverviewSummary(companyId, filter),
     staleTime: 2 * 60 * 1000, // 2분
-    cacheTime: 5 * 60 * 1000, // 5분
+    gcTime: 5 * 60 * 1000, // 5분
     enabled: !!companyId
   })
 }
@@ -156,7 +156,7 @@ export const useRecentActivities = (
     queryKey: ['dashboard', 'activities', companyId, userId, limit],
     queryFn: () => activityApi.getRecentActivities(companyId, userId, limit),
     staleTime: 1 * 60 * 1000, // 1분
-    cacheTime: 5 * 60 * 1000, // 5분
+    gcTime: 5 * 60 * 1000, // 5분
     refetchInterval: 30 * 1000, // 30초마다 자동 갱신
     enabled: !!companyId && !!userId
   })
@@ -304,7 +304,7 @@ export const useQuickActions = (userRole: string) => {
     queryKey: ['dashboard', 'quickActions', userRole],
     queryFn: () => quickActionApi.getQuickActions(userRole),
     staleTime: 10 * 60 * 1000, // 10분 (자주 변하지 않음)
-    cacheTime: 30 * 60 * 1000, // 30분
+    gcTime: 30 * 60 * 1000, // 30분
     enabled: !!userRole
   })
 }
@@ -341,7 +341,7 @@ export const useUserDashboardConfig = (userId: number) => {
     queryKey: ['dashboard', 'config', userId],
     queryFn: () => configApi.getUserConfig(userId),
     staleTime: 10 * 60 * 1000, // 10분
-    cacheTime: 30 * 60 * 1000, // 30분
+    gcTime: 30 * 60 * 1000, // 30분
     enabled: !!userId
   })
 }

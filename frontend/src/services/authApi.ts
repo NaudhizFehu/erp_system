@@ -12,7 +12,7 @@ import type {
   UserInfo 
 } from '@/types/auth'
 
-// 인증 API 기본 URL
+// 인증 API 기본 URL (api.ts에서 이미 /api가 설정되어 있음)
 const AUTH_BASE_URL = '/auth'
 
 /**
@@ -23,8 +23,11 @@ export const authApi = {
    * 로그인
    */
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
-    const response = await api.post<LoginResponse>(`${AUTH_BASE_URL}/login`, credentials)
-    return response.data
+    const response = await api.post(`${AUTH_BASE_URL}/login`, credentials)
+    console.log('로그인 API 전체 응답:', response)
+    console.log('로그인 API response.data:', response.data)
+    // 백엔드는 ApiResponse<LoginResponse> 형식으로 응답하므로 response.data.data를 반환
+    return response.data.data
   },
 
   /**
@@ -38,10 +41,11 @@ export const authApi = {
    * 토큰 갱신
    */
   refreshToken: async (refreshToken: string): Promise<RefreshTokenResponse> => {
-    const response = await api.post<RefreshTokenResponse>(`${AUTH_BASE_URL}/refresh`, {
+    const response = await api.post(`${AUTH_BASE_URL}/refresh`, {
       refreshToken
     })
-    return response.data
+    // 백엔드는 ApiResponse<LoginResponse> 형식으로 응답하므로 response.data.data를 반환
+    return response.data.data
   },
 
   /**
@@ -49,11 +53,12 @@ export const authApi = {
    */
   getCurrentUser: async (): Promise<UserInfo> => {
     console.log('현재 사용자 정보 조회 API 호출:', `${AUTH_BASE_URL}/me`)
-    const response = await api.get<UserInfo>(`${AUTH_BASE_URL}/me`)
+    const response = await api.get(`${AUTH_BASE_URL}/me`)
     console.log('현재 사용자 정보 조회 API 응답:', response)
     console.log('현재 사용자 정보:', response.data)
     console.log('현재 사용자 정보 상세:', JSON.stringify(response.data, null, 2))
-    return response.data
+    // 백엔드는 ApiResponse<UserInfo> 형식으로 응답하므로 response.data.data를 반환
+    return response.data.data
   },
 
   /**

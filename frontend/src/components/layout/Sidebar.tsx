@@ -5,9 +5,11 @@ import {
   Package, 
   ShoppingCart, 
   Calculator,
-  Building2
+  Building2,
+  User
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/contexts/AuthContext'
 
 /**
  * 사이드바 컴포넌트
@@ -15,6 +17,10 @@ import { cn } from '@/lib/utils'
  */
 function Sidebar() {
   const location = useLocation()
+  const { user } = useAuth()
+  
+  // 권한 체크
+  const canManageHR = user?.role && ['SUPER_ADMIN', 'ADMIN', 'MANAGER'].includes(user.role)
 
   const menuItems = [
     {
@@ -22,7 +28,14 @@ function Sidebar() {
       href: '/',
       icon: LayoutDashboard,
     },
+    // 모든 권한: 본인 정보 표시
     {
+      title: '내 정보',
+      href: '/hr/employees/me',
+      icon: User,
+    },
+    // SUPER_ADMIN, ADMIN, MANAGER만: 인사관리 메뉴
+    ...(canManageHR ? [{
       title: '인사관리',
       icon: Users,
       subItems: [
@@ -30,7 +43,7 @@ function Sidebar() {
         { title: '부서 관리', href: '/hr/departments' },
         { title: '직급 관리', href: '/hr/positions' },
       ],
-    },
+    }] : []),
     {
       title: '재고관리',
       icon: Package,

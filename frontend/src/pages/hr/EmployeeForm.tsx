@@ -4,6 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Save, ArrowLeft } from 'lucide-react'
 import { EmployeeCreateDto } from '@/types/hr'
+import { departmentApi, positionApi } from '@/services/hrApi'
+import { useState, useEffect } from 'react'
 
 /**
  * 직원 등록/수정 폼 검증 스키마
@@ -14,8 +16,8 @@ const employeeSchema = z.object({
   email: z.string().email('올바른 이메일 형식이어야 합니다'),
   phone: z.string().optional(),
   hireDate: z.string().min(1, '입사일은 필수입니다'),
-  departmentId: z.number().optional(),
-  positionId: z.number().optional(),
+  department: z.number().optional(),
+  position: z.number().optional(),
   salary: z.number().min(0, '급여는 0 이상이어야 합니다').optional(),
   address: z.string().optional(),
   birthDate: z.string().optional(),
@@ -29,12 +31,50 @@ function EmployeeForm() {
   const navigate = useNavigate()
   const { id } = useParams()
   const isEdit = Boolean(id)
+  
+  // 부서/직급 데이터 상태
+  const [departments, setDepartments] = useState<{ id: number; name: string }[]>([])
+  const [positions, setPositions] = useState<{ id: number; name: string }[]>([])
+  const [loadingDepartments, setLoadingDepartments] = useState(true)
+  const [loadingPositions, setLoadingPositions] = useState(true)
+
+  // 부서/직급 데이터 로딩
+  useEffect(() => {
+    const loadDepartments = async () => {
+      try {
+        setLoadingDepartments(true)
+        const departmentsData = await departmentApi.getDepartments()
+        setDepartments(departmentsData)
+      } catch (error) {
+        console.error('부서 목록 로딩 실패:', error)
+        setDepartments([])
+      } finally {
+        setLoadingDepartments(false)
+      }
+    }
+
+    const loadPositions = async () => {
+      try {
+        setLoadingPositions(true)
+        const positionsData = await positionApi.getAllPositions()
+        setPositions(positionsData)
+      } catch (error) {
+        console.error('직급 목록 로딩 실패:', error)
+        setPositions([])
+      } finally {
+        setLoadingPositions(false)
+      }
+    }
+
+    loadDepartments()
+    loadPositions()
+  }, [])
 
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<EmployeeCreateDto>({
+  } = useForm<z.infer<typeof employeeSchema>>({
     resolver: zodResolver(employeeSchema),
     defaultValues: {
       employeeNumber: '',
@@ -42,13 +82,14 @@ function EmployeeForm() {
       email: '',
       phone: '',
       hireDate: '',
-      salary: 0,
       address: '',
       birthDate: '',
+      department: undefined,
+      position: undefined,
     },
   })
 
-  const onSubmit = async (data: EmployeeCreateDto) => {
+  const onSubmit = async (data: any) => {
     try {
       console.log('폼 데이터:', data)
       // TODO: API 호출 로직 구현
@@ -176,43 +217,41 @@ function EmployeeForm() {
               <div className="form-group">
                 <label className="form-label">부서</label>
                 <select
-                  {...register('departmentId', { valueAsNumber: true })}
+                  {...register('department', { valueAsNumber: true })}
                   className="form-input"
+                  disabled={loadingDepartments}
                 >
                   <option value="">부서 선택</option>
-                  <option value={1}>개발팀</option>
-                  <option value={2}>마케팅팀</option>
-                  <option value={3}>영업팀</option>
+                  {departments.map((dept) => (
+                    <option key={dept.id} value={dept.id}>
+                      {dept.name}
+                    </option>
+                  ))}
                 </select>
+                {loadingDepartments && (
+                  <p className="text-sm text-muted-foreground mt-1">부서 목록을 불러오는 중...</p>
+                )}
               </div>
 
               <div className="form-group">
                 <label className="form-label">직급</label>
                 <select
-                  {...register('positionId', { valueAsNumber: true })}
+                  {...register('position', { valueAsNumber: true })}
                   className="form-input"
+                  disabled={loadingPositions}
                 >
                   <option value="">직급 선택</option>
-                  <option value={1}>인턴</option>
-                  <option value={2}>주니어</option>
-                  <option value={3}>시니어</option>
-                  <option value={4}>팀장</option>
+                  {positions.map((pos) => (
+                    <option key={pos.id} value={pos.id}>
+                      {pos.name}
+                    </option>
+                  ))}
                 </select>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">급여</label>
-                <input
-                  {...register('salary', { valueAsNumber: true })}
-                  type="number"
-                  className="form-input"
-                  placeholder="3000000"
-                  min="0"
-                />
-                {errors.salary && (
-                  <p className="form-error">{errors.salary.message}</p>
+                {loadingPositions && (
+                  <p className="text-sm text-muted-foreground mt-1">직급 목록을 불러오는 중...</p>
                 )}
               </div>
+
             </div>
           </div>
 

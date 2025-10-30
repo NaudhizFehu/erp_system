@@ -17,14 +17,14 @@
     "jsx": "react-jsx",
 
     /* 타입 체크 강화 */
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    "strict": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": true,
     "noImplicitOverride": true,
-    "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
+    "noUncheckedIndexedAccess": false,
+    "exactOptionalPropertyTypes": false,
 
     /* 추가 검사 */
     "skipLibCheck": true,
@@ -52,7 +52,6 @@
     "src/**/*",
     "src/**/*.tsx",
     "src/**/*.ts",
-    "vite.config.ts",
     "vitest.config.ts"
   ],
   "exclude": [

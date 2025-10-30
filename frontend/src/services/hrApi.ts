@@ -8,22 +8,21 @@ import type {
   PageResponse,
   Employee,
   Position,
-  Attendance,
-  Salary,
   EmployeeCreateRequest,
   EmployeeUpdateRequest,
   PositionCreateRequest,
   PositionUpdateRequest,
-  AttendanceCreateRequest,
-  SalaryCreateRequest,
   SearchParams,
   StatisticsData,
   EmploymentStatus,
   PositionCategory,
   PositionType,
   Company,
-  Department
+  Department,
+  ImportResult,
+  ExportFormat
 } from '@/types/hr'
+import type { ApiResponse } from '@/types/common'
 
 // Mock API import
 import { mockEmployeeApi, mockPositionApi } from './hrMockApi'
@@ -43,10 +42,14 @@ export const companyApi = {
    */
   getCompanies: async (): Promise<Company[]> => {
     try {
-      const response = await api.get<PageResponse<Company>>('/companies', {
+      const response = await api.get('/companies', {
         params: { page: 0, size: 1000 }
       })
-      return response.data?.content || []
+      
+      // 백엔드는 ApiResponse<PageResponse<Company>> 형식으로 반환
+      // response.data.data는 PageResponse<Company>
+      // response.data.data.content는 Company[]
+      return response.data?.data?.content || []
     } catch (error) {
       console.error('회사 목록 조회 오류:', error)
       return []
@@ -63,10 +66,14 @@ export const departmentApi = {
    */
   getDepartments: async (): Promise<Department[]> => {
     try {
-      const response = await api.get<PageResponse<Department>>('/departments', {
+      const response = await api.get('/departments', {
         params: { page: 0, size: 1000 }
       })
-      return response.data?.content || []
+      
+      // 백엔드는 ApiResponse<PageResponse<Department>> 형식으로 반환
+      // response.data.data는 PageResponse<Department>
+      // response.data.data.content는 Department[]
+      return response.data?.data?.content || []
     } catch (error) {
       console.error('부서 목록 조회 오류:', error)
       return []
@@ -78,10 +85,12 @@ export const departmentApi = {
    */
   getDepartmentsByCompany: async (companyId: number): Promise<Department[]> => {
     try {
-      const response = await api.get<PageResponse<Department>>(`/departments/company/${companyId}`, {
+      const response = await api.get(`/departments/company/${companyId}`, {
         params: { page: 0, size: 1000 }
       })
-      return response.data?.content || []
+      
+      // 백엔드는 ApiResponse<PageResponse<Department>> 형식으로 반환
+      return response.data?.data?.content || []
     } catch (error) {
       console.error('회사별 부서 목록 조회 오류:', error)
       return []
@@ -102,7 +111,7 @@ export const employeeApi = {
       return mockEmployeeApi.getEmployees(params)
     }
     
-    const response = await api.get<PageResponse<Employee>>(`${API_BASE_URL}/employees`, {
+    const response = await api.get(`${API_BASE_URL}/employees`, {
       params: {
         page: params.page || 0,
         size: params.size || 20,
@@ -111,8 +120,11 @@ export const employeeApi = {
       }
     })
     
+    // 백엔드는 ApiResponse<PageResponse<Employee>> 형식으로 응답하므로 response.data.data를 사용
+    const pageData = response.data.data
+    
     // 빈 결과를 반환하는 경우를 대비한 기본값 설정
-    if (!response.data || !response.data.content) {
+    if (!pageData || !pageData.content) {
       return {
         content: [],
         pageable: {
@@ -135,7 +147,7 @@ export const employeeApi = {
       }
     }
     
-    return response.data
+    return pageData
   },
 
   /**
@@ -182,7 +194,7 @@ export const employeeApi = {
       return mockEmployeeApi.searchEmployees(searchTerm, params)
     }
     
-    const { data } = await api.get<PageResponse<Employee>>(`${API_BASE_URL}/employees/search`, {
+    const response = await api.get(`${API_BASE_URL}/employees/search`, {
       params: {
         searchTerm,
         page: params.page || 0,
@@ -191,8 +203,11 @@ export const employeeApi = {
       }
     })
     
+    // 백엔드는 ApiResponse<PageResponse<Employee>> 형식으로 응답하므로 response.data.data를 사용
+    const pageData = response.data.data
+    
     // 빈 결과를 반환하는 경우를 대비한 기본값 설정
-    if (!data || !data.content) {
+    if (!pageData || !pageData.content) {
       return {
         content: [],
         pageable: {
@@ -215,7 +230,7 @@ export const employeeApi = {
       }
     }
     
-    return data
+    return pageData
   },
 
   /**
@@ -396,6 +411,27 @@ export const employeeApi = {
   },
 
   /**
+   * 회사별 최근 직원 목록 조회 (사번 중복 방지용)
+   */
+  getRecentEmployeesByCompany: async (companyId: number): Promise<Employee[]> => {
+    if (USE_MOCK_API) {
+      return mockEmployeeApi.getRecentEmployeesByCompany(companyId)
+    }
+    
+    try {
+      const response = await api.get<ApiResponse<Employee[]>>(`${API_BASE_URL}/employees/recent/company/${companyId}`)
+      
+      // api.ts 인터셉터가 response.data를 반환하므로
+      // response 자체가 ApiResponse 구조: { success, message, data, ... }
+      // 실제 직원 목록은 response.data에 있음
+      return Array.isArray(response) ? response : (response.data?.data || [])
+    } catch (error) {
+      console.error('회사별 최근 직원 목록 조회 오류:', error)
+      return []
+    }
+  },
+
+  /**
    * 직급별 직원 수 통계
    */
   getEmployeeCountByPosition: async (): Promise<StatisticsData[]> => {
@@ -456,6 +492,78 @@ export const employeeApi = {
       label: gender === 'MALE' ? '남성' : '여성', 
       count 
     }))
+  },
+
+  /**
+   * 엑셀로 직원 데이터 내보내기
+   */
+  exportToExcel: async (companyId?: number): Promise<Blob> => {
+    const params = companyId ? { companyId } : {}
+    const response = await api.get(`${API_BASE_URL}/employees/export/excel`, {
+      params,
+      responseType: 'blob'
+    })
+    return response.data
+  },
+
+  /**
+   * CSV로 직원 데이터 내보내기
+   */
+  exportToCsv: async (companyId?: number): Promise<Blob> => {
+    const params = companyId ? { companyId } : {}
+    const response = await api.get(`${API_BASE_URL}/employees/export/csv`, {
+      params,
+      responseType: 'blob'
+    })
+    return response.data
+  },
+
+  /**
+   * 엑셀에서 직원 데이터 가져오기
+   */
+  importFromExcel: async (file: File, companyId: number): Promise<ImportResult> => {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('companyId', companyId.toString())
+    
+    const response = await api.post(`${API_BASE_URL}/employees/import/excel`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    return response.data.data
+  },
+
+  /**
+   * CSV에서 직원 데이터 가져오기
+   */
+  importFromCsv: async (file: File, companyId: number): Promise<ImportResult> => {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('companyId', companyId.toString())
+    
+    const response = await api.post(`${API_BASE_URL}/employees/import/csv`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    return response.data.data
+  },
+
+  /**
+   * 상태별 직원 수 조회
+   */
+  getCountsByStatus: async (): Promise<Record<string, number>> => {
+    if (USE_MOCK_API) {
+      return {
+        ACTIVE: 3,
+        ON_LEAVE: 7,
+        INACTIVE: 6,
+        SUSPENDED: 8,
+        TERMINATED: 6
+      }
+    }
+    
+    const { data } = await api.get<ApiResponse<Record<string, number>>>(
+      `${API_BASE_URL}/employees/count/by-status`
+    )
+    return data.data
   }
 }
 
@@ -483,6 +591,26 @@ export const positionApi = {
   },
 
   /**
+   * 전체 직급 목록 조회 (페이징 없음)
+   */
+  getAllPositions: async (): Promise<Position[]> => {
+    if (USE_MOCK_API) {
+      const result = await mockPositionApi.getPositions({ page: 0, size: 1000 })
+      return result.content || []
+    }
+    
+    try {
+      const response = await api.get<ApiResponse<PageResponse<Position>>>('/positions', {
+        params: { page: 0, size: 1000 }
+      })
+      return response.data?.data?.content || []
+    } catch (error) {
+      console.error('전체 직급 목록 조회 오류:', error)
+      return []
+    }
+  },
+
+  /**
    * 직급 상세 조회
    */
   getPosition: async (id: number): Promise<Position> => {
@@ -502,24 +630,6 @@ export const positionApi = {
     return data.data
   },
 
-  /**
-   * 전체 직급 목록 조회 (배열)
-   */
-  getAllPositions: async (): Promise<Position[]> => {
-    if (USE_MOCK_API) {
-      return mockPositionApi.getActivePositions()
-    }
-    
-    try {
-      const { data } = await api.get<ApiResponse<PageResponse<Position>>>('/positions', {
-        params: { page: 0, size: 1000 }
-      })
-      return data.data?.content || []
-    } catch (error) {
-      console.error('직급 목록 조회 오류:', error)
-      return []
-    }
-  },
 
   /**
    * 회사별 직급 목록 조회
