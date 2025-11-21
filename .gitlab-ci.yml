@@ -38,7 +38,7 @@ backend-test:
     when: always
     paths:
       - backend/target/surefire-reports/
-      - backend/target/*.jar
+      - backend/target/*.war
     reports:
       junit:
         - backend/target/surefire-reports/TEST-*.xml
