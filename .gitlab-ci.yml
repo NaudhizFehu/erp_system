@@ -1,0 +1,49 @@
+# GitLab CI/CD 파이프라인 설정
+# Backend 테스트 자동화
+
+stages:
+  - build
+  - test
+
+# Backend 빌드 및 테스트
+backend-test:
+  stage: build
+  image: maven:3.9-eclipse-temurin-17
+
+  # Backend 디렉토리가 변경될 때만 실행
+  only:
+    changes:
+      - backend/**
+      - .gitlab-ci.yml
+
+  # Maven 캐시 설정
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - backend/.m2/repository
+
+  variables:
+    MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/backend/.m2/repository"
+
+  before_script:
+    - cd backend
+
+  script:
+    - ./mvnw clean package
+    # 또는 시스템 Maven 사용
+    # - mvn clean package
+
+  # 테스트 결과를 아티팩트로 저장
+  artifacts:
+    when: always
+    paths:
+      - backend/target/surefire-reports/
+      - backend/target/*.jar
+    reports:
+      junit:
+        - backend/target/surefire-reports/TEST-*.xml
+    expire_in: 7 days
+
+  # 태그 추가
+  tags:
+    - docker
