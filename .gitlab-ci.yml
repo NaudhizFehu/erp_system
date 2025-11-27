@@ -44,6 +44,6 @@ backend-test:
         - backend/target/surefire-reports/TEST-*.xml
     expire_in: 7 days
 
-  # 태그 추가
-  tags:
-    - docker
+  # 태그 제거 - 모든 Runner에서 실행 가능하도록
+  # tags:
+  #   - docker
