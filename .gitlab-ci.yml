@@ -8,7 +8,7 @@ stages:
 # Backend 빌드 및 테스트
 backend-test:
   stage: build
-  image: maven:3.9-eclipse-temurin-17
+  # image 제거 - Shell executor 사용
 
   # Backend 디렉토리가 변경될 때만 실행
   only:
@@ -24,14 +24,15 @@ backend-test:
 
   variables:
     MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/backend/.m2/repository"
+    JAVA_HOME: "/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home"
 
   before_script:
     - cd backend
+    - export PATH="/opt/homebrew/bin:$PATH"
+    - java -version
 
   script:
-    - ./mvnw clean package
-    # 또는 시스템 Maven 사용
-    # - mvn clean package
+    - mvn clean package
 
   # 테스트 결과를 아티팩트로 저장
   artifacts:
