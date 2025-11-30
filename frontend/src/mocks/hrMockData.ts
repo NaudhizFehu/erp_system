@@ -3,15 +3,21 @@
  * 백엔드 서버 없이 프론트엔드 테스트를 위한 데이터
  */
 
-import type { 
-  Employee, 
-  Position, 
-  Department, 
+import type {
+  Employee,
+  Position,
+  Department,
   Company,
   StatisticsData,
-  PageResponse
+  PageResponse,
 } from '@/types/hr'
-import { Gender, EmploymentStatus, EmploymentType, PositionCategory, PositionType } from '@/types/hr'
+import {
+  Gender,
+  EmploymentStatus,
+  EmploymentType,
+  PositionCategory,
+  PositionType,
+} from '@/types/hr'
 
 // Mock 회사 데이터
 export const mockCompanies: Company[] = [
@@ -27,8 +33,8 @@ export const mockCompanies: Company[] = [
     companyCode: 'ABC001',
     status: 'ACTIVE',
     createdAt: '2020-01-01T00:00:00',
-    updatedAt: '2024-01-01T00:00:00'
-  }
+    updatedAt: '2024-01-01T00:00:00',
+  },
 ]
 
 // Mock 부서 데이터
@@ -38,22 +44,22 @@ export const mockDepartments: Department[] = [
     departmentCode: 'DEV001',
     name: '개발팀',
     createdAt: '2020-01-01T00:00:00',
-    updatedAt: '2024-01-01T00:00:00'
+    updatedAt: '2024-01-01T00:00:00',
   },
   {
     id: 2,
     departmentCode: 'MKT001',
     name: '마케팅팀',
     createdAt: '2020-01-01T00:00:00',
-    updatedAt: '2024-01-01T00:00:00'
+    updatedAt: '2024-01-01T00:00:00',
   },
   {
     id: 3,
     departmentCode: 'HR001',
     name: '인사팀',
     createdAt: '2020-01-01T00:00:00',
-    updatedAt: '2024-01-01T00:00:00'
-  }
+    updatedAt: '2024-01-01T00:00:00',
+  },
 ]
 
 // Mock 직급 데이터
@@ -70,7 +76,7 @@ export const mockPositions: Position[] = [
     isActive: true,
     employeeCount: 10,
     createdAt: '2020-01-01T00:00:00',
-    updatedAt: '2024-01-01T00:00:00'
+    updatedAt: '2024-01-01T00:00:00',
   },
   {
     id: 2,
@@ -84,7 +90,7 @@ export const mockPositions: Position[] = [
     isActive: true,
     employeeCount: 8,
     createdAt: '2020-01-01T00:00:00',
-    updatedAt: '2024-01-01T00:00:00'
+    updatedAt: '2024-01-01T00:00:00',
   },
   {
     id: 3,
@@ -99,8 +105,8 @@ export const mockPositions: Position[] = [
     employeeCount: 5,
     isActive: true,
     createdAt: '2020-01-01T00:00:00',
-    updatedAt: '2024-01-01T00:00:00'
-  }
+    updatedAt: '2024-01-01T00:00:00',
+  },
 ]
 
 // Mock 직원 데이터
@@ -140,7 +146,7 @@ export const mockEmployees: Employee[] = [
     yearsOfService: 2,
     age: 30,
     createdAt: '2020-01-01T00:00:00',
-    updatedAt: '2024-01-01T00:00:00'
+    updatedAt: '2024-01-01T00:00:00',
   },
   {
     id: 2,
@@ -177,7 +183,7 @@ export const mockEmployees: Employee[] = [
     yearsOfService: 1,
     age: 28,
     createdAt: '2021-03-01T00:00:00',
-    updatedAt: '2024-01-01T00:00:00'
+    updatedAt: '2024-01-01T00:00:00',
   },
   {
     id: 3,
@@ -214,39 +220,43 @@ export const mockEmployees: Employee[] = [
     yearsOfService: 3,
     age: 32,
     createdAt: '2022-06-01T00:00:00',
-    updatedAt: '2024-01-01T00:00:00'
-  }
+    updatedAt: '2024-01-01T00:00:00',
+  },
 ]
 
 // Mock 통계 데이터
 export const mockPositionStats: StatisticsData[] = [
   { label: '시니어 개발자', count: 1 },
   { label: '주니어 개발자', count: 1 },
-  { label: '마케팅 매니저', count: 1 }
+  { label: '마케팅 매니저', count: 1 },
 ]
 
 export const mockDepartmentStats: StatisticsData[] = [
   { label: '개발팀', count: 1 },
   { label: '마케팅팀', count: 1 },
-  { label: '인사팀', count: 1 }
+  { label: '인사팀', count: 1 },
 ]
 
 export const mockGenderStats: StatisticsData[] = [
   { label: '남성', count: 2 },
-  { label: '여성', count: 1 }
+  { label: '여성', count: 1 },
 ]
 
 export const mockAgeGroupStats: StatisticsData[] = [
   { label: '20대', count: 1 },
-  { label: '30대', count: 2 }
+  { label: '30대', count: 2 },
 ]
 
 // Mock 페이지네이션 응답 생성 함수
-export function createMockPageResponse<T>(data: T[], page: number = 0, size: number = 20): PageResponse<T> {
+export function createMockPageResponse<T>(
+  data: T[],
+  page: number = 0,
+  size: number = 20,
+): PageResponse<T> {
   const startIndex = page * size
   const endIndex = startIndex + size
   const content = data.slice(startIndex, endIndex)
-  
+
   return {
     content,
     pageable: {
@@ -255,11 +265,11 @@ export function createMockPageResponse<T>(data: T[], page: number = 0, size: num
       sort: {
         sorted: false,
         unsorted: true,
-        empty: true
+        empty: true,
       },
       offset: startIndex,
       paged: true,
-      unpaged: false
+      unpaged: false,
     },
     totalElements: data.length,
     totalPages: Math.ceil(data.length / size),
@@ -272,10 +282,7 @@ export function createMockPageResponse<T>(data: T[], page: number = 0, size: num
     sort: {
       sorted: false,
       unsorted: true,
-      empty: true
-    }
+      empty: true,
+    },
   }
 }
-
-
-

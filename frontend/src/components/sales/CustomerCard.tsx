@@ -3,18 +3,8 @@
  * 고객 정보를 카드 형태로 표시합니다
  */
 
-import React from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator
-} from '@/components/ui/dropdown-menu'
+import { format } from 'date-fns'
+import { ko } from 'date-fns/locale'
 import {
   Building2,
   Phone,
@@ -29,15 +19,26 @@ import {
   Star,
   CreditCard,
   AlertTriangle,
-  TrendingUp
+  TrendingUp,
 } from 'lucide-react'
-import { format } from 'date-fns'
-import { ko } from 'date-fns/locale'
+import React from 'react'
+
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu'
 import type { CustomerSummary } from '@/types/sales'
 import {
   CustomerTypeLabels,
   CustomerStatusLabels,
-  CustomerGradeLabels
+  CustomerGradeLabels,
 } from '@/types/sales'
 import { formatCurrency } from '@/utils/format'
 
@@ -98,7 +99,7 @@ function CustomerCard({
   onToggleActive,
   onChangeStatus,
   onChangeGrade,
-  className = ''
+  className = '',
 }: CustomerCardProps) {
   // 고객명의 첫 글자를 아바타로 사용
   const getInitial = (name: string) => {
@@ -118,12 +119,14 @@ function CustomerCard({
   const daysSinceLastOrder = getDaysSinceLastOrder(customer.lastOrderDate)
 
   return (
-    <Card className={`hover:shadow-lg transition-shadow duration-200 ${className}`}>
+    <Card
+      className={`transition-shadow duration-200 hover:shadow-lg ${className}`}
+    >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center space-x-3">
             <Avatar className="h-12 w-12">
-              <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+              <AvatarFallback className="bg-primary/10 font-semibold text-primary">
                 {getInitial(customer.customerName)}
               </AvatarFallback>
             </Avatar>
@@ -131,7 +134,7 @@ function CustomerCard({
               <CardTitle className="text-lg font-semibold text-gray-900">
                 {customer.customerName}
               </CardTitle>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="mt-1 text-sm text-gray-500">
                 {customer.customerCode}
               </p>
             </div>
@@ -139,7 +142,7 @@ function CustomerCard({
           <div className="flex items-center space-x-2">
             {/* VIP 고객 표시 */}
             {customer.isVipCustomer && (
-              <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+              <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
             )}
             {/* 신용한도 초과 경고 */}
             {customer.isCreditLimitExceeded && (
@@ -231,7 +234,7 @@ function CustomerCard({
         </div>
 
         {/* 거래 정보 */}
-        <div className="grid grid-cols-2 gap-4 pt-2 border-t">
+        <div className="grid grid-cols-2 gap-4 border-t pt-2">
           <div>
             <p className="text-xs text-gray-500">총 주문 건수</p>
             <p className="text-sm font-semibold">
@@ -241,17 +244,16 @@ function CustomerCard({
           <div>
             <p className="text-xs text-gray-500">총 주문 금액</p>
             <p className="text-sm font-semibold">
-              {customer.totalOrderAmount 
+              {customer.totalOrderAmount
                 ? formatCurrency(customer.totalOrderAmount)
-                : '₩0'
-              }
+                : '₩0'}
             </p>
           </div>
         </div>
 
         {/* 미수금 정보 */}
         {customer.outstandingAmount && customer.outstandingAmount > 0 && (
-          <div className="flex items-center space-x-2 p-2 bg-red-50 rounded-md">
+          <div className="flex items-center space-x-2 rounded-md bg-red-50 p-2">
             <CreditCard className="h-4 w-4 text-red-500" />
             <div>
               <p className="text-xs text-red-600">미수금</p>
@@ -263,11 +265,14 @@ function CustomerCard({
         )}
 
         {/* 마지막 주문일 */}
-        <div className="flex justify-between items-center text-xs text-gray-500">
+        <div className="flex items-center justify-between text-xs text-gray-500">
           <span>
             {customer.lastOrderDate ? (
               <>
-                마지막 주문: {format(new Date(customer.lastOrderDate), 'yyyy.MM.dd', { locale: ko })}
+                마지막 주문:{' '}
+                {format(new Date(customer.lastOrderDate), 'yyyy.MM.dd', {
+                  locale: ko,
+                })}
                 {daysSinceLastOrder && daysSinceLastOrder > 30 && (
                   <span className="ml-1 text-orange-600">
                     ({daysSinceLastOrder}일 전)
@@ -307,7 +312,3 @@ function CustomerCard({
 }
 
 export { CustomerCard }
-
-
-
-

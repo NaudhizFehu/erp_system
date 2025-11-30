@@ -5,6 +5,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
+
 import {
   dashboardApiService,
   chartApi,
@@ -16,7 +17,7 @@ import {
   configApi,
   widgetApi,
   systemApi,
-  getDateRangeFromTimeRange
+  getDateRangeFromTimeRange,
 } from '@/services/dashboardApi'
 import type {
   DashboardData,
@@ -35,7 +36,7 @@ import type {
   KpiMetric,
   UserDashboardConfig,
   WidgetConfig,
-  SystemStatus
+  SystemStatus,
 } from '@/types/dashboard'
 
 // ================================
@@ -52,11 +53,12 @@ export const useDashboardData = (
 ) => {
   return useQuery({
     queryKey: ['dashboard', 'data', companyId, userId, filter],
-    queryFn: () => dashboardApiService.getDashboardData(companyId, userId, filter),
+    queryFn: () =>
+      dashboardApiService.getDashboardData(companyId, userId, filter),
     staleTime: 5 * 60 * 1000, // 5분
     gcTime: 10 * 60 * 1000, // 10분
     refetchOnWindowFocus: false,
-    enabled: !!companyId && !!userId
+    enabled: !!companyId && !!userId,
   })
 }
 
@@ -72,7 +74,7 @@ export const useOverviewSummary = (
     queryFn: () => dashboardApiService.getOverviewSummary(companyId, filter),
     staleTime: 2 * 60 * 1000, // 2분
     gcTime: 5 * 60 * 1000, // 5분
-    enabled: !!companyId
+    enabled: !!companyId,
   })
 }
 
@@ -91,7 +93,7 @@ export const useRevenueChart = (
     queryKey: ['dashboard', 'chart', 'revenue', companyId, filter],
     queryFn: () => chartApi.getRevenueChart(companyId, filter),
     staleTime: 5 * 60 * 1000, // 5분
-    enabled: !!companyId
+    enabled: !!companyId,
   })
 }
 
@@ -106,7 +108,7 @@ export const useOrderChart = (
     queryKey: ['dashboard', 'chart', 'orders', companyId, filter],
     queryFn: () => chartApi.getOrderChart(companyId, filter),
     staleTime: 5 * 60 * 1000, // 5분
-    enabled: !!companyId
+    enabled: !!companyId,
   })
 }
 
@@ -121,7 +123,7 @@ export const useInventoryChart = (
     queryKey: ['dashboard', 'chart', 'inventory', companyId, filter],
     queryFn: () => chartApi.getInventoryChart(companyId, filter),
     staleTime: 10 * 60 * 1000, // 10분 (재고는 자주 변하지 않음)
-    enabled: !!companyId
+    enabled: !!companyId,
   })
 }
 
@@ -136,7 +138,7 @@ export const useHrChart = (
     queryKey: ['dashboard', 'chart', 'hr', companyId, filter],
     queryFn: () => chartApi.getHrChart(companyId, filter),
     staleTime: 10 * 60 * 1000, // 10분
-    enabled: !!companyId
+    enabled: !!companyId,
   })
 }
 
@@ -158,7 +160,7 @@ export const useRecentActivities = (
     staleTime: 1 * 60 * 1000, // 1분
     gcTime: 5 * 60 * 1000, // 5분
     refetchInterval: 30 * 1000, // 30초마다 자동 갱신
-    enabled: !!companyId && !!userId
+    enabled: !!companyId && !!userId,
   })
 }
 
@@ -176,10 +178,11 @@ export const useNotifications = (
 ) => {
   return useQuery({
     queryKey: ['dashboard', 'notifications', userId, unreadOnly, limit],
-    queryFn: () => notificationApi.getUserNotifications(userId, unreadOnly, limit),
+    queryFn: () =>
+      notificationApi.getUserNotifications(userId, unreadOnly, limit),
     staleTime: 1 * 60 * 1000, // 1분
     refetchInterval: 30 * 1000, // 30초마다 자동 갱신
-    enabled: !!userId
+    enabled: !!userId,
   })
 }
 
@@ -192,7 +195,7 @@ export const useNotificationStats = (userId: number) => {
     queryFn: () => notificationApi.getNotificationStats(userId),
     staleTime: 2 * 60 * 1000, // 2분
     refetchInterval: 60 * 1000, // 1분마다 자동 갱신
-    enabled: !!userId
+    enabled: !!userId,
   })
 }
 
@@ -203,15 +206,26 @@ export const useMarkNotificationAsRead = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ notificationId, userId }: { notificationId: number; userId: number }) =>
-      notificationApi.markAsRead(notificationId, userId),
+    mutationFn: ({
+      notificationId,
+      userId,
+    }: {
+      notificationId: number
+      userId: number
+    }) => notificationApi.markAsRead(notificationId, userId),
     onSuccess: (_, { userId }) => {
-      queryClient.invalidateQueries({ queryKey: ['dashboard', 'notifications', userId] })
-      queryClient.invalidateQueries({ queryKey: ['dashboard', 'notifications', 'stats', userId] })
+      queryClient.invalidateQueries({
+        queryKey: ['dashboard', 'notifications', userId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['dashboard', 'notifications', 'stats', userId],
+      })
     },
     onError: (error: any) => {
-      toast.error(`알림 읽음 처리 실패: ${error.response?.data?.message || error.message}`)
-    }
+      toast.error(
+        `알림 읽음 처리 실패: ${error.response?.data?.message || error.message}`,
+      )
+    },
   })
 }
 
@@ -224,13 +238,19 @@ export const useMarkAllNotificationsAsRead = () => {
   return useMutation({
     mutationFn: (userId: number) => notificationApi.markAllAsRead(userId),
     onSuccess: (_, userId) => {
-      queryClient.invalidateQueries({ queryKey: ['dashboard', 'notifications', userId] })
-      queryClient.invalidateQueries({ queryKey: ['dashboard', 'notifications', 'stats', userId] })
+      queryClient.invalidateQueries({
+        queryKey: ['dashboard', 'notifications', userId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['dashboard', 'notifications', 'stats', userId],
+      })
       toast.success('모든 알림이 읽음 처리되었습니다')
     },
     onError: (error: any) => {
-      toast.error(`알림 읽음 처리 실패: ${error.response?.data?.message || error.message}`)
-    }
+      toast.error(
+        `알림 읽음 처리 실패: ${error.response?.data?.message || error.message}`,
+      )
+    },
   })
 }
 
@@ -250,7 +270,7 @@ export const useTodos = (
     queryKey: ['dashboard', 'todos', userId, status, limit],
     queryFn: () => todoApi.getUserTodos(userId, status, limit),
     staleTime: 2 * 60 * 1000, // 2분
-    enabled: !!userId
+    enabled: !!userId,
   })
 }
 
@@ -261,15 +281,24 @@ export const useCreateTodo = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ todoData, userId }: { todoData: TodoCreateRequest; userId: number }) =>
-      todoApi.createTodo(todoData, userId),
+    mutationFn: ({
+      todoData,
+      userId,
+    }: {
+      todoData: TodoCreateRequest
+      userId: number
+    }) => todoApi.createTodo(todoData, userId),
     onSuccess: (_, { userId }) => {
-      queryClient.invalidateQueries({ queryKey: ['dashboard', 'todos', userId] })
+      queryClient.invalidateQueries({
+        queryKey: ['dashboard', 'todos', userId],
+      })
       toast.success('새 할일이 생성되었습니다')
     },
     onError: (error: any) => {
-      toast.error(`할일 생성 실패: ${error.response?.data?.message || error.message}`)
-    }
+      toast.error(
+        `할일 생성 실패: ${error.response?.data?.message || error.message}`,
+      )
+    },
   })
 }
 
@@ -280,15 +309,26 @@ export const useUpdateTodoStatus = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ todoId, status, userId }: { todoId: number; status: string; userId: number }) =>
-      todoApi.updateTodoStatus(todoId, status, userId),
+    mutationFn: ({
+      todoId,
+      status,
+      userId,
+    }: {
+      todoId: number
+      status: string
+      userId: number
+    }) => todoApi.updateTodoStatus(todoId, status, userId),
     onSuccess: (_, { userId }) => {
-      queryClient.invalidateQueries({ queryKey: ['dashboard', 'todos', userId] })
+      queryClient.invalidateQueries({
+        queryKey: ['dashboard', 'todos', userId],
+      })
       toast.success('할일 상태가 변경되었습니다')
     },
     onError: (error: any) => {
-      toast.error(`할일 상태 변경 실패: ${error.response?.data?.message || error.message}`)
-    }
+      toast.error(
+        `할일 상태 변경 실패: ${error.response?.data?.message || error.message}`,
+      )
+    },
   })
 }
 
@@ -305,7 +345,7 @@ export const useQuickActions = (userRole: string) => {
     queryFn: () => quickActionApi.getQuickActions(userRole),
     staleTime: 10 * 60 * 1000, // 10분 (자주 변하지 않음)
     gcTime: 30 * 60 * 1000, // 30분
-    enabled: !!userRole
+    enabled: !!userRole,
   })
 }
 
@@ -325,7 +365,7 @@ export const useKpiMetrics = (
     queryKey: ['dashboard', 'kpi', companyId, category, filter],
     queryFn: () => kpiApi.getKpiMetrics(companyId, category, filter),
     staleTime: 5 * 60 * 1000, // 5분
-    enabled: !!companyId
+    enabled: !!companyId,
   })
 }
 
@@ -342,7 +382,7 @@ export const useUserDashboardConfig = (userId: number) => {
     queryFn: () => configApi.getUserConfig(userId),
     staleTime: 10 * 60 * 1000, // 10분
     gcTime: 30 * 60 * 1000, // 30분
-    enabled: !!userId
+    enabled: !!userId,
   })
 }
 
@@ -353,15 +393,22 @@ export const useSaveUserDashboardConfig = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ userId, config }: { userId: number; config: UserDashboardConfig }) =>
-      configApi.saveUserConfig(userId, config),
+    mutationFn: ({
+      userId,
+      config,
+    }: {
+      userId: number
+      config: UserDashboardConfig
+    }) => configApi.saveUserConfig(userId, config),
     onSuccess: (data, { userId }) => {
       queryClient.setQueryData(['dashboard', 'config', userId], data)
       toast.success('대시보드 설정이 저장되었습니다')
     },
     onError: (error: any) => {
-      toast.error(`설정 저장 실패: ${error.response?.data?.message || error.message}`)
-    }
+      toast.error(
+        `설정 저장 실패: ${error.response?.data?.message || error.message}`,
+      )
+    },
   })
 }
 
@@ -372,7 +419,11 @@ export const useUpdateWidgetConfig = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ userId, widgetId, config }: {
+    mutationFn: ({
+      userId,
+      widgetId,
+      config,
+    }: {
       userId: number
       widgetId: string
       config: Partial<WidgetConfig>
@@ -381,8 +432,10 @@ export const useUpdateWidgetConfig = () => {
       queryClient.setQueryData(['dashboard', 'config', userId], data)
     },
     onError: (error: any) => {
-      toast.error(`위젯 설정 업데이트 실패: ${error.response?.data?.message || error.message}`)
-    }
+      toast.error(
+        `위젯 설정 업데이트 실패: ${error.response?.data?.message || error.message}`,
+      )
+    },
   })
 }
 
@@ -399,8 +452,10 @@ export const useToggleWidgetVisibility = () => {
       queryClient.setQueryData(['dashboard', 'config', userId], data)
     },
     onError: (error: any) => {
-      toast.error(`위젯 표시 설정 변경 실패: ${error.response?.data?.message || error.message}`)
-    }
+      toast.error(
+        `위젯 표시 설정 변경 실패: ${error.response?.data?.message || error.message}`,
+      )
+    },
   })
 }
 
@@ -415,7 +470,12 @@ export const useRefreshWidget = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ widgetId, companyId, userId, parameters }: {
+    mutationFn: ({
+      widgetId,
+      companyId,
+      userId,
+      parameters,
+    }: {
       widgetId: string
       companyId: number
       userId: number
@@ -423,14 +483,18 @@ export const useRefreshWidget = () => {
     }) => widgetApi.refreshWidget(widgetId, companyId, userId, parameters),
     onSuccess: (_, { widgetId, companyId, userId }) => {
       // 관련된 쿼리들을 무효화하여 데이터 새로고침
-      queryClient.invalidateQueries({ queryKey: ['dashboard', 'data', companyId, userId] })
+      queryClient.invalidateQueries({
+        queryKey: ['dashboard', 'data', companyId, userId],
+      })
       queryClient.invalidateQueries({ queryKey: ['dashboard', 'chart'] })
       queryClient.invalidateQueries({ queryKey: ['dashboard', 'overview'] })
       toast.success('위젯 데이터가 새로고침되었습니다')
     },
     onError: (error: any) => {
-      toast.error(`위젯 새로고침 실패: ${error.response?.data?.message || error.message}`)
-    }
+      toast.error(
+        `위젯 새로고침 실패: ${error.response?.data?.message || error.message}`,
+      )
+    },
   })
 }
 
@@ -447,7 +511,7 @@ export const useSystemStatus = () => {
     queryFn: () => systemApi.getSystemStatus(),
     staleTime: 30 * 1000, // 30초
     refetchInterval: 60 * 1000, // 1분마다 자동 갱신
-    retry: 2
+    retry: 2,
   })
 }
 
@@ -462,7 +526,7 @@ export const useTimeRangeFilter = (timeRange?: string) => {
   if (!timeRange || timeRange === 'custom') {
     return {}
   }
-  
+
   return getDateRangeFromTimeRange(timeRange)
 }
 
@@ -482,16 +546,22 @@ export const useAutoRefresh = (
     queryFn: async () => {
       // 주요 데이터들을 새로고침
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['dashboard', 'overview', companyId] }),
-        queryClient.invalidateQueries({ queryKey: ['dashboard', 'activities', companyId, userId] }),
-        queryClient.invalidateQueries({ queryKey: ['dashboard', 'notifications', userId] })
+        queryClient.invalidateQueries({
+          queryKey: ['dashboard', 'overview', companyId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['dashboard', 'activities', companyId, userId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['dashboard', 'notifications', userId],
+        }),
       ])
       return Date.now()
     },
     enabled: enabled && !!companyId && !!userId,
     refetchInterval: interval,
     refetchIntervalInBackground: false,
-    refetchOnWindowFocus: false
+    refetchOnWindowFocus: false,
   })
 }
 
@@ -516,25 +586,29 @@ export const useDashboardLoading = (
   const notificationsQuery = useNotifications(userId, false, 5)
   const todosQuery = useTodos(userId, undefined, 5)
 
-  const isLoading = overviewQuery.isLoading || 
-                   activitiesQuery.isLoading || 
-                   notificationsQuery.isLoading || 
-                   todosQuery.isLoading
+  const isLoading =
+    overviewQuery.isLoading ||
+    activitiesQuery.isLoading ||
+    notificationsQuery.isLoading ||
+    todosQuery.isLoading
 
-  const hasError = overviewQuery.isError || 
-                  activitiesQuery.isError || 
-                  notificationsQuery.isError || 
-                  todosQuery.isError
+  const hasError =
+    overviewQuery.isError ||
+    activitiesQuery.isError ||
+    notificationsQuery.isError ||
+    todosQuery.isError
 
   return {
     isLoading,
     hasError,
-    loadingProgress: [
-      overviewQuery.isSuccess,
-      activitiesQuery.isSuccess,
-      notificationsQuery.isSuccess,
-      todosQuery.isSuccess
-    ].filter(Boolean).length / 4 * 100
+    loadingProgress:
+      ([
+        overviewQuery.isSuccess,
+        activitiesQuery.isSuccess,
+        notificationsQuery.isSuccess,
+        todosQuery.isSuccess,
+      ].filter(Boolean).length /
+        4) *
+      100,
   }
 }
-

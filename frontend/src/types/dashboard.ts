@@ -34,31 +34,31 @@ export interface OverviewSummary {
   totalRevenue: number
   monthlyRevenue: number
   revenueGrowthRate: number
-  
+
   // 주문 관련
   totalOrders: number
   monthlyOrders: number
   orderGrowthRate: number
   pendingOrders: number
-  
+
   // 고객 관련
   totalCustomers: number
   activeCustomers: number
   newCustomers: number
   customerGrowthRate: number
-  
+
   // 재고 관련
   totalProducts: number
   lowStockProducts: number
   totalInventoryValue: number
   inventoryTurnover: number
-  
+
   // 인력 관련
   totalEmployees: number
   activeEmployees: number
   newEmployees: number
   attendanceRate: number
-  
+
   // 회계 관련
   totalAssets: number
   totalLiabilities: number
@@ -445,34 +445,47 @@ export const TIME_RANGE_OPTIONS: TimeRangeOption[] = [
   { value: 'last_6_months', label: '최근 6개월', days: 180 },
   { value: 'this_year', label: '올해', days: 365 },
   { value: 'last_year', label: '작년', days: 365 },
-  { value: 'custom', label: '사용자 정의', days: 0 }
+  { value: 'custom', label: '사용자 정의', days: 0 },
 ]
 
 export const MODULE_OPTIONS: ModuleOption[] = [
   { value: 'sales', label: '영업관리', icon: 'TrendingUp', color: '#3b82f6' },
   { value: 'inventory', label: '재고관리', icon: 'Package', color: '#10b981' },
   { value: 'hr', label: '인사관리', icon: 'Users', color: '#f59e0b' },
-  { value: 'accounting', label: '회계관리', icon: 'Calculator', color: '#ef4444' },
-  { value: 'system', label: '시스템', icon: 'Settings', color: '#6b7280' }
+  {
+    value: 'accounting',
+    label: '회계관리',
+    icon: 'Calculator',
+    color: '#ef4444',
+  },
+  { value: 'system', label: '시스템', icon: 'Settings', color: '#6b7280' },
 ]
 
 export const CHART_COLORS = [
-  '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
-  '#06b6d4', '#84cc16', '#f97316', '#ec4899', '#6366f1'
+  '#3b82f6',
+  '#10b981',
+  '#f59e0b',
+  '#ef4444',
+  '#8b5cf6',
+  '#06b6d4',
+  '#84cc16',
+  '#f97316',
+  '#ec4899',
+  '#6366f1',
 ]
 
 export const SEVERITY_COLORS = {
   INFO: '#3b82f6',
   SUCCESS: '#10b981',
   WARNING: '#f59e0b',
-  ERROR: '#ef4444'
+  ERROR: '#ef4444',
 }
 
 export const PRIORITY_COLORS = {
   low: '#6b7280',
   medium: '#f59e0b',
   high: '#ef4444',
-  critical: '#dc2626'
+  critical: '#dc2626',
 }
 
 // ================================
@@ -480,8 +493,25 @@ export const PRIORITY_COLORS = {
 // ================================
 
 export type ChartType = 'line' | 'bar' | 'pie' | 'doughnut' | 'area' | 'scatter'
-export type WidgetType = 'summary' | 'chart' | 'list' | 'table' | 'metric' | 'custom'
-export type TimeRange = 'today' | 'yesterday' | 'this_week' | 'last_week' | 'this_month' | 'last_month' | 'last_3_months' | 'last_6_months' | 'this_year' | 'last_year' | 'custom'
+export type WidgetType =
+  | 'summary'
+  | 'chart'
+  | 'list'
+  | 'table'
+  | 'metric'
+  | 'custom'
+export type TimeRange =
+  | 'today'
+  | 'yesterday'
+  | 'this_week'
+  | 'last_week'
+  | 'this_month'
+  | 'last_month'
+  | 'last_3_months'
+  | 'last_6_months'
+  | 'this_year'
+  | 'last_year'
+  | 'custom'
 export type Theme = 'light' | 'dark' | 'auto'
 export type Layout = 'grid' | 'masonry' | 'custom'
 export type Severity = 'INFO' | 'WARNING' | 'ERROR' | 'SUCCESS'
@@ -490,7 +520,3 @@ export type NotificationType = 'info' | 'warning' | 'error' | 'success'
 export type TodoStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled'
 export type Trend = 'up' | 'down' | 'stable'
 export type SystemHealth = 'healthy' | 'warning' | 'critical'
-
-
-
-

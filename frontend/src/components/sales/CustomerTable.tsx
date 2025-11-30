@@ -3,25 +3,8 @@
  * 고객 목록을 테이블 형태로 표시합니다
  */
 
-import React, { useState } from 'react'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Checkbox } from '@/components/ui/checkbox'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator
-} from '@/components/ui/dropdown-menu'
+import { format } from 'date-fns'
+import { ko } from 'date-fns/locale'
 import {
   MoreHorizontal,
   Edit,
@@ -34,15 +17,33 @@ import {
   AlertTriangle,
   Phone,
   Mail,
-  ArrowUpDown
+  ArrowUpDown,
 } from 'lucide-react'
-import { format } from 'date-fns'
-import { ko } from 'date-fns/locale'
+import React, { useState } from 'react'
+
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import type { CustomerSummary } from '@/types/sales'
 import {
   CustomerTypeLabels,
   CustomerStatusLabels,
-  CustomerGradeLabels
+  CustomerGradeLabels,
 } from '@/types/sales'
 import { formatCurrency } from '@/utils/format'
 
@@ -113,7 +114,7 @@ function CustomerTable({
   onChangeGrade,
   onSort,
   sortField,
-  sortDirection
+  sortDirection,
 }: CustomerTableProps) {
   const [selectAll, setSelectAll] = useState(false)
 
@@ -149,7 +150,8 @@ function CustomerTable({
    */
   const handleSort = (field: string) => {
     if (onSort) {
-      const direction = sortField === field && sortDirection === 'asc' ? 'desc' : 'asc'
+      const direction =
+        sortField === field && sortDirection === 'asc' ? 'desc' : 'asc'
       onSort(field, direction)
     }
   }
@@ -160,10 +162,10 @@ function CustomerTable({
   const getSortIcon = (field: string) => {
     if (sortField === field) {
       return (
-        <ArrowUpDown 
+        <ArrowUpDown
           className={`ml-2 h-4 w-4 ${
-            sortDirection === 'asc' ? 'transform rotate-180' : ''
-          }`} 
+            sortDirection === 'asc' ? 'rotate-180 transform' : ''
+          }`}
         />
       )
     }
@@ -172,7 +174,7 @@ function CustomerTable({
 
   if (loading) {
     return (
-      <div className="border rounded-lg">
+      <div className="rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
@@ -185,20 +187,36 @@ function CustomerTable({
               <TableHead>연락처</TableHead>
               <TableHead>주문 정보</TableHead>
               <TableHead>마지막 주문</TableHead>
-              <TableHead className="w-12"></TableHead>
+              <TableHead className="w-12" />
             </TableRow>
           </TableHeader>
           <TableBody>
             {[...Array(5)].map((_, index) => (
               <TableRow key={index}>
-                <TableCell><div className="h-4 w-4 bg-gray-200 rounded animate-pulse" /></TableCell>
-                <TableCell><div className="h-4 w-24 bg-gray-200 rounded animate-pulse" /></TableCell>
-                <TableCell><div className="h-4 w-16 bg-gray-200 rounded animate-pulse" /></TableCell>
-                <TableCell><div className="h-4 w-16 bg-gray-200 rounded animate-pulse" /></TableCell>
-                <TableCell><div className="h-4 w-32 bg-gray-200 rounded animate-pulse" /></TableCell>
-                <TableCell><div className="h-4 w-20 bg-gray-200 rounded animate-pulse" /></TableCell>
-                <TableCell><div className="h-4 w-20 bg-gray-200 rounded animate-pulse" /></TableCell>
-                <TableCell><div className="h-4 w-4 bg-gray-200 rounded animate-pulse" /></TableCell>
+                <TableCell>
+                  <div className="h-4 w-4 animate-pulse rounded bg-gray-200" />
+                </TableCell>
+                <TableCell>
+                  <div className="h-4 w-24 animate-pulse rounded bg-gray-200" />
+                </TableCell>
+                <TableCell>
+                  <div className="h-4 w-16 animate-pulse rounded bg-gray-200" />
+                </TableCell>
+                <TableCell>
+                  <div className="h-4 w-16 animate-pulse rounded bg-gray-200" />
+                </TableCell>
+                <TableCell>
+                  <div className="h-4 w-32 animate-pulse rounded bg-gray-200" />
+                </TableCell>
+                <TableCell>
+                  <div className="h-4 w-20 animate-pulse rounded bg-gray-200" />
+                </TableCell>
+                <TableCell>
+                  <div className="h-4 w-20 animate-pulse rounded bg-gray-200" />
+                </TableCell>
+                <TableCell>
+                  <div className="h-4 w-4 animate-pulse rounded bg-gray-200" />
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -209,28 +227,25 @@ function CustomerTable({
 
   if (customers.length === 0) {
     return (
-      <div className="border rounded-lg p-8 text-center">
+      <div className="rounded-lg border p-8 text-center">
         <div className="text-gray-500">
-          <User className="mx-auto h-12 w-12 mb-4 opacity-50" />
+          <User className="mx-auto mb-4 h-12 w-12 opacity-50" />
           <p className="text-lg font-medium">고객이 없습니다</p>
-          <p className="text-sm mt-2">새로운 고객을 등록해보세요.</p>
+          <p className="mt-2 text-sm">새로운 고객을 등록해보세요.</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="border rounded-lg">
+    <div className="rounded-lg border">
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead className="w-12">
-              <Checkbox
-                checked={selectAll}
-                onCheckedChange={handleSelectAll}
-              />
+              <Checkbox checked={selectAll} onCheckedChange={handleSelectAll} />
             </TableHead>
-            <TableHead 
+            <TableHead
               className="cursor-pointer hover:bg-gray-50"
               onClick={() => handleSort('customerName')}
             >
@@ -243,7 +258,7 @@ function CustomerTable({
             <TableHead>등급</TableHead>
             <TableHead>유형</TableHead>
             <TableHead>연락처</TableHead>
-            <TableHead 
+            <TableHead
               className="cursor-pointer hover:bg-gray-50"
               onClick={() => handleSort('totalOrderAmount')}
             >
@@ -252,7 +267,7 @@ function CustomerTable({
                 {getSortIcon('totalOrderAmount')}
               </div>
             </TableHead>
-            <TableHead 
+            <TableHead
               className="cursor-pointer hover:bg-gray-50"
               onClick={() => handleSort('lastOrderDate')}
             >
@@ -261,20 +276,20 @@ function CustomerTable({
                 {getSortIcon('lastOrderDate')}
               </div>
             </TableHead>
-            <TableHead className="w-12"></TableHead>
+            <TableHead className="w-12" />
           </TableRow>
         </TableHeader>
         <TableBody>
-          {customers.map((customer) => (
-            <TableRow 
-              key={customer.id} 
+          {customers.map(customer => (
+            <TableRow
+              key={customer.id}
               className={`hover:bg-gray-50 ${!customer.isActive ? 'opacity-60' : ''}`}
             >
               {/* 선택 체크박스 */}
               <TableCell>
                 <Checkbox
                   checked={selectedCustomers.includes(customer.id)}
-                  onCheckedChange={(checked) => 
+                  onCheckedChange={checked =>
                     handleSelectCustomer(customer.id, checked as boolean)
                   }
                 />
@@ -289,7 +304,7 @@ function CustomerTable({
                         {customer.customerName}
                       </p>
                       {customer.isVipCustomer && (
-                        <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
+                        <Star className="h-3 w-3 fill-yellow-500 text-yellow-500" />
                       )}
                       {customer.isCreditLimitExceeded && (
                         <AlertTriangle className="h-3 w-3 text-red-500" />
@@ -340,7 +355,9 @@ function CustomerTable({
                   {customer.email && (
                     <div className="flex items-center space-x-1 text-sm">
                       <Mail className="h-3 w-3 text-gray-400" />
-                      <span className="truncate max-w-32">{customer.email}</span>
+                      <span className="max-w-32 truncate">
+                        {customer.email}
+                      </span>
                     </div>
                   )}
                   {customer.salesManagerName && (
@@ -359,19 +376,19 @@ function CustomerTable({
                     <span className="font-medium">
                       {customer.totalOrderCount?.toLocaleString() || 0}
                     </span>
-                    <span className="text-gray-500 ml-1">건</span>
+                    <span className="ml-1 text-gray-500">건</span>
                   </div>
                   <div className="text-sm font-medium">
-                    {customer.totalOrderAmount 
+                    {customer.totalOrderAmount
                       ? formatCurrency(customer.totalOrderAmount)
-                      : '₩0'
-                    }
+                      : '₩0'}
                   </div>
-                  {customer.outstandingAmount && customer.outstandingAmount > 0 && (
-                    <div className="text-xs text-red-600">
-                      미수금: {formatCurrency(customer.outstandingAmount)}
-                    </div>
-                  )}
+                  {customer.outstandingAmount &&
+                    customer.outstandingAmount > 0 && (
+                      <div className="text-xs text-red-600">
+                        미수금: {formatCurrency(customer.outstandingAmount)}
+                      </div>
+                    )}
                 </div>
               </TableCell>
 
@@ -379,7 +396,9 @@ function CustomerTable({
               <TableCell>
                 {customer.lastOrderDate ? (
                   <div className="text-sm">
-                    {format(new Date(customer.lastOrderDate), 'yyyy.MM.dd', { locale: ko })}
+                    {format(new Date(customer.lastOrderDate), 'yyyy.MM.dd', {
+                      locale: ko,
+                    })}
                   </div>
                 ) : (
                   <span className="text-xs text-gray-400">주문 이력 없음</span>
@@ -404,7 +423,9 @@ function CustomerTable({
                       수정
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => onToggleActive?.(customer)}>
+                    <DropdownMenuItem
+                      onClick={() => onToggleActive?.(customer)}
+                    >
                       {customer.isActive ? (
                         <>
                           <UserX className="mr-2 h-4 w-4" />
@@ -417,7 +438,9 @@ function CustomerTable({
                         </>
                       )}
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onChangeStatus?.(customer)}>
+                    <DropdownMenuItem
+                      onClick={() => onChangeStatus?.(customer)}
+                    >
                       <User className="mr-2 h-4 w-4" />
                       상태 변경
                     </DropdownMenuItem>
@@ -437,7 +460,3 @@ function CustomerTable({
 }
 
 export { CustomerTable }
-
-
-
-

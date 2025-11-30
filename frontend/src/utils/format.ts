@@ -15,12 +15,12 @@ export function formatNumber(value: number | undefined | null): string {
  * 통화를 한국 원화로 포맷팅
  */
 export function formatCurrency(
-  value: number | undefined | null, 
+  value: number | undefined | null,
   showSymbol: boolean = true,
   abbreviated: boolean = false
 ): string {
   if (value === undefined || value === null) return showSymbol ? '₩0' : '0'
-  
+
   if (abbreviated) {
     if (value >= 1000000000) {
       return `${showSymbol ? '₩' : ''}${(value / 1000000000).toFixed(1)}억`
@@ -32,7 +32,7 @@ export function formatCurrency(
       return `${showSymbol ? '₩' : ''}${(value / 10000).toFixed(0)}만`
     }
   }
-  
+
   const formatted = value.toLocaleString('ko-KR')
   return showSymbol ? `₩${formatted}` : formatted
 }
@@ -45,51 +45,51 @@ export function formatDate(
   format: 'full' | 'date' | 'time' | 'datetime' | 'MM/dd' | 'relative' = 'date'
 ): string {
   if (!date) return '-'
-  
+
   const dateObj = typeof date === 'string' ? new Date(date) : date
-  
+
   if (isNaN(dateObj.getTime())) return '-'
-  
+
   switch (format) {
     case 'full':
       return dateObj.toLocaleDateString('ko-KR', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
-        weekday: 'long'
+        weekday: 'long',
       })
-    
+
     case 'date':
       return dateObj.toLocaleDateString('ko-KR', {
         year: 'numeric',
         month: '2-digit',
-        day: '2-digit'
+        day: '2-digit',
       })
-    
+
     case 'time':
       return dateObj.toLocaleTimeString('ko-KR', {
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
       })
-    
+
     case 'datetime':
       return dateObj.toLocaleString('ko-KR', {
         year: 'numeric',
         month: '2-digit',
         day: '2-digit',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
       })
-    
+
     case 'MM/dd':
       return dateObj.toLocaleDateString('ko-KR', {
         month: '2-digit',
-        day: '2-digit'
+        day: '2-digit',
       })
-    
+
     case 'relative':
       return formatRelativeDate(dateObj)
-    
+
     default:
       return dateObj.toLocaleDateString('ko-KR')
   }
@@ -105,7 +105,7 @@ export function formatRelativeDate(date: Date): string {
   const diffInMinutes = Math.floor(diffInSeconds / 60)
   const diffInHours = Math.floor(diffInMinutes / 60)
   const diffInDays = Math.floor(diffInHours / 24)
-  
+
   if (diffInSeconds < 60) {
     return '방금 전'
   } else if (diffInMinutes < 60) {
@@ -131,11 +131,11 @@ export function formatRelativeDate(date: Date): string {
  */
 export function formatFileSize(bytes: number | undefined | null): string {
   if (!bytes || bytes === 0) return '0 B'
-  
+
   const k = 1024
   const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
   const i = Math.floor(Math.log(bytes) / Math.log(k))
-  
+
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`
 }
 
@@ -155,15 +155,15 @@ export function formatPercentage(
  */
 export function formatPhoneNumber(phone: string | undefined | null): string {
   if (!phone) return '-'
-  
+
   // 숫자만 추출
   const numbers = phone.replace(/\D/g, '')
-  
+
   // 휴대폰 번호 (010-xxxx-xxxx)
   if (numbers.length === 11 && numbers.startsWith('010')) {
     return `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7)}`
   }
-  
+
   // 일반 전화번호 (02-xxx-xxxx, 031-xxx-xxxx 등)
   if (numbers.length >= 9 && numbers.length <= 11) {
     if (numbers.startsWith('02')) {
@@ -174,22 +174,24 @@ export function formatPhoneNumber(phone: string | undefined | null): string {
       return `${numbers.slice(0, 3)}-${numbers.slice(3, -4)}-${numbers.slice(-4)}`
     }
   }
-  
+
   return phone
 }
 
 /**
  * 사업자등록번호 포맷팅
  */
-export function formatBusinessNumber(number: string | undefined | null): string {
+export function formatBusinessNumber(
+  number: string | undefined | null,
+): string {
   if (!number) return '-'
-  
+
   const numbers = number.replace(/\D/g, '')
-  
+
   if (numbers.length === 10) {
     return `${numbers.slice(0, 3)}-${numbers.slice(3, 5)}-${numbers.slice(5)}`
   }
-  
+
   return number
 }
 
@@ -198,13 +200,13 @@ export function formatBusinessNumber(number: string | undefined | null): string 
  */
 export function maskResidentNumber(number: string | undefined | null): string {
   if (!number) return '-'
-  
+
   const numbers = number.replace(/\D/g, '')
-  
+
   if (numbers.length === 13) {
     return `${numbers.slice(0, 6)}-${numbers.slice(6, 7)}******`
   }
-  
+
   return number
 }
 
@@ -213,14 +215,14 @@ export function maskResidentNumber(number: string | undefined | null): string {
  */
 export function maskAccountNumber(account: string | undefined | null): string {
   if (!account) return '-'
-  
+
   if (account.length > 8) {
     const start = account.slice(0, 4)
     const end = account.slice(-4)
     const middle = '*'.repeat(account.length - 8)
     return `${start}${middle}${end}`
   }
-  
+
   return account
 }
 
@@ -232,9 +234,9 @@ export function truncateText(
   maxLength: number = 50
 ): string {
   if (!text) return ''
-  
+
   if (text.length <= maxLength) return text
-  
+
   return `${text.slice(0, maxLength)}...`
 }
 
@@ -246,18 +248,18 @@ export function getKoreanParticle(
   type: '은는' | '이가' | '을를'
 ): string {
   if (!word) return ''
-  
+
   const lastChar = word[word.length - 1]
   const lastCharCode = lastChar.charCodeAt(0)
-  
+
   // 한글이 아닌 경우
-  if (lastCharCode < 0xAC00 || lastCharCode > 0xD7A3) {
+  if (lastCharCode < 0xac00 || lastCharCode > 0xd7a3) {
     return type === '은는' ? '는' : type === '이가' ? '가' : '를'
   }
-  
+
   // 받침 있는지 확인
-  const hasJongseong = (lastCharCode - 0xAC00) % 28 !== 0
-  
+  const hasJongseong = (lastCharCode - 0xac00) % 28 !== 0
+
   switch (type) {
     case '은는':
       return hasJongseong ? '은' : '는'
@@ -277,10 +279,10 @@ export function formatKoreanList(items: string[]): string {
   if (items.length === 0) return ''
   if (items.length === 1) return items[0]
   if (items.length === 2) return `${items[0]} 및 ${items[1]}`
-  
+
   const lastItem = items[items.length - 1]
   const otherItems = items.slice(0, -1).join(', ')
-  
+
   return `${otherItems} 및 ${lastItem}`
 }
 
@@ -289,25 +291,22 @@ export function formatKoreanList(items: string[]): string {
  */
 export function formatKoreanNumber(num: number): string {
   if (num === 0) return '0'
-  
+
   const units = ['', '만', '억', '조']
   let result = ''
   let unitIndex = 0
-  
+
   while (num > 0 && unitIndex < units.length) {
     const remainder = num % 10000
-    
+
     if (remainder > 0) {
-      result = `${remainder.toLocaleString()}${units[unitIndex]} ${result}`.trim()
+      result =
+        `${remainder.toLocaleString()}${units[unitIndex]} ${result}`.trim()
     }
-    
+
     num = Math.floor(num / 10000)
     unitIndex++
   }
-  
+
   return result || '0'
 }
-
-
-
-

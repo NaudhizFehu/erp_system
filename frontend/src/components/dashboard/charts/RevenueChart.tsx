@@ -3,6 +3,16 @@
  * 매출 관련 다양한 차트를 표시합니다
  */
 
+import {
+  TrendingUp,
+  TrendingDown,
+  BarChart3,
+  LineChart as LineChartIcon,
+  PieChart as PieChartIcon,
+  RefreshCw,
+  Download,
+  Filter,
+} from 'lucide-react'
 import React, { useState } from 'react'
 import {
   LineChart,
@@ -19,11 +29,12 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer
+  ResponsiveContainer,
 } from 'recharts'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
@@ -32,18 +43,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  BarChart3, 
-  LineChart as LineChartIcon,
-  PieChart as PieChartIcon,
-  RefreshCw,
-  Download,
-  Filter
-} from 'lucide-react'
-import { formatCurrency } from '@/utils/format'
 import type { RevenueChart, ChartDataPoint } from '@/types/dashboard'
+import { formatCurrency } from '@/utils/format'
 
 interface RevenueChartProps {
   data: RevenueChart
@@ -65,7 +66,8 @@ const transformChartData = (data: ChartDataPoint[]) => {
     color: item.color,
     // 추가 포맷팅
     formattedValue: formatCurrency(item.value),
-    shortName: item.label.length > 10 ? item.label.substring(0, 10) + '...' : item.label
+    shortName:
+      item.label.length > 10 ? item.label.substring(0, 10) + '...' : item.label,
   }))
 }
 
@@ -75,11 +77,12 @@ const transformChartData = (data: ChartDataPoint[]) => {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white p-3 border rounded-lg shadow-lg">
+      <div className="rounded-lg border bg-white p-3 shadow-lg">
         <p className="font-medium text-gray-900">{label}</p>
         {payload.map((entry: any, index: number) => (
           <p key={index} className="text-sm" style={{ color: entry.color }}>
-            {entry.name}: <span className="font-semibold">{formatCurrency(entry.value)}</span>
+            {entry.name}:{' '}
+            <span className="font-semibold">{formatCurrency(entry.value)}</span>
           </p>
         ))}
       </div>
@@ -91,10 +94,16 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 /**
  * 트렌드 표시 컴포넌트
  */
-const TrendIndicator = ({ current, previous }: { current: number; previous: number }) => {
+const TrendIndicator = ({
+  current,
+  previous,
+}: {
+  current: number
+  previous: number
+}) => {
   const change = ((current - previous) / previous) * 100
   const isPositive = change > 0
-  
+
   return (
     <div className="flex items-center space-x-1">
       {isPositive ? (
@@ -102,7 +111,9 @@ const TrendIndicator = ({ current, previous }: { current: number; previous: numb
       ) : (
         <TrendingDown className="h-4 w-4 text-red-500" />
       )}
-      <span className={`text-sm font-medium ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+      <span
+        className={`text-sm font-medium ${isPositive ? 'text-green-600' : 'text-red-600'}`}
+      >
         {Math.abs(change).toFixed(1)}%
       </span>
     </div>
@@ -115,7 +126,7 @@ function RevenueChart({
   error,
   className = '',
   onRefresh,
-  onExport
+  onExport,
 }: RevenueChartProps) {
   const [activeTab, setActiveTab] = useState('monthly')
   const [chartType, setChartType] = useState<'line' | 'bar' | 'area'>('line')
@@ -128,8 +139,10 @@ function RevenueChart({
 
   // 총 매출 계산
   const totalRevenue = monthlyData.reduce((sum, item) => sum + item.value, 0)
-  const previousTotal = monthlyData.length > 1 ? 
-    monthlyData.slice(0, -1).reduce((sum, item) => sum + item.value, 0) : totalRevenue
+  const previousTotal =
+    monthlyData.length > 1
+      ? monthlyData.slice(0, -1).reduce((sum, item) => sum + item.value, 0)
+      : totalRevenue
 
   if (loading) {
     return (
@@ -143,8 +156,8 @@ function RevenueChart({
           </div>
         </CardHeader>
         <CardContent>
-          <div className="h-80 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <div className="flex h-80 items-center justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary" />
           </div>
         </CardContent>
       </Card>
@@ -161,11 +174,13 @@ function RevenueChart({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-80 flex items-center justify-center">
+          <div className="flex h-80 items-center justify-center">
             <div className="text-center">
-              <p className="text-red-500 mb-2">데이터 로딩 중 오류가 발생했습니다</p>
+              <p className="mb-2 text-red-500">
+                데이터 로딩 중 오류가 발생했습니다
+              </p>
               <Button variant="outline" size="sm" onClick={onRefresh}>
-                <RefreshCw className="h-4 w-4 mr-2" />
+                <RefreshCw className="mr-2 h-4 w-4" />
                 다시 시도
               </Button>
             </div>
@@ -186,7 +201,10 @@ function RevenueChart({
           </div>
           <div className="flex items-center space-x-2">
             <TrendIndicator current={totalRevenue} previous={previousTotal} />
-            <Select value={chartType} onValueChange={(value: any) => setChartType(value)}>
+            <Select
+              value={chartType}
+              onValueChange={(value: any) => setChartType(value)}
+            >
               <SelectTrigger className="w-24">
                 <SelectValue />
               </SelectTrigger>
@@ -225,7 +243,11 @@ function RevenueChart({
         </div>
       </CardHeader>
       <CardContent>
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="space-y-4"
+        >
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="monthly">월별</TabsTrigger>
             <TabsTrigger value="daily">일별</TabsTrigger>
@@ -239,79 +261,79 @@ function RevenueChart({
                 <div>
                   {chartType === 'line' ? (
                     <LineChart data={monthlyData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis 
-                      dataKey="name" 
-                      tick={{ fontSize: 12 }}
-                      tickLine={false}
-                    />
-                    <YAxis 
-                      tick={{ fontSize: 12 }}
-                      tickLine={false}
-                      tickFormatter={(value) => formatCurrency(value, true)}
-                    />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Legend />
-                    <Line 
-                      type="monotone" 
-                      dataKey="value" 
-                      stroke="#3b82f6" 
-                      strokeWidth={3}
-                      dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
-                      activeDot={{ r: 6, stroke: '#3b82f6', strokeWidth: 2 }}
-                      name="매출액"
-                    />
-                  </LineChart>
-                ) : null}
-                {chartType === 'bar' ? (
-                  <BarChart data={monthlyData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis 
-                      dataKey="name" 
-                      tick={{ fontSize: 12 }}
-                      tickLine={false}
-                    />
-                    <YAxis 
-                      tick={{ fontSize: 12 }}
-                      tickLine={false}
-                      tickFormatter={(value) => formatCurrency(value, true)}
-                    />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Legend />
-                    <Bar 
-                      dataKey="value" 
-                      fill="#3b82f6" 
-                      radius={[4, 4, 0, 0]}
-                      name="매출액"
-                    />
-                  </BarChart>
-                ) : null}
-                {chartType === 'area' ? (
-                  <AreaChart data={monthlyData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis 
-                      dataKey="name" 
-                      tick={{ fontSize: 12 }}
-                      tickLine={false}
-                    />
-                    <YAxis 
-                      tick={{ fontSize: 12 }}
-                      tickLine={false}
-                      tickFormatter={(value) => formatCurrency(value, true)}
-                    />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Legend />
-                    <Area 
-                      type="monotone" 
-                      dataKey="value" 
-                      stroke="#3b82f6" 
-                      fill="#3b82f6" 
-                      fillOpacity={0.1}
-                      strokeWidth={2}
-                      name="매출액"
-                    />
-                  </AreaChart>
-                ) : null}
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                      <XAxis
+                        dataKey="name"
+                        tick={{ fontSize: 12 }}
+                        tickLine={false}
+                      />
+                      <YAxis
+                        tick={{ fontSize: 12 }}
+                        tickLine={false}
+                        tickFormatter={value => formatCurrency(value, true)}
+                      />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend />
+                      <Line
+                        type="monotone"
+                        dataKey="value"
+                        stroke="#3b82f6"
+                        strokeWidth={3}
+                        dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
+                        activeDot={{ r: 6, stroke: '#3b82f6', strokeWidth: 2 }}
+                        name="매출액"
+                      />
+                    </LineChart>
+                  ) : null}
+                  {chartType === 'bar' ? (
+                    <BarChart data={monthlyData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                      <XAxis
+                        dataKey="name"
+                        tick={{ fontSize: 12 }}
+                        tickLine={false}
+                      />
+                      <YAxis
+                        tick={{ fontSize: 12 }}
+                        tickLine={false}
+                        tickFormatter={value => formatCurrency(value, true)}
+                      />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend />
+                      <Bar
+                        dataKey="value"
+                        fill="#3b82f6"
+                        radius={[4, 4, 0, 0]}
+                        name="매출액"
+                      />
+                    </BarChart>
+                  ) : null}
+                  {chartType === 'area' ? (
+                    <AreaChart data={monthlyData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                      <XAxis
+                        dataKey="name"
+                        tick={{ fontSize: 12 }}
+                        tickLine={false}
+                      />
+                      <YAxis
+                        tick={{ fontSize: 12 }}
+                        tickLine={false}
+                        tickFormatter={value => formatCurrency(value, true)}
+                      />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend />
+                      <Area
+                        type="monotone"
+                        dataKey="value"
+                        stroke="#3b82f6"
+                        fill="#3b82f6"
+                        fillOpacity={0.1}
+                        strokeWidth={2}
+                        name="매출액"
+                      />
+                    </AreaChart>
+                  ) : null}
                 </div>
               </ResponsiveContainer>
             </div>
@@ -322,23 +344,23 @@ function RevenueChart({
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={dailyData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis 
-                    dataKey="name" 
+                  <XAxis
+                    dataKey="name"
                     tick={{ fontSize: 12 }}
                     tickLine={false}
                   />
-                  <YAxis 
+                  <YAxis
                     tick={{ fontSize: 12 }}
                     tickLine={false}
-                    tickFormatter={(value) => formatCurrency(value, true)}
+                    tickFormatter={value => formatCurrency(value, true)}
                   />
                   <Tooltip content={<CustomTooltip />} />
                   <Legend />
-                  <Area 
-                    type="monotone" 
-                    dataKey="value" 
-                    stroke="#10b981" 
-                    fill="#10b981" 
+                  <Area
+                    type="monotone"
+                    dataKey="value"
+                    stroke="#10b981"
+                    fill="#10b981"
                     fillOpacity={0.1}
                     strokeWidth={2}
                     name="일별 매출"
@@ -349,7 +371,7 @@ function RevenueChart({
           </TabsContent>
 
           <TabsContent value="category" className="space-y-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -374,16 +396,21 @@ function RevenueChart({
               <div className="space-y-3">
                 <h4 className="font-medium text-gray-900">카테고리별 매출</h4>
                 {categoryData.map((item, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div
+                    key={index}
+                    className="flex items-center justify-between rounded-lg bg-gray-50 p-3"
+                  >
                     <div className="flex items-center space-x-3">
-                      <div 
-                        className="w-4 h-4 rounded-full" 
+                      <div
+                        className="h-4 w-4 rounded-full"
                         style={{ backgroundColor: item.color }}
                       />
                       <span className="font-medium">{item.name}</span>
                     </div>
                     <div className="text-right">
-                      <div className="font-semibold">{formatCurrency(item.value)}</div>
+                      <div className="font-semibold">
+                        {formatCurrency(item.value)}
+                      </div>
                       <div className="text-sm text-gray-500">
                         {((item.value / totalRevenue) * 100).toFixed(1)}%
                       </div>
@@ -399,24 +426,24 @@ function RevenueChart({
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={customerData} layout="horizontal">
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis 
+                  <XAxis
                     type="number"
                     tick={{ fontSize: 12 }}
                     tickLine={false}
-                    tickFormatter={(value) => formatCurrency(value, true)}
+                    tickFormatter={value => formatCurrency(value, true)}
                   />
-                  <YAxis 
+                  <YAxis
                     type="category"
-                    dataKey="shortName" 
+                    dataKey="shortName"
                     tick={{ fontSize: 12 }}
                     tickLine={false}
                     width={100}
                   />
                   <Tooltip content={<CustomTooltip />} />
                   <Legend />
-                  <Bar 
-                    dataKey="value" 
-                    fill="#f59e0b" 
+                  <Bar
+                    dataKey="value"
+                    fill="#f59e0b"
                     radius={[0, 4, 4, 0]}
                     name="매출액"
                   />
@@ -431,7 +458,3 @@ function RevenueChart({
 }
 
 export { RevenueChart }
-
-
-
-

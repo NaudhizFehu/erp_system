@@ -24,7 +24,10 @@ class NotificationService {
   /**
    * 사용자의 알림 목록 조회 (페이징)
    */
-  async getNotifications(page: number = 0, size: number = 20): Promise<{
+  async getNotifications(
+    page: number = 0,
+    size: number = 20,
+  ): Promise<{
     content: Notification[]
     totalElements: number
     totalPages: number
@@ -32,8 +35,13 @@ class NotificationService {
     number: number
   }> {
     try {
-      console.log('알림 목록 조회 API 호출:', `${this.baseUrl}?page=${page}&size=${size}`)
-      const response = await api.get(`${this.baseUrl}?page=${page}&size=${size}`)
+      console.log(
+        '알림 목록 조회 API 호출:',
+        `${this.baseUrl}?page=${page}&size=${size}`,
+      )
+      const response = await api.get(
+        `${this.baseUrl}?page=${page}&size=${size}`,
+      )
       console.log('알림 목록 조회 API 응답:', response)
       return response.data.data
     } catch (error) {
@@ -47,7 +55,10 @@ class NotificationService {
    */
   async getUnreadCount(): Promise<number> {
     try {
-      console.log('읽지 않은 알림 개수 조회 API 호출:', `${this.baseUrl}/unread-count`)
+      console.log(
+        '읽지 않은 알림 개수 조회 API 호출:',
+        `${this.baseUrl}/unread-count`,
+      )
       const response = await api.get(`${this.baseUrl}/unread-count`)
       console.log('읽지 않은 알림 개수 조회 API 응답:', response)
       return response.data.data
@@ -62,7 +73,10 @@ class NotificationService {
    */
   async getUnreadNotifications(): Promise<Notification[]> {
     try {
-      console.log('읽지 않은 알림 목록 조회 API 호출:', `${this.baseUrl}/unread`)
+      console.log(
+        '읽지 않은 알림 목록 조회 API 호출:',
+        `${this.baseUrl}/unread`,
+      )
       const response = await api.get(`${this.baseUrl}/unread`)
       console.log('읽지 않은 알림 목록 조회 API 응답:', response)
       return response.data.data
@@ -77,13 +91,18 @@ class NotificationService {
    */
   async getRecentNotifications(): Promise<Notification[]> {
     try {
-      console.log('최근 3일 이내 알림 목록 조회 API 호출:', `${this.baseUrl}/recent`)
+      console.log(
+        '최근 3일 이내 알림 목록 조회 API 호출:',
+        `${this.baseUrl}/recent`,
+      )
       const response = await api.get(`${this.baseUrl}/recent`)
       console.log('최근 3일 이내 알림 목록 조회 API 응답:', response)
       return response.data.data
     } catch (error) {
       console.error('최근 3일 이내 알림 목록 조회 오류:', error)
-      throw new Error('최근 3일 이내 알림 목록을 불러오는 중 오류가 발생했습니다.')
+      throw new Error(
+        '최근 3일 이내 알림 목록을 불러오는 중 오류가 발생했습니다.',
+      )
     }
   }
 
@@ -92,13 +111,18 @@ class NotificationService {
    */
   async getAllNotifications(): Promise<Notification[]> {
     try {
-      console.log('최근 2주 이내 모든 알림 목록 조회 API 호출:', `${this.baseUrl}/all`)
+      console.log(
+        '최근 2주 이내 모든 알림 목록 조회 API 호출:',
+        `${this.baseUrl}/all`,
+      )
       const response = await api.get(`${this.baseUrl}/all`)
       console.log('최근 2주 이내 모든 알림 목록 조회 API 응답:', response)
       return response.data.data
     } catch (error) {
       console.error('최근 2주 이내 모든 알림 목록 조회 오류:', error)
-      throw new Error('최근 2주 이내 모든 알림 목록을 불러오는 중 오류가 발생했습니다.')
+      throw new Error(
+        '최근 2주 이내 모든 알림 목록을 불러오는 중 오류가 발생했습니다.',
+      )
     }
   }
 
@@ -107,7 +131,10 @@ class NotificationService {
    */
   async markAsRead(notificationId: number): Promise<void> {
     try {
-      console.log('알림 읽음 처리 API 호출:', `${this.baseUrl}/${notificationId}/read`)
+      console.log(
+        '알림 읽음 처리 API 호출:',
+        `${this.baseUrl}/${notificationId}/read`,
+      )
       const response = await api.put(`${this.baseUrl}/${notificationId}/read`)
       console.log('알림 읽음 처리 API 응답:', response)
     } catch (error) {

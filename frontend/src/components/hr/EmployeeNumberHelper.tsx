@@ -3,9 +3,11 @@
  * 회사별 최근 사번을 확인하여 중복 방지를 도와줍니다
  */
 
+import { AlertCircle, Users, Hash } from 'lucide-react'
 import { useState, useMemo, useEffect } from 'react'
+
+import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { useAuth } from '@/contexts/AuthContext'
 import {
   Dialog,
   DialogContent,
@@ -20,10 +22,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Badge } from '@/components/ui/badge'
-import { AlertCircle, Users, Hash } from 'lucide-react'
-import { useCompanies } from '@/hooks/useEmployees'
-import { useRecentEmployeesByCompany } from '@/hooks/useEmployees'
+import { useAuth } from '@/contexts/AuthContext'
+import { useCompanies, useRecentEmployeesByCompany } from '@/hooks/useEmployees'
 import type { Company, Employee } from '@/types/hr'
 
 interface EmployeeNumberHelperProps {
@@ -32,23 +32,32 @@ interface EmployeeNumberHelperProps {
   onSelectEmployeeNumber?: (employeeNumber: string, companyId: number) => void
 }
 
-export function EmployeeNumberHelper({ open, onOpenChange, onSelectEmployeeNumber }: EmployeeNumberHelperProps) {
+export function EmployeeNumberHelper({
+  open,
+  onOpenChange,
+  onSelectEmployeeNumber,
+}: EmployeeNumberHelperProps) {
   const { user } = useAuth()
-  const [selectedCompanyId, setSelectedCompanyId] = useState<number | null>(null)
-  
+  const [selectedCompanyId, setSelectedCompanyId] = useState<number | null>(
+    null,
+  )
+
   // 데이터 조회
-  const { data: allCompanies = [], isLoading: isLoadingCompanies } = useCompanies()
-  const { data: recentEmployees = [], isLoading } = useRecentEmployeesByCompany(selectedCompanyId || 0)
+  const { data: allCompanies = [], isLoading: isLoadingCompanies } =
+    useCompanies()
+  const { data: recentEmployees = [], isLoading } = useRecentEmployeesByCompany(
+    selectedCompanyId || 0,
+  )
 
   // 권한별 회사 목록 필터링
   const filteredCompanies = useMemo(() => {
     if (!user) return []
-    
+
     // SUPER_ADMIN: 모든 회사
     if (user.role === 'SUPER_ADMIN') {
       return allCompanies
     }
-    
+
     // ADMIN, MANAGER: 자신의 회사만
     if (user.role === 'ADMIN' || user.role === 'MANAGER') {
       if (user.company) {
@@ -56,7 +65,7 @@ export function EmployeeNumberHelper({ open, onOpenChange, onSelectEmployeeNumbe
       }
       return []
     }
-    
+
     return []
   }, [user, allCompanies])
 
@@ -73,25 +82,25 @@ export function EmployeeNumberHelper({ open, onOpenChange, onSelectEmployeeNumbe
 
   const getLastEmployeeNumber = (employees: Employee[]): string | null => {
     if (employees.length === 0) return null
-    
+
     // 사번을 문자열로 정렬하여 가장 마지막 사번 반환
-    const sortedEmployees = [...employees].sort((a, b) => 
+    const sortedEmployees = [...employees].sort((a, b) =>
       b.employeeNumber.localeCompare(a.employeeNumber)
     )
-    
+
     return sortedEmployees[0]?.employeeNumber || null
   }
 
   const getNextEmployeeNumber = (employees: Employee[]): string | null => {
     const lastNumber = getLastEmployeeNumber(employees)
     if (!lastNumber) return null
-    
+
     // 숫자 부분 추출하여 +1 (예: "ABC008" -> "ABC009")
     const match = lastNumber.match(/^([A-Z]+)(\d+)$/)
     if (match && match[1] && match[2]) {
-      const prefix = match[1]  // "ABC"
-      const number = parseInt(match[2]) + 1  // 8 + 1 = 9
-      const paddedNumber = String(number).padStart(match[2].length, '0')  // "009"
+      const prefix = match[1] // "ABC"
+      const number = parseInt(match[2]) + 1 // 8 + 1 = 9
+      const paddedNumber = String(number).padStart(match[2].length, '0') // "009"
       return `${prefix}${paddedNumber}`
     }
     return null
@@ -115,21 +124,21 @@ export function EmployeeNumberHelper({ open, onOpenChange, onSelectEmployeeNumbe
           <div className="space-y-2">
             <label className="text-sm font-medium">회사 선택</label>
             {isLoadingCompanies ? (
-              <div className="text-sm text-muted-foreground p-3 border rounded-md">
+              <div className="rounded-md border p-3 text-sm text-muted-foreground">
                 회사 목록을 불러오는 중...
               </div>
             ) : filteredCompanies.length === 0 ? (
-              <div className="text-sm text-muted-foreground p-3 border rounded-md bg-muted/50">
+              <div className="rounded-md border bg-muted/50 p-3 text-sm text-muted-foreground">
                 등록된 회사가 없습니다.
               </div>
             ) : filteredCompanies.length === 1 ? (
               // 회사가 1개인 경우 자동 선택 및 표시
-              <div className="text-sm p-3 border rounded-md bg-muted/50">
+              <div className="rounded-md border bg-muted/50 p-3 text-sm">
                 {filteredCompanies[0].name}
               </div>
             ) : (
               // 회사가 여러 개인 경우 드롭다운 표시
-              <Select 
+              <Select
                 onValueChange={handleCompanyChange}
                 value={selectedCompanyId?.toString()}
               >
@@ -137,7 +146,7 @@ export function EmployeeNumberHelper({ open, onOpenChange, onSelectEmployeeNumbe
                   <SelectValue placeholder="회사를 선택하세요" />
                 </SelectTrigger>
                 <SelectContent>
-                  {filteredCompanies.map((company) => (
+                  {filteredCompanies.map(company => (
                     <SelectItem key={company.id} value={company.id.toString()}>
                       {company.name}
                     </SelectItem>
@@ -158,15 +167,17 @@ export function EmployeeNumberHelper({ open, onOpenChange, onSelectEmployeeNumbe
               </CardHeader>
               <CardContent className="space-y-4">
                 {isLoading ? (
-                  <div className="text-center py-4">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900 mx-auto"></div>
-                    <p className="text-sm text-gray-500 mt-2">로딩 중...</p>
+                  <div className="py-4 text-center">
+                    <div className="mx-auto h-6 w-6 animate-spin rounded-full border-b-2 border-gray-900" />
+                    <p className="mt-2 text-sm text-gray-500">로딩 중...</p>
                   </div>
                 ) : recentEmployees.length > 0 ? (
                   <>
                     {/* 최근 사번 */}
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-700">최근 사번</label>
+                      <label className="text-sm font-medium text-gray-700">
+                        최근 사번
+                      </label>
                       <div className="flex items-center gap-2">
                         <Badge variant="outline" className="font-mono">
                           {getLastEmployeeNumber(recentEmployees)}
@@ -179,15 +190,25 @@ export function EmployeeNumberHelper({ open, onOpenChange, onSelectEmployeeNumbe
 
                     {/* 다음 추천 사번 */}
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-700">추천 사번</label>
+                      <label className="text-sm font-medium text-gray-700">
+                        추천 사번
+                      </label>
                       <div className="flex items-center gap-2">
-                        <Badge 
-                          variant="default" 
-                          className="font-mono cursor-pointer hover:bg-primary/80 transition-colors"
+                        <Badge
+                          variant="default"
+                          className="cursor-pointer font-mono transition-colors hover:bg-primary/80"
                           onClick={() => {
-                            const nextNumber = getNextEmployeeNumber(recentEmployees)
-                            if (nextNumber && onSelectEmployeeNumber && selectedCompanyId) {
-                              onSelectEmployeeNumber(nextNumber, selectedCompanyId)
+                            const nextNumber =
+                              getNextEmployeeNumber(recentEmployees)
+                            if (
+                              nextNumber &&
+                              onSelectEmployeeNumber &&
+                              selectedCompanyId
+                            ) {
+                              onSelectEmployeeNumber(
+                                nextNumber,
+                                selectedCompanyId,
+                              )
                               onOpenChange(false)
                             }
                           }}
@@ -202,11 +223,18 @@ export function EmployeeNumberHelper({ open, onOpenChange, onSelectEmployeeNumbe
 
                     {/* 최근 직원 목록 */}
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-700">최근 등록된 직원</label>
-                      <div className="max-h-32 overflow-y-auto border rounded-md p-2 bg-gray-50">
-                        {recentEmployees.map((employee) => (
-                          <div key={employee.id} className="flex justify-between items-center py-1 text-sm">
-                            <span className="font-mono">{employee.employeeNumber}</span>
+                      <label className="text-sm font-medium text-gray-700">
+                        최근 등록된 직원
+                      </label>
+                      <div className="max-h-32 overflow-y-auto rounded-md border bg-gray-50 p-2">
+                        {recentEmployees.map(employee => (
+                          <div
+                            key={employee.id}
+                            className="flex items-center justify-between py-1 text-sm"
+                          >
+                            <span className="font-mono">
+                              {employee.employeeNumber}
+                            </span>
                             <span>{employee.name}</span>
                           </div>
                         ))}
@@ -214,10 +242,14 @@ export function EmployeeNumberHelper({ open, onOpenChange, onSelectEmployeeNumbe
                     </div>
                   </>
                 ) : (
-                  <div className="text-center py-4">
-                    <AlertCircle className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-sm text-gray-500">해당 회사에 등록된 직원이 없습니다.</p>
-                    <p className="text-xs text-gray-400 mt-1">첫 번째 직원의 사번을 자유롭게 입력하세요.</p>
+                  <div className="py-4 text-center">
+                    <AlertCircle className="mx-auto mb-2 h-8 w-8 text-gray-400" />
+                    <p className="text-sm text-gray-500">
+                      해당 회사에 등록된 직원이 없습니다.
+                    </p>
+                    <p className="mt-1 text-xs text-gray-400">
+                      첫 번째 직원의 사번을 자유롭게 입력하세요.
+                    </p>
                   </div>
                 )}
               </CardContent>
@@ -225,13 +257,14 @@ export function EmployeeNumberHelper({ open, onOpenChange, onSelectEmployeeNumbe
           )}
 
           {/* 안내 메시지 */}
-          <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+          <div className="rounded-md border border-blue-200 bg-blue-50 p-3">
             <div className="flex items-start gap-2">
-              <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+              <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-600" />
               <div className="text-sm text-blue-800">
                 <p className="font-medium">사번 중복 방지 안내</p>
                 <p className="mt-1">
-                  추천 사번을 사용하거나, 기존 사번과 중복되지 않도록 확인 후 입력하세요.
+                  추천 사번을 사용하거나, 기존 사번과 중복되지 않도록 확인 후
+                  입력하세요.
                 </p>
               </div>
             </div>

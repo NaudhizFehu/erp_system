@@ -1,10 +1,17 @@
+import { Search, Building2, Plus, Eye } from 'lucide-react'
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Search, Building2, Plus, Eye } from 'lucide-react'
 import api from '@/services/api'
 
 /**
@@ -44,9 +51,9 @@ function CompanyList() {
     try {
       setIsLoading(true)
       setError(null)
-      
+
       const response = await api.get('/companies')
-      
+
       if (response.data.success) {
         setCompanies(response.data || [])
       } else {
@@ -63,7 +70,11 @@ function CompanyList() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'ACTIVE':
-        return <Badge variant="default" className="bg-green-100 text-green-800">활성</Badge>
+        return (
+          <Badge variant="default" className="bg-green-100 text-green-800">
+            활성
+          </Badge>
+        )
       case 'INACTIVE':
         return <Badge variant="secondary">비활성</Badge>
       case 'SUSPENDED':
@@ -75,18 +86,20 @@ function CompanyList() {
     }
   }
 
-  const filteredCompanies = companies.filter(company =>
-    company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    company.companyCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (company.businessNumber && company.businessNumber.includes(searchTerm)) ||
-    (company.ceoName && company.ceoName.toLowerCase().includes(searchTerm.toLowerCase()))
+  const filteredCompanies = companies.filter(
+    company =>
+      company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      company.companyCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (company.businessNumber && company.businessNumber.includes(searchTerm)) ||
+      (company.ceoName &&
+        company.ceoName.toLowerCase().includes(searchTerm.toLowerCase()))
   )
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-96">
+      <div className="flex min-h-96 items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600" />
           <p className="text-gray-600">회사 목록을 불러오는 중...</p>
         </div>
       </div>
@@ -95,11 +108,13 @@ function CompanyList() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-96">
+      <div className="flex min-h-96 items-center justify-center">
         <div className="text-center">
-          <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">오류 발생</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
+          <div className="mb-4 text-6xl text-red-500">⚠️</div>
+          <h2 className="mb-2 text-xl font-semibold text-gray-900">
+            오류 발생
+          </h2>
+          <p className="mb-4 text-gray-600">{error}</p>
           <Button onClick={fetchCompanies} variant="outline">
             다시 시도
           </Button>
@@ -114,10 +129,12 @@ function CompanyList() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">회사 관리</h1>
-          <p className="text-gray-600">등록된 회사 목록을 확인하고 관리할 수 있습니다</p>
+          <p className="text-gray-600">
+            등록된 회사 목록을 확인하고 관리할 수 있습니다
+          </p>
         </div>
         <Button onClick={() => navigate('/companies/new')}>
-          <Plus className="w-4 h-4 mr-2" />
+          <Plus className="mr-2 h-4 w-4" />
           회사 등록
         </Button>
       </div>
@@ -126,13 +143,13 @@ function CompanyList() {
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-center space-x-4">
-            <div className="relative flex-1 max-w-sm">
+            <div className="relative max-w-sm flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 type="text"
                 placeholder="회사명, 코드, 사업자번호, 대표자명으로 검색..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={e => setSearchTerm(e.target.value)}
                 className="pl-10"
               />
             </div>
@@ -147,20 +164,19 @@ function CompanyList() {
       {filteredCompanies.length === 0 ? (
         <Card>
           <CardContent className="pt-6">
-            <div className="text-center py-12">
-              <Building2 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <div className="py-12 text-center">
+              <Building2 className="mx-auto mb-4 h-16 w-16 text-gray-300" />
+              <h3 className="mb-2 text-lg font-semibold text-gray-900">
                 {searchTerm ? '검색 결과가 없습니다' : '등록된 회사가 없습니다'}
               </h3>
-              <p className="text-gray-600 mb-4">
-                {searchTerm 
-                  ? '다른 검색어로 시도해보세요' 
-                  : '새로운 회사를 등록해보세요'
-                }
+              <p className="mb-4 text-gray-600">
+                {searchTerm
+                  ? '다른 검색어로 시도해보세요'
+                  : '새로운 회사를 등록해보세요'}
               </p>
               {!searchTerm && (
                 <Button onClick={() => navigate('/companies/new')}>
-                  <Plus className="w-4 h-4 mr-2" />
+                  <Plus className="mr-2 h-4 w-4" />
                   회사 등록
                 </Button>
               )}
@@ -168,9 +184,12 @@ function CompanyList() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCompanies.map((company) => (
-            <Card key={company.id} className="hover:shadow-lg transition-shadow cursor-pointer">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {filteredCompanies.map(company => (
+            <Card
+              key={company.id}
+              className="cursor-pointer transition-shadow hover:shadow-lg"
+            >
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -189,7 +208,9 @@ function CompanyList() {
                   {company.businessNumber && (
                     <div className="flex justify-between">
                       <span className="text-gray-500">사업자번호:</span>
-                      <span className="font-medium">{company.businessNumber}</span>
+                      <span className="font-medium">
+                        {company.businessNumber}
+                      </span>
                     </div>
                   )}
                   {company.ceoName && (
@@ -201,25 +222,29 @@ function CompanyList() {
                   {company.businessType && (
                     <div className="flex justify-between">
                       <span className="text-gray-500">업종:</span>
-                      <span className="font-medium">{company.businessType}</span>
+                      <span className="font-medium">
+                        {company.businessType}
+                      </span>
                     </div>
                   )}
                   {company.employeeCount && (
                     <div className="flex justify-between">
                       <span className="text-gray-500">직원 수:</span>
-                      <span className="font-medium">{company.employeeCount.toLocaleString()}명</span>
+                      <span className="font-medium">
+                        {company.employeeCount.toLocaleString()}명
+                      </span>
                     </div>
                   )}
                 </div>
-                
-                <div className="pt-3 border-t">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+
+                <div className="border-t pt-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
                     className="w-full"
                     onClick={() => navigate(`/companies/${company.id}`)}
                   >
-                    <Eye className="w-4 h-4 mr-2" />
+                    <Eye className="mr-2 h-4 w-4" />
                     상세보기
                   </Button>
                 </div>
@@ -233,6 +258,3 @@ function CompanyList() {
 }
 
 export { CompanyList }
-
-
-

@@ -7,7 +7,13 @@ export interface Order {
   id: number
   orderNumber: string
   orderDate: string
-  orderStatus: 'PENDING' | 'CONFIRMED' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED'
+  orderStatus:
+    | 'PENDING'
+    | 'CONFIRMED'
+    | 'PROCESSING'
+    | 'SHIPPED'
+    | 'DELIVERED'
+    | 'CANCELLED'
   paymentStatus: 'UNPAID' | 'PAID' | 'PARTIAL' | 'REFUNDED'
   customerId: number
   customerName: string
@@ -105,7 +111,9 @@ class OrderService {
   /**
    * 주문 생성
    */
-  async createOrder(order: Omit<Order, 'id' | 'createdAt' | 'updatedAt'>): Promise<Order> {
+  async createOrder(
+    order: Omit<Order, 'id' | 'createdAt' | 'updatedAt'>,
+  ): Promise<Order> {
     try {
       const response = await axios.post(this.baseUrl, order)
       return response.data.data
@@ -143,9 +151,14 @@ class OrderService {
   /**
    * 주문 상태 변경
    */
-  async updateOrderStatus(id: number, status: Order['orderStatus']): Promise<Order> {
+  async updateOrderStatus(
+    id: number,
+    status: Order['orderStatus'],
+  ): Promise<Order> {
     try {
-      const response = await axios.patch(`${this.baseUrl}/${id}/status`, { status })
+      const response = await axios.patch(`${this.baseUrl}/${id}/status`, {
+        status,
+      })
       return response.data.data
     } catch (error) {
       console.error('주문 상태 변경 오류:', error)
@@ -156,9 +169,15 @@ class OrderService {
   /**
    * 결제 상태 변경
    */
-  async updatePaymentStatus(id: number, paymentStatus: Order['paymentStatus']): Promise<Order> {
+  async updatePaymentStatus(
+    id: number,
+    paymentStatus: Order['paymentStatus'],
+  ): Promise<Order> {
     try {
-      const response = await axios.patch(`${this.baseUrl}/${id}/payment-status`, { paymentStatus })
+      const response = await axios.patch(
+        `${this.baseUrl}/${id}/payment-status`,
+        { paymentStatus },
+      )
       return response.data.data
     } catch (error) {
       console.error('결제 상태 변경 오류:', error)
@@ -172,7 +191,7 @@ class OrderService {
   async searchOrders(searchTerm: string): Promise<Order[]> {
     try {
       const response = await axios.get(`${this.baseUrl}/search`, {
-        params: { q: searchTerm }
+        params: { q: searchTerm },
       })
       return response.data.data
     } catch (error) {
@@ -183,6 +202,3 @@ class OrderService {
 }
 
 export const orderService = new OrderService()
-
-
-

@@ -3,14 +3,15 @@
  * 로그인, 로그아웃, 토큰 갱신 등의 인증 관련 API를 제공합니다
  */
 
-import api from './api'
-import type { 
-  LoginRequest, 
-  LoginResponse, 
-  RefreshTokenRequest, 
+import type {
+  LoginRequest,
+  LoginResponse,
+  RefreshTokenRequest,
   RefreshTokenResponse,
-  UserInfo 
+  UserInfo,
 } from '@/types/auth'
+
+import api from './api'
 
 // 인증 API 기본 URL (api.ts에서 이미 /api가 설정되어 있음)
 const AUTH_BASE_URL = '/auth'
@@ -42,7 +43,7 @@ export const authApi = {
    */
   refreshToken: async (refreshToken: string): Promise<RefreshTokenResponse> => {
     const response = await api.post(`${AUTH_BASE_URL}/refresh`, {
-      refreshToken
+      refreshToken,
     })
     // 백엔드는 ApiResponse<LoginResponse> 형식으로 응답하므로 response.data.data를 반환
     return response.data.data
@@ -56,7 +57,10 @@ export const authApi = {
     const response = await api.get(`${AUTH_BASE_URL}/me`)
     console.log('현재 사용자 정보 조회 API 응답:', response)
     console.log('현재 사용자 정보:', response.data)
-    console.log('현재 사용자 정보 상세:', JSON.stringify(response.data, null, 2))
+    console.log(
+      '현재 사용자 정보 상세:',
+      JSON.stringify(response.data, null, 2),
+    )
     // 백엔드는 ApiResponse<UserInfo> 형식으로 응답하므로 response.data.data를 반환
     return response.data.data
   },
@@ -64,10 +68,13 @@ export const authApi = {
   /**
    * 비밀번호 변경
    */
-  changePassword: async (currentPassword: string, newPassword: string): Promise<void> => {
+  changePassword: async (
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<void> => {
     await api.post(`${AUTH_BASE_URL}/change-password`, {
       currentPassword,
-      newPassword
+      newPassword,
     })
   },
 
@@ -76,7 +83,7 @@ export const authApi = {
    */
   requestPasswordReset: async (email: string): Promise<void> => {
     await api.post(`${AUTH_BASE_URL}/reset-password`, { email })
-  }
+  },
 }
 
 /**
@@ -124,7 +131,7 @@ export const tokenUtils = {
    */
   isTokenValid: (token: string): boolean => {
     if (!token) return false
-    
+
     try {
       // JWT 토큰 디코딩하여 만료 시간 확인
       const payload = JSON.parse(atob(token.split('.')[1]))
@@ -133,8 +140,5 @@ export const tokenUtils = {
     } catch {
       return false
     }
-  }
+  },
 }
-
-
-

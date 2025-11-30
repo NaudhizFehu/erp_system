@@ -3,12 +3,17 @@
  * 직원 정보를 입력하고 수정하는 폼입니다
  */
 
+import { zodResolver } from '@hookform/resolvers/zod'
+import { format } from 'date-fns'
+import { ko } from 'date-fns/locale'
+import { CalendarIcon, Loader2, Hash } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
+
 import { Button } from '@/components/ui/button'
-import { useAuth } from '@/contexts/AuthContext'
+import { Calendar } from '@/components/ui/calendar'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Form,
   FormControl,
@@ -19,7 +24,11 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import {
   Select,
   SelectContent,
@@ -27,67 +36,73 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
-import { CalendarIcon, Loader2, Hash } from 'lucide-react'
-import { Calendar } from '@/components/ui/calendar'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
-import { format } from 'date-fns'
-import { ko } from 'date-fns/locale'
+import { Textarea } from '@/components/ui/textarea'
+import { useAuth } from '@/contexts/AuthContext'
+import { useCheckEmployeeNumber, useCheckEmail } from '@/hooks/useEmployees'
 import { cn } from '@/lib/utils'
-import { EmployeeNumberHelper } from './EmployeeNumberHelper'
-import type { 
-  Employee, 
-  EmployeeCreateRequest, 
+import type {
+  Employee,
+  EmployeeCreateRequest,
   EmployeeUpdateRequest,
   Company,
   Department,
-  Position
+  Position,
 } from '@/types/hr'
-import { 
+import {
   Gender,
   EmploymentStatus,
-  EmploymentType
+  EmploymentType,
+  KOREAN_LABELS,
 } from '@/types/hr'
-import { KOREAN_LABELS } from '@/types/hr'
-import { useCheckEmployeeNumber, useCheckEmail } from '@/hooks/useEmployees'
+
+import { EmployeeNumberHelper } from './EmployeeNumberHelper'
 
 // 폼 검증 스키마
 const employeeFormSchema = z.object({
-  employeeNumber: z.string()
+  employeeNumber: z
+    .string()
     .min(1, '사번은 필수입니다')
     .max(20, '사번은 20자 이하여야 합니다')
     .regex(/^[A-Z0-9]+$/, '사번은 대문자와 숫자만 사용 가능합니다'),
-  name: z.string()
+  name: z
+    .string()
     .min(1, '성명은 필수입니다')
     .max(50, '성명은 50자 이하여야 합니다'),
-  nameEn: z.string()
-    .max(100, '영문 성명은 100자 이하여야 합니다')
-    .optional(),
-  email: z.string()
+  nameEn: z.string().max(100, '영문 성명은 100자 이하여야 합니다').optional(),
+  email: z
+    .string()
     .min(1, '이메일은 필수입니다')
     .email('올바른 이메일 형식이어야 합니다')
     .max(100, '이메일은 100자 이하여야 합니다'),
-  phone: z.string()
-    .regex(/^\d{2,3}-\d{3,4}-\d{4}$/, '올바른 전화번호 형식이어야 합니다 (예: 02-1234-5678)')
+  phone: z
+    .string()
+    .regex(
+      /^\d{2,3}-\d{3,4}-\d{4}$/,
+      '올바른 전화번호 형식이어야 합니다 (예: 02-1234-5678)',
+    )
     .optional()
     .or(z.literal('')),
-  mobile: z.string()
+  mobile: z
+    .string()
     .min(1, '휴대폰번호는 필수입니다')
-    .regex(/^010-\d{4}-\d{4}$/, '올바른 휴대폰번호 형식이어야 합니다 (예: 010-1234-5678)'),
+    .regex(
+      /^010-\d{4}-\d{4}$/,
+      '올바른 휴대폰번호 형식이어야 합니다 (예: 010-1234-5678)',
+    ),
   birthDate: z.date({
-    required_error: '생년월일은 필수입니다'
+    required_error: '생년월일은 필수입니다',
   }),
   gender: z.nativeEnum(Gender, {
-    required_error: '성별은 필수입니다'
+    required_error: '성별은 필수입니다',
   }),
   address: z.string().max(500, '주소는 500자 이하여야 합니다').optional(),
-  addressDetail: z.string().max(200, '상세 주소는 200자 이하여야 합니다').optional(),
-  postalCode: z.string()
+  addressDetail: z
+    .string()
+    .max(200, '상세 주소는 200자 이하여야 합니다')
+    .optional(),
+  postalCode: z
+    .string()
     .regex(/^\d{5}$/, '올바른 우편번호 형식이어야 합니다 (5자리 숫자)')
     .optional()
     .or(z.literal('')),
@@ -96,26 +111,45 @@ const employeeFormSchema = z.object({
   position: z.number().min(1, '직급은 필수입니다'),
   hireDate: z.date(),
   employmentStatus: z.nativeEnum(EmploymentStatus, {
-    required_error: '근무 상태는 필수입니다'
+    required_error: '근무 상태는 필수입니다',
   }),
   employmentType: z.nativeEnum(EmploymentType).optional(),
   baseSalary: z.number().min(1, '기본급은 1원 이상이어야 합니다'),
-  bankName: z.string().min(1, '은행명은 필수입니다').max(50, '은행명은 50자 이하여야 합니다'),
-  accountNumber: z.string().min(1, '계좌번호는 필수입니다').max(50, '계좌번호는 50자 이하여야 합니다'),
-  accountHolder: z.string().min(1, '예금주명은 필수입니다').max(50, '예금주명은 50자 이하여야 합니다'),
-  emergencyContact: z.string().max(20, '비상연락처는 20자 이하여야 합니다').optional(),
-  emergencyRelation: z.string().max(20, '비상연락처 관계는 20자 이하여야 합니다').optional(),
+  bankName: z
+    .string()
+    .min(1, '은행명은 필수입니다')
+    .max(50, '은행명은 50자 이하여야 합니다'),
+  accountNumber: z
+    .string()
+    .min(1, '계좌번호는 필수입니다')
+    .max(50, '계좌번호는 50자 이하여야 합니다'),
+  accountHolder: z
+    .string()
+    .min(1, '예금주명은 필수입니다')
+    .max(50, '예금주명은 50자 이하여야 합니다'),
+  emergencyContact: z
+    .string()
+    .max(20, '비상연락처는 20자 이하여야 합니다')
+    .optional(),
+  emergencyRelation: z
+    .string()
+    .max(20, '비상연락처 관계는 20자 이하여야 합니다')
+    .optional(),
   education: z.string().max(100, '학력은 100자 이하여야 합니다').optional(),
   major: z.string().max(100, '전공은 100자 이하여야 합니다').optional(),
   career: z.string().max(1000, '경력은 1000자 이하여야 합니다').optional(),
   skills: z.string().max(500, '기술 스택은 500자 이하여야 합니다').optional(),
-  certifications: z.string().max(500, '자격증은 500자 이하여야 합니다').optional(),
+  certifications: z
+    .string()
+    .max(500, '자격증은 500자 이하여야 합니다')
+    .optional(),
   memo: z.string().optional(),
-  profileImageUrl: z.string()
+  profileImageUrl: z
+    .string()
     .url('올바른 URL 형식이어야 합니다')
     .max(500, 'URL은 500자 이하여야 합니다')
     .optional()
-    .or(z.literal(''))
+    .or(z.literal('')),
 })
 
 type EmployeeFormData = z.infer<typeof employeeFormSchema>
@@ -125,7 +159,9 @@ interface EmployeeFormProps {
   companies: Company[]
   departments: Department[]
   positions: Position[]
-  onSubmit: (data: EmployeeCreateRequest | EmployeeUpdateRequest) => Promise<void>
+  onSubmit: (
+    data: EmployeeCreateRequest | EmployeeUpdateRequest
+  ) => Promise<void>
   onCancel: () => void
   loading?: boolean
   mode?: 'create' | 'edit'
@@ -142,23 +178,28 @@ export function EmployeeForm({
   onSubmit,
   onCancel,
   loading = false,
-  mode = 'create'
+  mode = 'create',
 }: EmployeeFormProps) {
   const { user } = useAuth()
   const isEditMode = mode === 'edit'
-  const [showEmployeeNumberHelper, setShowEmployeeNumberHelper] = useState(false)
-  const [selectedCompanyFromHelper, setSelectedCompanyFromHelper] = useState<number | null>(null)
-  const [isEmployeeNumberFromHelper, setIsEmployeeNumberFromHelper] = useState(false)
-  
+  const [showEmployeeNumberHelper, setShowEmployeeNumberHelper] =
+    useState(false)
+  const [selectedCompanyFromHelper, setSelectedCompanyFromHelper] = useState<
+    number | null
+  >(null)
+  const [isEmployeeNumberFromHelper, setIsEmployeeNumberFromHelper] =
+    useState(false)
+
   // 사번 필드 읽기 전용 조건
   // ADMIN/MANAGER: 읽기 전용 (사번확인도우미만 사용 가능)
   // SUPER_ADMIN: 직접 입력 가능
   const isEmployeeNumberReadOnly = user?.role !== 'SUPER_ADMIN' && !isEditMode
-  
+
   // 회사 필드 비활성화 조건
   // SUPER_ADMIN: 항상 변경 가능
   // ADMIN/MANAGER: 사번확인도우미 사용 시 변경 불가
-  const isCompanyDisabled = user?.role !== 'SUPER_ADMIN' && isEmployeeNumberFromHelper
+  const isCompanyDisabled =
+    user?.role !== 'SUPER_ADMIN' && isEmployeeNumberFromHelper
 
   // 폼 초기화
   const form = useForm<EmployeeFormData>({
@@ -193,16 +234,16 @@ export function EmployeeForm({
       skills: employee?.skills || '',
       certifications: employee?.certifications || '',
       memo: employee?.memo || '',
-      profileImageUrl: employee?.profileImageUrl || ''
-    }
+      profileImageUrl: employee?.profileImageUrl || '',
+    },
   })
 
   // 중복 확인
   const employeeNumberWatch = form.watch('employeeNumber')
   const emailWatch = form.watch('email')
-  
+
   const { data: isEmployeeNumberExists } = useCheckEmployeeNumber(
-    employeeNumberWatch || '', 
+    employeeNumberWatch || '',
     isEditMode ? employee?.id : undefined
   )
   const { data: isEmailExists } = useCheckEmail(
@@ -224,7 +265,7 @@ export function EmployeeForm({
 
     try {
       const { department, position, ...restData } = data
-      
+
       const submitData = {
         ...restData,
         departmentId: department,
@@ -249,7 +290,7 @@ export function EmployeeForm({
         skills: restData.skills || undefined,
         certifications: restData.certifications || undefined,
         memo: restData.memo || undefined,
-        profileImageUrl: restData.profileImageUrl || undefined
+        profileImageUrl: restData.profileImageUrl || undefined,
       }
 
       await onSubmit(submitData)
@@ -266,7 +307,7 @@ export function EmployeeForm({
           <CardHeader>
             <CardTitle>기본 정보</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {/* 사번 */}
             <FormField
               control={form.control}
@@ -276,16 +317,19 @@ export function EmployeeForm({
                   <FormLabel>사번 *</FormLabel>
                   <div className="flex gap-2">
                     <FormControl>
-                      <Input 
-                        placeholder="예: EMP001" 
+                      <Input
+                        placeholder="예: EMP001"
                         {...field}
                         disabled={isEditMode}
                         readOnly={isEmployeeNumberReadOnly}
                         className="flex-1"
-                        onChange={(e) => {
+                        onChange={e => {
                           field.onChange(e)
                           // 사번이 수정되면 회사 고정 해제 (SUPER_ADMIN만)
-                          if (isEmployeeNumberFromHelper && user?.role === 'SUPER_ADMIN') {
+                          if (
+                            isEmployeeNumberFromHelper &&
+                            user?.role === 'SUPER_ADMIN'
+                          ) {
                             setIsEmployeeNumberFromHelper(false)
                             setSelectedCompanyFromHelper(null)
                           }
@@ -300,7 +344,7 @@ export function EmployeeForm({
                         onClick={() => setShowEmployeeNumberHelper(true)}
                         className="shrink-0"
                       >
-                        <Hash className="h-4 w-4 mr-1" />
+                        <Hash className="mr-1 h-4 w-4" />
                         확인
                       </Button>
                     )}
@@ -312,7 +356,7 @@ export function EmployeeForm({
                   )}
                   {isEmployeeNumberFromHelper && selectedCompanyFromHelper && (
                     <FormDescription className="text-blue-600">
-                      {user?.role === 'SUPER_ADMIN' 
+                      {user?.role === 'SUPER_ADMIN'
                         ? '사번확인도우미로 입력된 사번입니다. 회사가 자동 선택되었습니다.'
                         : '사번확인도우미로 입력된 사번입니다. 회사가 자동 선택되어 변경할 수 없습니다.'}
                     </FormDescription>
@@ -365,10 +409,10 @@ export function EmployeeForm({
                 <FormItem>
                   <FormLabel>이메일 *</FormLabel>
                   <FormControl>
-                    <Input 
-                      type="email" 
-                      placeholder="hong@company.com" 
-                      {...field} 
+                    <Input
+                      type="email"
+                      placeholder="hong@company.com"
+                      {...field}
                     />
                   </FormControl>
                   {isEmailExists && (
@@ -424,12 +468,14 @@ export function EmployeeForm({
                         <Button
                           variant="outline"
                           className={cn(
-                            "w-full pl-3 text-left font-normal h-10",
-                            !field.value && "text-muted-foreground"
+                            'h-10 w-full pl-3 text-left font-normal',
+                            !field.value && 'text-muted-foreground',
                           )}
                         >
                           {field.value ? (
-                            format(field.value, "yyyy년 MM월 dd일", { locale: ko })
+                            format(field.value, 'yyyy년 MM월 dd일', {
+                              locale: ko,
+                            })
                           ) : (
                             <span>날짜를 선택하세요</span>
                           )}
@@ -442,8 +488,8 @@ export function EmployeeForm({
                         mode="single"
                         selected={field.value}
                         onSelect={field.onChange}
-                        disabled={(date) =>
-                          date > new Date() || date < new Date("1900-01-01")
+                        disabled={date =>
+                          date > new Date() || date < new Date('1900-01-01')
                         }
                         initialFocus
                         fromYear={1950}
@@ -463,10 +509,7 @@ export function EmployeeForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>성별 *</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    value={field.value}
-                  >
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="성별을 선택하세요" />
@@ -493,7 +536,7 @@ export function EmployeeForm({
           <CardHeader>
             <CardTitle>주소 정보</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {/* 우편번호 */}
             <FormField
               control={form.control}
@@ -508,9 +551,7 @@ export function EmployeeForm({
                 </FormItem>
               )}
             />
-
             <div /> {/* 빈 공간 */}
-
             {/* 주소 */}
             <FormField
               control={form.control}
@@ -519,13 +560,15 @@ export function EmployeeForm({
                 <FormItem className="md:col-span-2">
                   <FormLabel>주소</FormLabel>
                   <FormControl>
-                    <Input placeholder="서울특별시 강남구 테헤란로 123" {...field} />
+                    <Input
+                      placeholder="서울특별시 강남구 테헤란로 123"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-
             {/* 상세 주소 */}
             <FormField
               control={form.control}
@@ -548,7 +591,7 @@ export function EmployeeForm({
           <CardHeader>
             <CardTitle>회사 정보</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-3">
             {/* 회사 */}
             <FormField
               control={form.control}
@@ -556,8 +599,8 @@ export function EmployeeForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>소속 회사 *</FormLabel>
-                  <Select 
-                    onValueChange={(value) => field.onChange(Number(value))}
+                  <Select
+                    onValueChange={value => field.onChange(Number(value))}
                     value={field.value?.toString()}
                     disabled={isCompanyDisabled}
                   >
@@ -567,8 +610,11 @@ export function EmployeeForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {companies.map((company) => (
-                        <SelectItem key={company.id} value={company.id.toString()}>
+                      {companies.map(company => (
+                        <SelectItem
+                          key={company.id}
+                          value={company.id.toString()}
+                        >
                           {company.name}
                         </SelectItem>
                       ))}
@@ -591,8 +637,8 @@ export function EmployeeForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>소속 부서 *</FormLabel>
-                  <Select 
-                    onValueChange={(value) => field.onChange(Number(value))}
+                  <Select
+                    onValueChange={value => field.onChange(Number(value))}
                     value={field.value?.toString()}
                   >
                     <FormControl>
@@ -602,11 +648,16 @@ export function EmployeeForm({
                     </FormControl>
                     <SelectContent>
                       {departments
-                        .filter((department, index, self) => 
-                          self.findIndex(d => d.name === department.name) === index
+                        .filter(
+                          (department, index, self) =>
+                            self.findIndex(d => d.name === department.name) ===
+                            index
                         )
-                        .map((department) => (
-                          <SelectItem key={department.id} value={department.id.toString()}>
+                        .map(department => (
+                          <SelectItem
+                            key={department.id}
+                            value={department.id.toString()}
+                          >
                             {department.name}
                           </SelectItem>
                         ))}
@@ -624,8 +675,8 @@ export function EmployeeForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>직급 *</FormLabel>
-                  <Select 
-                    onValueChange={(value) => field.onChange(Number(value))}
+                  <Select
+                    onValueChange={value => field.onChange(Number(value))}
                     value={field.value?.toString()}
                   >
                     <FormControl>
@@ -635,11 +686,16 @@ export function EmployeeForm({
                     </FormControl>
                     <SelectContent>
                       {positions
-                        .filter((position, index, self) => 
-                          self.findIndex(p => p.name === position.name) === index
+                        .filter(
+                          (position, index, self) =>
+                            self.findIndex(p => p.name === position.name) ===
+                            index
                         )
-                        .map((position) => (
-                          <SelectItem key={position.id} value={position.id.toString()}>
+                        .map(position => (
+                          <SelectItem
+                            key={position.id}
+                            value={position.id.toString()}
+                          >
                             {position.name}
                           </SelectItem>
                         ))}
@@ -663,12 +719,14 @@ export function EmployeeForm({
                         <Button
                           variant="outline"
                           className={cn(
-                            "w-full pl-3 text-left font-normal h-10",
-                            !field.value && "text-muted-foreground"
+                            'h-10 w-full pl-3 text-left font-normal',
+                            !field.value && 'text-muted-foreground',
                           )}
                         >
                           {field.value ? (
-                            format(field.value, "yyyy년 MM월 dd일", { locale: ko })
+                            format(field.value, 'yyyy년 MM월 dd일', {
+                              locale: ko,
+                            })
                           ) : (
                             <span>날짜를 선택하세요</span>
                           )}
@@ -681,7 +739,7 @@ export function EmployeeForm({
                         mode="single"
                         selected={field.value}
                         onSelect={field.onChange}
-                        disabled={(date) => date > new Date()}
+                        disabled={date => date > new Date()}
                         initialFocus
                         fromYear={1990}
                         toYear={new Date().getFullYear()}
@@ -700,17 +758,14 @@ export function EmployeeForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>근무 상태 *</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    value={field.value}
-                  >
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="근무 상태를 선택하세요" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {Object.values(EmploymentStatus).map((status) => (
+                      {Object.values(EmploymentStatus).map(status => (
                         <SelectItem key={status} value={status}>
                           {KOREAN_LABELS[status]}
                         </SelectItem>
@@ -729,17 +784,14 @@ export function EmployeeForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>고용 형태</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    value={field.value}
-                  >
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="고용 형태를 선택하세요" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {Object.values(EmploymentType).map((type) => (
+                      {Object.values(EmploymentType).map(type => (
                         <SelectItem key={type} value={type}>
                           {KOREAN_LABELS[type]}
                         </SelectItem>
@@ -758,7 +810,7 @@ export function EmployeeForm({
           <CardHeader>
             <CardTitle>급여 및 계좌 정보</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {/* 예금주명 */}
             <FormField
               control={form.control}
@@ -782,12 +834,12 @@ export function EmployeeForm({
                 <FormItem>
                   <FormLabel>기본급 *</FormLabel>
                   <FormControl>
-                    <Input 
-                      type="number" 
-                      placeholder="3000000" 
+                    <Input
+                      type="number"
+                      placeholder="3000000"
                       min="0"
                       value={field.value ?? ''}
-                      onChange={(e) => {
+                      onChange={e => {
                         const value = e.target.value
                         if (value === '') {
                           field.onChange(0)
@@ -843,7 +895,7 @@ export function EmployeeForm({
           <CardHeader>
             <CardTitle>비상연락처</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {/* 비상연락처 */}
             <FormField
               control={form.control}
@@ -881,7 +933,7 @@ export function EmployeeForm({
           <CardHeader>
             <CardTitle>학력 및 경력</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {/* 학력 */}
             <FormField
               control={form.control}
@@ -920,10 +972,10 @@ export function EmployeeForm({
                 <FormItem className="md:col-span-2">
                   <FormLabel>경력</FormLabel>
                   <FormControl>
-                    <Textarea 
+                    <Textarea
                       placeholder="이전 직장 경력을 입력하세요..."
                       className="min-h-[80px]"
-                      {...field} 
+                      {...field}
                     />
                   </FormControl>
                   <FormMessage />
@@ -939,9 +991,9 @@ export function EmployeeForm({
                 <FormItem className="md:col-span-2">
                   <FormLabel>기술 스택</FormLabel>
                   <FormControl>
-                    <Input 
-                      placeholder="Java, Spring Boot, React, TypeScript" 
-                      {...field} 
+                    <Input
+                      placeholder="Java, Spring Boot, React, TypeScript"
+                      {...field}
                     />
                   </FormControl>
                   <FormDescription>
@@ -960,10 +1012,7 @@ export function EmployeeForm({
                 <FormItem className="md:col-span-2">
                   <FormLabel>자격증</FormLabel>
                   <FormControl>
-                    <Input 
-                      placeholder="정보처리기사, SQLD" 
-                      {...field} 
-                    />
+                    <Input placeholder="정보처리기사, SQLD" {...field} />
                   </FormControl>
                   <FormDescription>
                     콤마(,)로 구분하여 입력하세요
@@ -989,10 +1038,10 @@ export function EmployeeForm({
                 <FormItem>
                   <FormLabel>프로필 이미지 URL</FormLabel>
                   <FormControl>
-                    <Input 
+                    <Input
                       type="url"
-                      placeholder="https://example.com/profile.jpg" 
-                      {...field} 
+                      placeholder="https://example.com/profile.jpg"
+                      {...field}
                     />
                   </FormControl>
                   <FormMessage />
@@ -1008,10 +1057,10 @@ export function EmployeeForm({
                 <FormItem>
                   <FormLabel>메모</FormLabel>
                   <FormControl>
-                    <Textarea 
+                    <Textarea
                       placeholder="추가 정보나 특이사항을 입력하세요..."
                       className="min-h-[100px]"
-                      {...field} 
+                      {...field}
                     />
                   </FormControl>
                   <FormMessage />
@@ -1023,9 +1072,9 @@ export function EmployeeForm({
 
         {/* 버튼 */}
         <div className="flex justify-end space-x-2">
-          <Button 
-            type="button" 
-            variant="outline" 
+          <Button
+            type="button"
+            variant="outline"
             onClick={onCancel}
             disabled={loading}
           >
@@ -1039,16 +1088,16 @@ export function EmployeeForm({
       </form>
 
       {/* 사번 확인 도우미 */}
-      <EmployeeNumberHelper 
+      <EmployeeNumberHelper
         open={showEmployeeNumberHelper}
         onOpenChange={setShowEmployeeNumberHelper}
         onSelectEmployeeNumber={(employeeNumber, companyId) => {
           // 사번 입력
           form.setValue('employeeNumber', employeeNumber)
-          
+
           // 회사 자동 선택
           form.setValue('companyId', companyId)
-          
+
           // 상태 업데이트
           setSelectedCompanyFromHelper(companyId)
           setIsEmployeeNumberFromHelper(true)
@@ -1057,4 +1106,3 @@ export function EmployeeForm({
     </Form>
   )
 }
-

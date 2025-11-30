@@ -5,8 +5,14 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { employeeApi, companyApi, departmentApi, positionApi } from '@/services/hrApi'
+
 import { useAuth } from '@/contexts/AuthContext'
+import {
+  employeeApi,
+  companyApi,
+  departmentApi,
+  positionApi,
+} from '@/services/hrApi'
 import type {
   Employee,
   EmployeeCreateRequest,
@@ -17,7 +23,7 @@ import type {
   Department,
   Position,
   ImportResult,
-  ExportFormat
+  ExportFormat,
 } from '@/types/hr'
 
 /**
@@ -26,20 +32,29 @@ import type {
 export const EMPLOYEE_QUERY_KEYS = {
   all: ['employees'] as const,
   lists: () => [...EMPLOYEE_QUERY_KEYS.all, 'list'] as const,
-  list: (params: SearchParams) => [...EMPLOYEE_QUERY_KEYS.lists(), params] as const,
+  list: (params: SearchParams) =>
+    [...EMPLOYEE_QUERY_KEYS.lists(), params] as const,
   details: () => [...EMPLOYEE_QUERY_KEYS.all, 'detail'] as const,
   detail: (id: number) => [...EMPLOYEE_QUERY_KEYS.details(), id] as const,
-  search: (searchTerm: string, params: SearchParams) => [...EMPLOYEE_QUERY_KEYS.all, 'search', searchTerm, params] as const,
+  search: (searchTerm: string, params: SearchParams) =>
+    [...EMPLOYEE_QUERY_KEYS.all, 'search', searchTerm, params] as const,
   active: () => [...EMPLOYEE_QUERY_KEYS.all, 'active'] as const,
-  activeByCompany: (companyId: number) => [...EMPLOYEE_QUERY_KEYS.active(), companyId] as const,
-  byCompany: (companyId: number, params: SearchParams) => [...EMPLOYEE_QUERY_KEYS.all, 'company', companyId, params] as const,
-  byDepartment: (departmentId: number, params: SearchParams) => [...EMPLOYEE_QUERY_KEYS.all, 'department', departmentId, params] as const,
-  byHireDateRange: (startDate: string, endDate: string) => [...EMPLOYEE_QUERY_KEYS.all, 'hireDate', startDate, endDate] as const,
-  byBirthday: (month: number, day: number) => [...EMPLOYEE_QUERY_KEYS.all, 'birthday', month, day] as const,
-  birthdayThisMonth: () => [...EMPLOYEE_QUERY_KEYS.all, 'birthdayThisMonth'] as const,
+  activeByCompany: (companyId: number) =>
+    [...EMPLOYEE_QUERY_KEYS.active(), companyId] as const,
+  byCompany: (companyId: number, params: SearchParams) =>
+    [...EMPLOYEE_QUERY_KEYS.all, 'company', companyId, params] as const,
+  byDepartment: (departmentId: number, params: SearchParams) =>
+    [...EMPLOYEE_QUERY_KEYS.all, 'department', departmentId, params] as const,
+  byHireDateRange: (startDate: string, endDate: string) =>
+    [...EMPLOYEE_QUERY_KEYS.all, 'hireDate', startDate, endDate] as const,
+  byBirthday: (month: number, day: number) =>
+    [...EMPLOYEE_QUERY_KEYS.all, 'birthday', month, day] as const,
+  birthdayThisMonth: () =>
+    [...EMPLOYEE_QUERY_KEYS.all, 'birthdayThisMonth'] as const,
   statistics: () => [...EMPLOYEE_QUERY_KEYS.all, 'statistics'] as const,
   check: () => [...EMPLOYEE_QUERY_KEYS.all, 'check'] as const,
-  countsByStatus: () => [...EMPLOYEE_QUERY_KEYS.all, 'counts', 'byStatus'] as const
+  countsByStatus: () =>
+    [...EMPLOYEE_QUERY_KEYS.all, 'counts', 'byStatus'] as const,
 }
 
 /**
@@ -51,33 +66,35 @@ export function useEmployees(params: SearchParams = {}) {
     queryFn: async () => {
       try {
         const result = await employeeApi.getEmployees(params)
-        return result || {
-          content: [],
-          pageable: {
+        return (
+          result || {
+            content: [],
+            pageable: {
+              sort: { sorted: false, unsorted: true, empty: true },
+              pageNumber: params.page || 0,
+              pageSize: params.size || 20,
+              offset: (params.page || 0) * (params.size || 20),
+              paged: true,
+              unpaged: false,
+            },
+            totalElements: 0,
+            totalPages: 0,
+            last: true,
+            first: true,
+            numberOfElements: 0,
+            size: params.size || 20,
+            number: params.page || 0,
             sort: { sorted: false, unsorted: true, empty: true },
-            pageNumber: params.page || 0,
-            pageSize: params.size || 20,
-            offset: (params.page || 0) * (params.size || 20),
-            paged: true,
-            unpaged: false
-          },
-          totalElements: 0,
-          totalPages: 0,
-          last: true,
-          first: true,
-          numberOfElements: 0,
-          size: params.size || 20,
-          number: params.page || 0,
-          sort: { sorted: false, unsorted: true, empty: true },
-          empty: true
-        }
+            empty: true,
+          }
+        )
       } catch (error) {
         console.error('직원 목록 조회 오류:', error)
         throw error
       }
     },
     staleTime: 5 * 60 * 1000, // 5분
-    retry: 3
+    retry: 3,
   })
 }
 
@@ -90,39 +107,44 @@ export function useEmployee(id: number) {
     queryFn: () => employeeApi.getEmployee(id),
     enabled: !!id,
     staleTime: 5 * 60 * 1000,
-    retry: 3
+    retry: 3,
   })
 }
 
 /**
  * 직원 검색 훅
  */
-export function useEmployeeSearch(searchTerm: string, params: SearchParams = {}) {
+export function useEmployeeSearch(
+  searchTerm: string,
+  params: SearchParams = {},
+) {
   return useQuery({
     queryKey: EMPLOYEE_QUERY_KEYS.search(searchTerm, params),
     queryFn: async () => {
       try {
         const result = await employeeApi.searchEmployees(searchTerm, params)
-        return result || {
-          content: [],
-          pageable: {
+        return (
+          result || {
+            content: [],
+            pageable: {
+              sort: { sorted: false, unsorted: true, empty: true },
+              pageNumber: params.page || 0,
+              pageSize: params.size || 20,
+              offset: (params.page || 0) * (params.size || 20),
+              paged: true,
+              unpaged: false,
+            },
+            totalElements: 0,
+            totalPages: 0,
+            last: true,
+            first: true,
+            numberOfElements: 0,
+            size: params.size || 20,
+            number: params.page || 0,
             sort: { sorted: false, unsorted: true, empty: true },
-            pageNumber: params.page || 0,
-            pageSize: params.size || 20,
-            offset: (params.page || 0) * (params.size || 20),
-            paged: true,
-            unpaged: false
-          },
-          totalElements: 0,
-          totalPages: 0,
-          last: true,
-          first: true,
-          numberOfElements: 0,
-          size: params.size || 20,
-          number: params.page || 0,
-          sort: { sorted: false, unsorted: true, empty: true },
-          empty: true
-        }
+            empty: true,
+          }
+        )
       } catch (error) {
         console.error('직원 검색 오류:', error)
         throw error
@@ -130,7 +152,7 @@ export function useEmployeeSearch(searchTerm: string, params: SearchParams = {})
     },
     enabled: !!searchTerm && searchTerm.length >= 1,
     staleTime: 2 * 60 * 1000, // 2분
-    retry: 2
+    retry: 2,
   })
 }
 
@@ -150,7 +172,7 @@ export function useActiveEmployees() {
       }
     },
     staleTime: 10 * 60 * 1000, // 10분
-    retry: 3
+    retry: 3,
   })
 }
 
@@ -171,33 +193,39 @@ export function useActiveEmployeesByCompany(companyId: number) {
     },
     enabled: !!companyId,
     staleTime: 10 * 60 * 1000,
-    retry: 3
+    retry: 3,
   })
 }
 
 /**
  * 회사별 직원 목록 조회 훅
  */
-export function useEmployeesByCompany(companyId: number, params: SearchParams = {}) {
+export function useEmployeesByCompany(
+  companyId: number,
+  params: SearchParams = {},
+) {
   return useQuery({
     queryKey: EMPLOYEE_QUERY_KEYS.byCompany(companyId, params),
     queryFn: () => employeeApi.getEmployeesByCompany(companyId, params),
     enabled: !!companyId,
     staleTime: 5 * 60 * 1000,
-    retry: 3
+    retry: 3,
   })
 }
 
 /**
  * 부서별 직원 목록 조회 훅
  */
-export function useEmployeesByDepartment(departmentId: number, params: SearchParams = {}) {
+export function useEmployeesByDepartment(
+  departmentId: number,
+  params: SearchParams = {},
+) {
   return useQuery({
     queryKey: EMPLOYEE_QUERY_KEYS.byDepartment(departmentId, params),
     queryFn: () => employeeApi.getEmployeesByDepartment(departmentId, params),
     enabled: !!departmentId,
     staleTime: 5 * 60 * 1000,
-    retry: 3
+    retry: 3,
   })
 }
 
@@ -209,7 +237,7 @@ export function useBirthdayEmployeesThisMonth() {
     queryKey: EMPLOYEE_QUERY_KEYS.birthdayThisMonth(),
     queryFn: () => employeeApi.getBirthdayEmployeesThisMonth(),
     staleTime: 60 * 60 * 1000, // 1시간
-    retry: 3
+    retry: 3,
   })
 }
 
@@ -221,7 +249,7 @@ export function useEmployeeCountsByStatus() {
     queryKey: EMPLOYEE_QUERY_KEYS.countsByStatus(),
     queryFn: () => employeeApi.getCountsByStatus(),
     staleTime: 60 * 1000, // 1분
-    retry: 3
+    retry: 3,
   })
 }
 
@@ -230,16 +258,17 @@ export function useEmployeeCountsByStatus() {
  */
 export function useEmployeeStatistics() {
   const { user } = useAuth()
-  
+
   // HR 통계 조회 권한 체크 (ADMIN, MANAGER, USER 모두 허용)
-  const hasHrStatsPermission = user?.role && ['ADMIN', 'MANAGER', 'USER'].includes(user.role)
+  const hasHrStatsPermission =
+    user?.role && ['ADMIN', 'MANAGER', 'USER'].includes(user.role)
 
   const positionStats = useQuery({
     queryKey: [...EMPLOYEE_QUERY_KEYS.statistics(), 'position'],
     queryFn: () => employeeApi.getEmployeeCountByPosition(),
     staleTime: 30 * 60 * 1000, // 30분
     retry: 3,
-    enabled: !!hasHrStatsPermission // 권한이 있을 때만 호출
+    enabled: !!hasHrStatsPermission, // 권한이 있을 때만 호출
   })
 
   const departmentStats = useQuery({
@@ -247,7 +276,7 @@ export function useEmployeeStatistics() {
     queryFn: () => employeeApi.getEmployeeCountByDepartment(),
     staleTime: 30 * 60 * 1000,
     retry: 3,
-    enabled: !!hasHrStatsPermission
+    enabled: !!hasHrStatsPermission,
   })
 
   const hireYearStats = useQuery({
@@ -255,7 +284,7 @@ export function useEmployeeStatistics() {
     queryFn: () => employeeApi.getEmployeeCountByHireYear(),
     staleTime: 30 * 60 * 1000,
     retry: 3,
-    enabled: !!hasHrStatsPermission
+    enabled: !!hasHrStatsPermission,
   })
 
   const ageGroupStats = useQuery({
@@ -263,7 +292,7 @@ export function useEmployeeStatistics() {
     queryFn: () => employeeApi.getEmployeeCountByAgeGroup(),
     staleTime: 30 * 60 * 1000,
     retry: 3,
-    enabled: !!hasHrStatsPermission
+    enabled: !!hasHrStatsPermission,
   })
 
   const genderStats = useQuery({
@@ -271,7 +300,7 @@ export function useEmployeeStatistics() {
     queryFn: () => employeeApi.getEmployeeCountByGender(),
     staleTime: 30 * 60 * 1000,
     retry: 3,
-    enabled: !!hasHrStatsPermission
+    enabled: !!hasHrStatsPermission,
   })
 
   return {
@@ -280,7 +309,7 @@ export function useEmployeeStatistics() {
     hireYearStats,
     ageGroupStats,
     genderStats,
-    hasHrStatsPermission
+    hasHrStatsPermission,
   }
 }
 
@@ -289,22 +318,28 @@ export function useEmployeeStatistics() {
  */
 export function useHrPermissions() {
   const { user } = useAuth()
-  
+
   return {
     // 조회 권한 (모든 사용자)
-    canView: user?.role && ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'USER'].includes(user.role),
-    
+    canView:
+      user?.role &&
+      ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'USER'].includes(user.role),
+
     // 수정 권한 (SUPER_ADMIN, MANAGER, ADMIN)
-    canEdit: user?.role && ['SUPER_ADMIN', 'ADMIN', 'MANAGER'].includes(user.role),
-    
+    canEdit:
+      user?.role && ['SUPER_ADMIN', 'ADMIN', 'MANAGER'].includes(user.role),
+
     // 관리 권한 (SUPER_ADMIN, ADMIN, MANAGER) - 내보내기/가져오기 포함
-    canManage: user?.role && ['SUPER_ADMIN', 'ADMIN', 'MANAGER'].includes(user.role),
-    
+    canManage:
+      user?.role && ['SUPER_ADMIN', 'ADMIN', 'MANAGER'].includes(user.role),
+
     // 직원 등록 권한 (SUPER_ADMIN, ADMIN, MANAGER)
-    canCreate: user?.role && ['SUPER_ADMIN', 'ADMIN', 'MANAGER'].includes(user.role),
-    
+    canCreate:
+      user?.role && ['SUPER_ADMIN', 'ADMIN', 'MANAGER'].includes(user.role),
+
     // 직원 삭제 권한 (SUPER_ADMIN, ADMIN, MANAGER) - MANAGER도 직원 관리 가능
-    canDelete: user?.role && ['SUPER_ADMIN', 'ADMIN', 'MANAGER'].includes(user.role)
+    canDelete:
+      user?.role && ['SUPER_ADMIN', 'ADMIN', 'MANAGER'].includes(user.role),
   }
 }
 
@@ -315,16 +350,18 @@ export function useCreateEmployee() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (employee: EmployeeCreateRequest) => employeeApi.createEmployee(employee),
-    onSuccess: (data) => {
+    mutationFn: (employee: EmployeeCreateRequest) =>
+      employeeApi.createEmployee(employee),
+    onSuccess: data => {
       // 관련 쿼리 무효화
       queryClient.invalidateQueries({ queryKey: EMPLOYEE_QUERY_KEYS.all })
       toast.success('직원이 성공적으로 등록되었습니다')
     },
     onError: (error: any) => {
-      const message = error.response?.data?.message || '직원 등록에 실패했습니다'
+      const message =
+        error.response?.data?.message || '직원 등록에 실패했습니다'
       toast.error(message)
-    }
+    },
   })
 }
 
@@ -335,8 +372,13 @@ export function useUpdateEmployee() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, employee }: { id: number; employee: EmployeeUpdateRequest }) => 
-      employeeApi.updateEmployee(id, employee),
+    mutationFn: ({
+      id,
+      employee,
+    }: {
+      id: number
+      employee: EmployeeUpdateRequest
+    }) => employeeApi.updateEmployee(id, employee),
     onSuccess: (data, variables) => {
       // 특정 직원 쿼리 업데이트
       queryClient.setQueryData(EMPLOYEE_QUERY_KEYS.detail(variables.id), data)
@@ -345,9 +387,10 @@ export function useUpdateEmployee() {
       toast.success('직원 정보가 성공적으로 수정되었습니다')
     },
     onError: (error: any) => {
-      const message = error.response?.data?.message || '직원 정보 수정에 실패했습니다'
+      const message =
+        error.response?.data?.message || '직원 정보 수정에 실패했습니다'
       toast.error(message)
-    }
+    },
   })
 }
 
@@ -358,19 +401,29 @@ export function useTerminateEmployee() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, terminationDate, reason }: { id: number; terminationDate: string; reason: string }) =>
-      employeeApi.terminateEmployee(id, terminationDate, reason),
+    mutationFn: ({
+      id,
+      terminationDate,
+      reason,
+    }: {
+      id: number
+      terminationDate: string
+      reason: string
+    }) => employeeApi.terminateEmployee(id, terminationDate, reason),
     onSuccess: (_, variables) => {
       // 관련 쿼리 무효화
-      queryClient.invalidateQueries({ queryKey: EMPLOYEE_QUERY_KEYS.detail(variables.id) })
+      queryClient.invalidateQueries({
+        queryKey: EMPLOYEE_QUERY_KEYS.detail(variables.id),
+      })
       queryClient.invalidateQueries({ queryKey: EMPLOYEE_QUERY_KEYS.lists() })
       queryClient.invalidateQueries({ queryKey: EMPLOYEE_QUERY_KEYS.active() })
       toast.success('직원 퇴직 처리가 완료되었습니다')
     },
     onError: (error: any) => {
-      const message = error.response?.data?.message || '직원 퇴직 처리에 실패했습니다'
+      const message =
+        error.response?.data?.message || '직원 퇴직 처리에 실패했습니다'
       toast.error(message)
-    }
+    },
   })
 }
 
@@ -384,15 +437,18 @@ export function useReactivateEmployee() {
     mutationFn: (id: number) => employeeApi.reactivateEmployee(id),
     onSuccess: (_, id) => {
       // 관련 쿼리 무효화
-      queryClient.invalidateQueries({ queryKey: EMPLOYEE_QUERY_KEYS.detail(id) })
+      queryClient.invalidateQueries({
+        queryKey: EMPLOYEE_QUERY_KEYS.detail(id),
+      })
       queryClient.invalidateQueries({ queryKey: EMPLOYEE_QUERY_KEYS.lists() })
       queryClient.invalidateQueries({ queryKey: EMPLOYEE_QUERY_KEYS.active() })
       toast.success('직원 복직 처리가 완료되었습니다')
     },
     onError: (error: any) => {
-      const message = error.response?.data?.message || '직원 복직 처리에 실패했습니다'
+      const message =
+        error.response?.data?.message || '직원 복직 처리에 실패했습니다'
       toast.error(message)
-    }
+    },
   })
 }
 
@@ -410,22 +466,31 @@ export function useDeleteEmployee() {
       toast.success('직원이 성공적으로 삭제되었습니다')
     },
     onError: (error: any) => {
-      const message = error.response?.data?.message || '직원 삭제에 실패했습니다'
+      const message =
+        error.response?.data?.message || '직원 삭제에 실패했습니다'
       toast.error(message)
-    }
+    },
   })
 }
 
 /**
  * 사번 중복 확인 훅
  */
-export function useCheckEmployeeNumber(employeeNumber: string, excludeId?: number) {
+export function useCheckEmployeeNumber(
+  employeeNumber: string,
+  excludeId?: number,
+) {
   return useQuery({
-    queryKey: [...EMPLOYEE_QUERY_KEYS.check(), 'employeeNumber', employeeNumber, excludeId],
+    queryKey: [
+      ...EMPLOYEE_QUERY_KEYS.check(),
+      'employeeNumber',
+      employeeNumber,
+      excludeId,
+    ],
     queryFn: () => employeeApi.checkEmployeeNumber(employeeNumber, excludeId),
     enabled: !!employeeNumber && employeeNumber.length >= 2,
     staleTime: 0, // 실시간 검증
-    retry: 1
+    retry: 1,
   })
 }
 
@@ -438,7 +503,7 @@ export function useCheckEmail(email: string, excludeId?: number) {
     queryFn: () => employeeApi.checkEmail(email, excludeId),
     enabled: !!email && email.includes('@'),
     staleTime: 0, // 실시간 검증
-    retry: 1
+    retry: 1,
   })
 }
 
@@ -450,7 +515,7 @@ export function useCompanies() {
     queryKey: ['companies'],
     queryFn: companyApi.getCompanies,
     staleTime: 10 * 60 * 1000, // 10분
-    retry: 2
+    retry: 2,
   })
 }
 
@@ -462,7 +527,7 @@ export function useDepartments() {
     queryKey: ['departments'],
     queryFn: departmentApi.getDepartments,
     staleTime: 10 * 60 * 1000, // 10분
-    retry: 2
+    retry: 2,
   })
 }
 
@@ -475,7 +540,7 @@ export function useDepartmentsByCompany(companyId: number) {
     queryFn: () => departmentApi.getDepartmentsByCompany(companyId),
     enabled: !!companyId,
     staleTime: 10 * 60 * 1000, // 10분
-    retry: 2
+    retry: 2,
   })
 }
 
@@ -487,7 +552,7 @@ export function usePositions() {
     queryKey: ['positions', 'all'],
     queryFn: positionApi.getAllPositions,
     staleTime: 5 * 60 * 1000, // 5분
-    retry: 2
+    retry: 2,
   })
 }
 
@@ -500,7 +565,7 @@ export function usePositionsByCompany(companyId: number) {
     queryFn: () => positionApi.getPositionsByCompany(companyId),
     enabled: !!companyId,
     staleTime: 10 * 60 * 1000, // 10분
-    retry: 2
+    retry: 2,
   })
 }
 
@@ -513,7 +578,7 @@ export function useRecentEmployeesByCompany(companyId: number) {
     queryFn: () => employeeApi.getRecentEmployeesByCompany(companyId),
     enabled: !!companyId && companyId > 0,
     staleTime: 5 * 60 * 1000, // 5분
-    retry: 2
+    retry: 2,
   })
 }
 
@@ -522,11 +587,18 @@ export function useRecentEmployeesByCompany(companyId: number) {
  */
 export function useExportEmployees() {
   return useMutation({
-    mutationFn: async ({ format, companyId }: { format: ExportFormat; companyId?: number }) => {
-      const blob = format === 'excel' 
-        ? await employeeApi.exportToExcel(companyId)
-        : await employeeApi.exportToCsv(companyId)
-      
+    mutationFn: async ({
+      format,
+      companyId,
+    }: {
+      format: ExportFormat
+      companyId?: number
+    }) => {
+      const blob =
+        format === 'excel'
+          ? await employeeApi.exportToExcel(companyId)
+          : await employeeApi.exportToCsv(companyId)
+
       // 파일 다운로드
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
@@ -543,7 +615,7 @@ export function useExportEmployees() {
     onError: (error: any) => {
       const message = error.response?.data?.message || '내보내기 실패'
       toast.error(message)
-    }
+    },
   })
 }
 
@@ -552,30 +624,39 @@ export function useExportEmployees() {
  */
 export function useImportEmployees() {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
-    mutationFn: async ({ file, format, companyId }: { file: File; format: ExportFormat; companyId: number }): Promise<ImportResult> => {
+    mutationFn: async ({
+      file,
+      format,
+      companyId,
+    }: {
+      file: File
+      format: ExportFormat
+      companyId: number
+    }): Promise<ImportResult> => {
       return format === 'excel'
         ? await employeeApi.importFromExcel(file, companyId)
         : await employeeApi.importFromCsv(file, companyId)
     },
-    onSuccess: (result) => {
+    onSuccess: result => {
       queryClient.invalidateQueries({ queryKey: EMPLOYEE_QUERY_KEYS.all })
-      
+
       if (result.successCount > 0) {
-        toast.success(`${result.successCount}개 데이터를 성공적으로 가져왔습니다`)
+        toast.success(
+          `${result.successCount}개 데이터를 성공적으로 가져왔습니다`,
+        )
       }
-      
+
       if (result.failCount > 0) {
         toast.error(`${result.failCount}개 데이터 가져오기에 실패했습니다`)
       }
-      
+
       return result
     },
     onError: (error: any) => {
       const message = error.response?.data?.message || '가져오기 실패'
       toast.error(message)
-    }
+    },
   })
 }
-

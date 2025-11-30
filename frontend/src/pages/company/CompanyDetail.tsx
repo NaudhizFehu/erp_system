@@ -1,9 +1,25 @@
+import {
+  ArrowLeft,
+  Building2,
+  MapPin,
+  Phone,
+  Mail,
+  Globe,
+  Users,
+  Calendar,
+} from 'lucide-react'
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, Building2, MapPin, Phone, Mail, Globe, Users, Calendar } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import api from '@/services/api'
 
 /**
@@ -55,9 +71,9 @@ function CompanyDetail() {
     try {
       setIsLoading(true)
       setError(null)
-      
+
       const response = await api.get(`/companies/${companyId}`)
-      
+
       if (response.data.success) {
         setCompany(response.data)
       } else {
@@ -74,7 +90,11 @@ function CompanyDetail() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'ACTIVE':
-        return <Badge variant="default" className="bg-green-100 text-green-800">활성</Badge>
+        return (
+          <Badge variant="default" className="bg-green-100 text-green-800">
+            활성
+          </Badge>
+        )
       case 'INACTIVE':
         return <Badge variant="secondary">비활성</Badge>
       case 'SUSPENDED':
@@ -105,9 +125,9 @@ function CompanyDetail() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-96">
+      <div className="flex min-h-96 items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600" />
           <p className="text-gray-600">회사 정보를 불러오는 중...</p>
         </div>
       </div>
@@ -116,13 +136,15 @@ function CompanyDetail() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-96">
+      <div className="flex min-h-96 items-center justify-center">
         <div className="text-center">
-          <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">오류 발생</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
+          <div className="mb-4 text-6xl text-red-500">⚠️</div>
+          <h2 className="mb-2 text-xl font-semibold text-gray-900">
+            오류 발생
+          </h2>
+          <p className="mb-4 text-gray-600">{error}</p>
           <Button onClick={() => navigate(-1)} variant="outline">
-            <ArrowLeft className="w-4 h-4 mr-2" />
+            <ArrowLeft className="mr-2 h-4 w-4" />
             뒤로 가기
           </Button>
         </div>
@@ -132,13 +154,17 @@ function CompanyDetail() {
 
   if (!company) {
     return (
-      <div className="flex items-center justify-center min-h-96">
+      <div className="flex min-h-96 items-center justify-center">
         <div className="text-center">
-          <div className="text-gray-400 text-6xl mb-4">🏢</div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">회사 정보 없음</h2>
-          <p className="text-gray-600 mb-4">요청하신 회사 정보를 찾을 수 없습니다</p>
+          <div className="mb-4 text-6xl text-gray-400">🏢</div>
+          <h2 className="mb-2 text-xl font-semibold text-gray-900">
+            회사 정보 없음
+          </h2>
+          <p className="mb-4 text-gray-600">
+            요청하신 회사 정보를 찾을 수 없습니다
+          </p>
           <Button onClick={() => navigate(-1)} variant="outline">
-            <ArrowLeft className="w-4 h-4 mr-2" />
+            <ArrowLeft className="mr-2 h-4 w-4" />
             뒤로 가기
           </Button>
         </div>
@@ -152,7 +178,7 @@ function CompanyDetail() {
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <Button onClick={() => navigate(-1)} variant="outline" size="sm">
-            <ArrowLeft className="w-4 h-4 mr-2" />
+            <ArrowLeft className="mr-2 h-4 w-4" />
             뒤로 가기
           </Button>
           <div>
@@ -170,26 +196,34 @@ function CompanyDetail() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
-            <Building2 className="w-5 h-5 mr-2" />
+            <Building2 className="mr-2 h-5 w-5" />
             기본 정보
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
-              <label className="text-sm font-medium text-gray-500">회사 코드</label>
+              <label className="text-sm font-medium text-gray-500">
+                회사 코드
+              </label>
               <p className="text-lg font-semibold">{company.companyCode}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500">대표자</label>
+              <label className="text-sm font-medium text-gray-500">
+                대표자
+              </label>
               <p className="text-lg">{company.ceoName || '미입력'}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500">사업자등록번호</label>
+              <label className="text-sm font-medium text-gray-500">
+                사업자등록번호
+              </label>
               <p className="text-lg">{company.businessNumber || '미입력'}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500">법인등록번호</label>
+              <label className="text-sm font-medium text-gray-500">
+                법인등록번호
+              </label>
               <p className="text-lg">{company.corporationNumber || '미입력'}</p>
             </div>
             <div>
@@ -208,26 +242,30 @@ function CompanyDetail() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
-            <Phone className="w-5 h-5 mr-2" />
+            <Phone className="mr-2 h-5 w-5" />
             연락처 정보
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="flex items-center space-x-3">
-              <MapPin className="w-5 h-5 text-gray-400" />
+              <MapPin className="h-5 w-5 text-gray-400" />
               <div>
                 <p className="font-medium">{company.address}</p>
                 {company.addressDetail && (
-                  <p className="text-sm text-gray-600">{company.addressDetail}</p>
+                  <p className="text-sm text-gray-600">
+                    {company.addressDetail}
+                  </p>
                 )}
                 {company.postalCode && (
-                  <p className="text-sm text-gray-500">우편번호: {company.postalCode}</p>
+                  <p className="text-sm text-gray-500">
+                    우편번호: {company.postalCode}
+                  </p>
                 )}
               </div>
             </div>
             <div className="flex items-center space-x-3">
-              <Phone className="w-5 h-5 text-gray-400" />
+              <Phone className="h-5 w-5 text-gray-400" />
               <div>
                 <p className="font-medium">{company.phone || '미입력'}</p>
                 {company.fax && (
@@ -236,11 +274,11 @@ function CompanyDetail() {
               </div>
             </div>
             <div className="flex items-center space-x-3">
-              <Mail className="w-5 h-5 text-gray-400" />
+              <Mail className="h-5 w-5 text-gray-400" />
               <p className="font-medium">{company.email || '미입력'}</p>
             </div>
             <div className="flex items-center space-x-3">
-              <Globe className="w-5 h-5 text-gray-400" />
+              <Globe className="h-5 w-5 text-gray-400" />
               <p className="font-medium">{company.website || '미입력'}</p>
             </div>
           </div>
@@ -251,35 +289,51 @@ function CompanyDetail() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
-            <Users className="w-5 h-5 mr-2" />
+            <Users className="mr-2 h-5 w-5" />
             상세 정보
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <div className="flex items-center space-x-3">
-              <Calendar className="w-5 h-5 text-gray-400" />
+              <Calendar className="h-5 w-5 text-gray-400" />
               <div>
-                <label className="text-sm font-medium text-gray-500">설립일</label>
-                <p className="font-medium">{company.establishedDate || '미입력'}</p>
+                <label className="text-sm font-medium text-gray-500">
+                  설립일
+                </label>
+                <p className="font-medium">
+                  {company.establishedDate || '미입력'}
+                </p>
               </div>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500">직원 수</label>
-              <p className="text-lg font-semibold">{company.employeeCount?.toLocaleString() || '미입력'}명</p>
+              <label className="text-sm font-medium text-gray-500">
+                직원 수
+              </label>
+              <p className="text-lg font-semibold">
+                {company.employeeCount?.toLocaleString() || '미입력'}명
+              </p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500">자본금</label>
+              <label className="text-sm font-medium text-gray-500">
+                자본금
+              </label>
               <p className="text-lg font-semibold">
-                {company.capitalAmount ? `${company.capitalAmount.toLocaleString()}원` : '미입력'}
+                {company.capitalAmount
+                  ? `${company.capitalAmount.toLocaleString()}원`
+                  : '미입력'}
               </p>
             </div>
           </div>
-          
+
           {company.description && (
             <div>
-              <label className="text-sm font-medium text-gray-500">회사 설명</label>
-              <p className="mt-2 text-gray-700 whitespace-pre-wrap">{company.description}</p>
+              <label className="text-sm font-medium text-gray-500">
+                회사 설명
+              </label>
+              <p className="mt-2 whitespace-pre-wrap text-gray-700">
+                {company.description}
+              </p>
             </div>
           )}
         </CardContent>
@@ -289,6 +343,3 @@ function CompanyDetail() {
 }
 
 export { CompanyDetail }
-
-
-

@@ -3,18 +3,23 @@
  * 상품 목록 조회, 등록, 수정, 삭제 등의 기능을 제공합니다
  */
 
-import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+  Plus,
+  Search,
+  Filter,
+  Download,
+  Upload,
+  MoreHorizontal,
+  Package,
+  AlertTriangle,
+  CheckCircle,
+  XCircle,
+  BarChart3,
+  RefreshCw,
+} from 'lucide-react'
+import { useState, useEffect } from 'react'
+import toast from 'react-hot-toast'
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,46 +30,49 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { 
-  Plus, 
-  Search, 
-  Filter, 
-  Download, 
-  Upload,
-  MoreHorizontal,
-  Package,
-  AlertTriangle,
-  CheckCircle,
-  XCircle,
-  BarChart3,
-  RefreshCw
-} from 'lucide-react'
-import { ProductTable } from '../../components/inventory/ProductTable'
+
+import { LoadingSpinner } from '../../components/common/LoadingSpinner'
 import { ProductForm } from '../../components/inventory/ProductForm'
-import { 
-  useProducts, 
-  useCreateProduct, 
-  useUpdateProduct, 
+import { ProductTable } from '../../components/inventory/ProductTable'
+import { useDebounce } from '../../hooks/useDebounce'
+import {
+  useProducts,
+  useCreateProduct,
+  useUpdateProduct,
   useDeleteProduct,
   useToggleProductActive,
   useCategories,
   useLowStockProducts,
   useOutOfStockProducts,
-  useProductStats
+  useProductStats,
 } from '../../hooks/useInventory'
-import { useDebounce } from '../../hooks/useDebounce'
-import { 
-  Product, 
-  ProductCreateRequest, 
-  ProductType, 
-  ProductStatus, 
+import {
+  Product,
+  ProductCreateRequest,
+  ProductType,
+  ProductStatus,
   InventorySearchParams,
-  KOREAN_LABELS 
+  KOREAN_LABELS,
 } from '../../types/inventory'
 import { formatNumber, formatCurrency } from '../../utils/format'
-import { LoadingSpinner } from '../../components/common/LoadingSpinner'
-import toast from 'react-hot-toast'
 
 interface ProductManagementPageProps {
   companyId: number
@@ -91,15 +99,24 @@ function ProductManagementPage({ companyId }: ProductManagementPageProps) {
     searchTerm: debouncedSearchTerm,
     page: currentPage,
     size: pageSize,
-    categoryId: selectedCategory && selectedCategory !== 'all' ? Number(selectedCategory) : undefined,
-    productType: selectedType && selectedType !== 'all' ? (selectedType as ProductType) : undefined,
-    productStatus: selectedStatus && selectedStatus !== 'all' ? (selectedStatus as ProductStatus) : undefined,
+    categoryId:
+      selectedCategory && selectedCategory !== 'all'
+        ? Number(selectedCategory)
+        : undefined,
+    productType:
+      selectedType && selectedType !== 'all'
+        ? (selectedType as ProductType)
+        : undefined,
+    productStatus:
+      selectedStatus && selectedStatus !== 'all'
+        ? (selectedStatus as ProductStatus)
+        : undefined,
   }
 
   // 탭별 추가 필터
   const getTabSearchParams = (): InventorySearchParams => {
     const baseParams = { ...searchParams }
-    
+
     switch (selectedTab) {
       case 'low-stock':
         return { ...baseParams, isLowStock: true }
@@ -113,10 +130,11 @@ function ProductManagementPage({ companyId }: ProductManagementPageProps) {
   }
 
   // 데이터 페칭
-  const { data: productsResponse, isLoading: isLoadingProducts, refetch: refetchProducts } = useProducts(
-    companyId, 
-    getTabSearchParams()
-  )
+  const {
+    data: productsResponse,
+    isLoading: isLoadingProducts,
+    refetch: refetchProducts,
+  } = useProducts(companyId, getTabSearchParams())
   const { data: categoriesResponse } = useCategories(companyId)
   const { data: lowStockResponse } = useLowStockProducts(companyId)
   const { data: outOfStockResponse } = useOutOfStockProducts(companyId)
@@ -147,7 +165,7 @@ function ProductManagementPage({ companyId }: ProductManagementPageProps) {
 
   // 상품 선택 핸들러
   const handleSelectProduct = (productId: number) => {
-    setSelectedProducts(prev => 
+    setSelectedProducts(prev =>
       prev.includes(productId)
         ? prev.filter(id => id !== productId)
         : [...prev, productId]
@@ -194,22 +212,25 @@ function ProductManagementPage({ companyId }: ProductManagementPageProps) {
   // 폼 제출 핸들러
   const handleFormSubmit = (data: ProductCreateRequest) => {
     if (editingProduct) {
-      updateProductMutation.mutate({
-        id: editingProduct.id,
-        productData: data
-      }, {
-        onSuccess: () => {
-          setIsProductFormOpen(false)
-          setEditingProduct(null)
-          refetchProducts()
-        }
-      })
+      updateProductMutation.mutate(
+        {
+          id: editingProduct.id,
+          productData: data,
+        },
+        {
+          onSuccess: () => {
+            setIsProductFormOpen(false)
+            setEditingProduct(null)
+            refetchProducts()
+          },
+        },
+      )
     } else {
       createProductMutation.mutate(data, {
         onSuccess: () => {
           setIsProductFormOpen(false)
           refetchProducts()
-        }
+        },
       })
     }
   }
@@ -221,7 +242,7 @@ function ProductManagementPage({ companyId }: ProductManagementPageProps) {
         onSuccess: () => {
           setDeletingProduct(null)
           refetchProducts()
-        }
+        },
       })
     }
   }
@@ -263,7 +284,7 @@ function ProductManagementPage({ companyId }: ProductManagementPageProps) {
   }
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="container mx-auto space-y-6 py-6">
       {/* 헤더 */}
       <div className="flex items-center justify-between">
         <div>
@@ -274,15 +295,15 @@ function ProductManagementPage({ companyId }: ProductManagementPageProps) {
         </div>
         <div className="flex items-center space-x-2">
           <Button variant="outline" size="sm">
-            <Upload className="h-4 w-4 mr-2" />
+            <Upload className="mr-2 h-4 w-4" />
             가져오기
           </Button>
           <Button variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
+            <Download className="mr-2 h-4 w-4" />
             내보내기
           </Button>
           <Button onClick={handleCreateProduct} size="sm">
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="mr-2 h-4 w-4" />
             상품 등록
           </Button>
         </div>
@@ -295,8 +316,12 @@ function ProductManagementPage({ companyId }: ProductManagementPageProps) {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">전체 상품</p>
-                  <p className="text-2xl font-bold">{formatNumber(stats.totalProducts)}</p>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    전체 상품
+                  </p>
+                  <p className="text-2xl font-bold">
+                    {formatNumber(stats.totalProducts)}
+                  </p>
                 </div>
                 <Package className="h-8 w-8 text-blue-600" />
               </div>
@@ -307,8 +332,12 @@ function ProductManagementPage({ companyId }: ProductManagementPageProps) {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">활성 상품</p>
-                  <p className="text-2xl font-bold text-green-600">{formatNumber(stats.activeProducts)}</p>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    활성 상품
+                  </p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {formatNumber(stats.activeProducts)}
+                  </p>
                 </div>
                 <CheckCircle className="h-8 w-8 text-green-600" />
               </div>
@@ -319,8 +348,12 @@ function ProductManagementPage({ companyId }: ProductManagementPageProps) {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">안전재고 미달</p>
-                  <p className="text-2xl font-bold text-yellow-600">{formatNumber(stats.lowStockProducts)}</p>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    안전재고 미달
+                  </p>
+                  <p className="text-2xl font-bold text-yellow-600">
+                    {formatNumber(stats.lowStockProducts)}
+                  </p>
                 </div>
                 <AlertTriangle className="h-8 w-8 text-yellow-600" />
               </div>
@@ -331,8 +364,12 @@ function ProductManagementPage({ companyId }: ProductManagementPageProps) {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">재고없음</p>
-                  <p className="text-2xl font-bold text-red-600">{formatNumber(stats.outOfStockProducts)}</p>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    재고없음
+                  </p>
+                  <p className="text-2xl font-bold text-red-600">
+                    {formatNumber(stats.outOfStockProducts)}
+                  </p>
                 </div>
                 <XCircle className="h-8 w-8 text-red-600" />
               </div>
@@ -348,30 +385,36 @@ function ProductManagementPage({ companyId }: ProductManagementPageProps) {
             <div className="flex items-center space-x-4">
               <div className="flex-1">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
                   <Input
                     placeholder="상품명, 상품코드, 브랜드로 검색..."
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={e => setSearchTerm(e.target.value)}
                     className="pl-10"
                   />
                 </div>
               </div>
               <Button variant="outline" onClick={() => refetchProducts()}>
-                <RefreshCw className="h-4 w-4 mr-2" />
+                <RefreshCw className="mr-2 h-4 w-4" />
                 새로고침
               </Button>
             </div>
 
             <div className="flex items-center space-x-4">
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <Select
+                value={selectedCategory}
+                onValueChange={setSelectedCategory}
+              >
                 <SelectTrigger className="w-[200px]">
                   <SelectValue placeholder="분류 선택" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">전체 분류</SelectItem>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id.toString()}>
+                  {categories.map(category => (
+                    <SelectItem
+                      key={category.id}
+                      value={category.id.toString()}
+                    >
                       {category.fullPath}
                     </SelectItem>
                   ))}
@@ -384,7 +427,7 @@ function ProductManagementPage({ companyId }: ProductManagementPageProps) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">전체 유형</SelectItem>
-                  {Object.values(ProductType).map((type) => (
+                  {Object.values(ProductType).map(type => (
                     <SelectItem key={type} value={type}>
                       {KOREAN_LABELS[type]}
                     </SelectItem>
@@ -398,7 +441,7 @@ function ProductManagementPage({ companyId }: ProductManagementPageProps) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">전체 상태</SelectItem>
-                  {Object.values(ProductStatus).map((status) => (
+                  {Object.values(ProductStatus).map(status => (
                     <SelectItem key={status} value={status}>
                       {KOREAN_LABELS[status]}
                     </SelectItem>
@@ -413,36 +456,36 @@ function ProductManagementPage({ companyId }: ProductManagementPageProps) {
 
             {/* 선택된 상품 일괄 작업 */}
             {selectedProducts.length > 0 && (
-              <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+              <div className="flex items-center justify-between rounded-lg bg-blue-50 p-4">
                 <div className="flex items-center space-x-2">
                   <Badge variant="secondary">
                     {selectedProducts.length}개 선택됨
                   </Badge>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     size="sm"
                     onClick={() => handleBulkAction('activate')}
                   >
                     활성화
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     size="sm"
                     onClick={() => handleBulkAction('deactivate')}
                   >
                     비활성화
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     size="sm"
                     onClick={() => handleBulkAction('export')}
                   >
                     내보내기
                   </Button>
-                  <Button 
-                    variant="destructive" 
+                  <Button
+                    variant="destructive"
                     size="sm"
                     onClick={() => handleBulkAction('delete')}
                   >
@@ -465,18 +508,28 @@ function ProductManagementPage({ companyId }: ProductManagementPageProps) {
               <Badge variant="secondary">{formatNumber(tabCounts.all)}</Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="low-stock" className="flex items-center space-x-2">
+          <TabsTrigger
+            value="low-stock"
+            className="flex items-center space-x-2"
+          >
             <AlertTriangle className="h-4 w-4" />
             <span>안전재고 미달</span>
             {tabCounts.lowStock > 0 && (
-              <Badge variant="secondary">{formatNumber(tabCounts.lowStock)}</Badge>
+              <Badge variant="secondary">
+                {formatNumber(tabCounts.lowStock)}
+              </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="out-of-stock" className="flex items-center space-x-2">
+          <TabsTrigger
+            value="out-of-stock"
+            className="flex items-center space-x-2"
+          >
             <XCircle className="h-4 w-4" />
             <span>재고없음</span>
             {tabCounts.outOfStock > 0 && (
-              <Badge variant="destructive">{formatNumber(tabCounts.outOfStock)}</Badge>
+              <Badge variant="destructive">
+                {formatNumber(tabCounts.outOfStock)}
+              </Badge>
             )}
           </TabsTrigger>
           <TabsTrigger value="inactive" className="flex items-center space-x-2">
@@ -497,7 +550,10 @@ function ProductManagementPage({ companyId }: ProductManagementPageProps) {
                     </CardDescription>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Select value={pageSize.toString()} onValueChange={(value) => setPageSize(Number(value))}>
+                    <Select
+                      value={pageSize.toString()}
+                      onValueChange={value => setPageSize(Number(value))}
+                    >
                       <SelectTrigger className="w-[100px]">
                         <SelectValue />
                       </SelectTrigger>
@@ -526,15 +582,19 @@ function ProductManagementPage({ companyId }: ProductManagementPageProps) {
 
                 {/* 페이지네이션 */}
                 {totalPages > 1 && (
-                  <div className="flex items-center justify-between mt-6">
+                  <div className="mt-6 flex items-center justify-between">
                     <div className="text-sm text-muted-foreground">
-                      {currentPage * pageSize + 1}-{Math.min((currentPage + 1) * pageSize, totalElements)} / {formatNumber(totalElements)}
+                      {currentPage * pageSize + 1}-
+                      {Math.min((currentPage + 1) * pageSize, totalElements)} /{' '}
+                      {formatNumber(totalElements)}
                     </div>
                     <div className="flex items-center space-x-2">
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
+                        onClick={() =>
+                          setCurrentPage(Math.max(0, currentPage - 1))
+                        }
                         disabled={currentPage === 0}
                       >
                         이전
@@ -545,7 +605,11 @@ function ProductManagementPage({ companyId }: ProductManagementPageProps) {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
+                        onClick={() =>
+                          setCurrentPage(
+                            Math.min(totalPages - 1, currentPage + 1),
+                          )
+                        }
                         disabled={currentPage === totalPages - 1}
                       >
                         다음
@@ -569,18 +633,22 @@ function ProductManagementPage({ companyId }: ProductManagementPageProps) {
         onSubmit={handleFormSubmit}
         product={editingProduct}
         companyId={companyId}
-        isLoading={createProductMutation.isPending || updateProductMutation.isPending}
+        isLoading={
+          createProductMutation.isPending || updateProductMutation.isPending
+        }
       />
 
       {/* 삭제 확인 다이얼로그 */}
-      <AlertDialog open={!!deletingProduct} onOpenChange={() => setDeletingProduct(null)}>
+      <AlertDialog
+        open={!!deletingProduct}
+        onOpenChange={() => setDeletingProduct(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>상품 삭제</AlertDialogTitle>
             <AlertDialogDescription>
               '{deletingProduct?.productName}' 상품을 정말 삭제하시겠습니까?
-              <br />
-              이 작업은 되돌릴 수 없습니다.
+              <br />이 작업은 되돌릴 수 없습니다.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -599,4 +667,3 @@ function ProductManagementPage({ companyId }: ProductManagementPageProps) {
 }
 
 export { ProductManagementPage }
-
