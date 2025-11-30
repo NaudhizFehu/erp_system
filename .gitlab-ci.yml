@@ -25,6 +25,8 @@ backend-test:
   variables:
     MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/backend/.m2/repository"
     JAVA_HOME: "/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home"
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_PROJECT_PATH
+    CI_SERVER_URL: "https://gitlab.fehu.kr"
 
   before_script:
     - cd backend
