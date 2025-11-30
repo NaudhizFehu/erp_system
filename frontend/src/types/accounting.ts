@@ -1,9 +1,14 @@
 /**
- * 회계 모듈 TypeScript 타입 정의
+ * Accounting 모듈 TypeScript 타입 정의
  * 백엔드 DTO와 매칭되는 인터페이스들을 정의합니다
  */
 
-import { ApiResponse, PageResponse } from './common'
+// (삭제됨) 초기 간단 타입 정의 블록 — 아래의 확장된 회계 타입 정의와 중복되어 제거됨
+
+/**
+ * 회계 모듈 TypeScript 타입 정의
+ * 백엔드 DTO와 매칭되는 인터페이스들을 정의합니다
+ */
 
 /**
  * 계정과목 유형 열거형
@@ -13,7 +18,7 @@ export enum AccountType {
   LIABILITY = 'LIABILITY',
   EQUITY = 'EQUITY',
   REVENUE = 'REVENUE',
-  EXPENSE = 'EXPENSE'
+  EXPENSE = 'EXPENSE',
 }
 
 /**
@@ -23,22 +28,22 @@ export enum AccountCategory {
   // 자산
   CURRENT_ASSET = 'CURRENT_ASSET',
   NON_CURRENT_ASSET = 'NON_CURRENT_ASSET',
-  
+
   // 부채
   CURRENT_LIABILITY = 'CURRENT_LIABILITY',
   NON_CURRENT_LIABILITY = 'NON_CURRENT_LIABILITY',
-  
+
   // 자본
   PAID_IN_CAPITAL = 'PAID_IN_CAPITAL',
   RETAINED_EARNINGS = 'RETAINED_EARNINGS',
-  
+
   // 수익
   OPERATING_REVENUE = 'OPERATING_REVENUE',
   NON_OPERATING_REVENUE = 'NON_OPERATING_REVENUE',
-  
+
   // 비용
   OPERATING_EXPENSE = 'OPERATING_EXPENSE',
-  NON_OPERATING_EXPENSE = 'NON_OPERATING_EXPENSE'
+  NON_OPERATING_EXPENSE = 'NON_OPERATING_EXPENSE',
 }
 
 /**
@@ -46,7 +51,7 @@ export enum AccountCategory {
  */
 export enum DebitCreditType {
   DEBIT = 'DEBIT',
-  CREDIT = 'CREDIT'
+  CREDIT = 'CREDIT',
 }
 
 /**
@@ -61,7 +66,7 @@ export enum TransactionType {
   BANK_RECEIPT = 'BANK_RECEIPT',
   BANK_PAYMENT = 'BANK_PAYMENT',
   ADJUSTMENT = 'ADJUSTMENT',
-  CLOSING = 'CLOSING'
+  CLOSING = 'CLOSING',
 }
 
 /**
@@ -72,7 +77,7 @@ export enum TransactionStatus {
   PENDING = 'PENDING',
   APPROVED = 'APPROVED',
   POSTED = 'POSTED',
-  CANCELLED = 'CANCELLED'
+  CANCELLED = 'CANCELLED',
 }
 
 /**
@@ -82,7 +87,7 @@ export enum TaxType {
   VAT_10 = 'VAT_10',
   VAT_0 = 'VAT_0',
   TAX_FREE = 'TAX_FREE',
-  WITHHOLDING = 'WITHHOLDING'
+  WITHHOLDING = 'WITHHOLDING',
 }
 
 /**
@@ -96,7 +101,7 @@ export enum DocumentType {
   PROMISSORY_NOTE = 'PROMISSORY_NOTE',
   RECEIPT = 'RECEIPT',
   CONTRACT = 'CONTRACT',
-  OTHER = 'OTHER'
+  OTHER = 'OTHER',
 }
 
 /**
@@ -105,7 +110,7 @@ export enum DocumentType {
 export enum BudgetPeriod {
   ANNUAL = 'ANNUAL',
   QUARTERLY = 'QUARTERLY',
-  MONTHLY = 'MONTHLY'
+  MONTHLY = 'MONTHLY',
 }
 
 /**
@@ -115,7 +120,7 @@ export enum BudgetType {
   REVENUE = 'REVENUE',
   EXPENSE = 'EXPENSE',
   CAPITAL = 'CAPITAL',
-  CASH_FLOW = 'CASH_FLOW'
+  CASH_FLOW = 'CASH_FLOW',
 }
 
 /**
@@ -127,7 +132,7 @@ export enum BudgetStatus {
   APPROVED = 'APPROVED',
   ACTIVE = 'ACTIVE',
   CLOSED = 'CLOSED',
-  CANCELLED = 'CANCELLED'
+  CANCELLED = 'CANCELLED',
 }
 
 /**
@@ -143,7 +148,7 @@ export enum ReportType {
   BUDGET_REPORT = 'BUDGET_REPORT',
   VARIANCE_ANALYSIS = 'VARIANCE_ANALYSIS',
   AGING_REPORT = 'AGING_REPORT',
-  TAX_REPORT = 'TAX_REPORT'
+  TAX_REPORT = 'TAX_REPORT',
 }
 
 /**
@@ -154,7 +159,7 @@ export enum ReportStatus {
   GENERATED = 'GENERATED',
   REVIEWED = 'REVIEWED',
   APPROVED = 'APPROVED',
-  PUBLISHED = 'PUBLISHED'
+  PUBLISHED = 'PUBLISHED',
 }
 
 /**
@@ -189,6 +194,63 @@ export interface Account {
   isLeafAccount: boolean
   createdAt: string
   updatedAt: string
+}
+
+/**
+ * 계정과목 생성/수정 요청 인터페이스
+ */
+export interface AccountCreateRequest {
+  accountCode: string
+  accountName: string
+  accountNameEn?: string
+  description?: string
+  companyId: number
+  accountType: AccountType
+  accountCategory: AccountCategory
+  debitCreditType: DebitCreditType
+  parentAccountId?: number
+  accountLevel: number
+  sortOrder?: number
+  isActive: boolean
+  trackBalance: boolean
+  openingBalance?: number
+  budgetAmount?: number
+  taxCode?: string
+  controlField1?: string
+  controlField2?: string
+}
+
+export interface AccountUpdateRequest {
+  accountCode?: string
+  accountName?: string
+  accountNameEn?: string
+  description?: string
+  companyId?: number
+  accountType?: AccountType
+  accountCategory?: AccountCategory
+  debitCreditType?: DebitCreditType
+  parentAccountId?: number
+  accountLevel?: number
+  sortOrder?: number
+  isActive?: boolean
+  trackBalance?: boolean
+  openingBalance?: number
+  budgetAmount?: number
+  taxCode?: string
+  controlField1?: string
+  controlField2?: string
+}
+
+/**
+ * 계정과목 트리 노드 (간략형)
+ */
+export interface AccountTreeNode {
+  id: number
+  accountCode: string
+  accountName: string
+  accountLevel: number
+  isActive: boolean
+  children: AccountTreeNode[]
 }
 
 /**
@@ -591,7 +653,3 @@ export const KOREAN_LABELS = {
 
   // 보고서 상태
 } as const
-
-
-
-

@@ -3,10 +3,17 @@
  * 전역 인증 상태 관리 및 인증 관련 함수들을 제공합니다
  */
 
-import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react'
+import React, {
+  createContext,
+  useContext,
+  useReducer,
+  useEffect,
+  ReactNode,
+} from 'react'
+import toast from 'react-hot-toast'
+
 import { authApi, tokenUtils } from '@/services/authApi'
 import type { AuthState, LoginRequest, UserInfo } from '@/types/auth'
-import toast from 'react-hot-toast'
 
 // AuthContext 타입 정의
 interface AuthContextType extends AuthState {
@@ -19,7 +26,10 @@ interface AuthContextType extends AuthState {
 // 액션 타입 정의
 type AuthAction =
   | { type: 'LOGIN_START' }
-  | { type: 'LOGIN_SUCCESS'; payload: { user: UserInfo; accessToken: string; refreshToken: string } }
+  | {
+      type: 'LOGIN_SUCCESS'
+      payload: { user: UserInfo; accessToken: string; refreshToken: string }
+    }
   | { type: 'LOGIN_FAILURE' }
   | { type: 'LOGOUT' }
   | { type: 'UPDATE_USER'; payload: { user: UserInfo } }
@@ -32,7 +42,7 @@ const initialState: AuthState = {
   user: null,
   accessToken: null,
   refreshToken: null,
-  isLoading: true
+  isLoading: true,
 }
 
 // 리듀서
@@ -40,7 +50,7 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
   switch (action.type) {
     case 'LOGIN_START':
       return { ...state, isLoading: true }
-    
+
     case 'LOGIN_SUCCESS':
       return {
         ...state,
@@ -48,9 +58,9 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
         user: action.payload.user,
         accessToken: action.payload.accessToken,
         refreshToken: action.payload.refreshToken,
-        isLoading: false
+        isLoading: false,
       }
-    
+
     case 'LOGIN_FAILURE':
       return {
         ...state,
@@ -58,9 +68,9 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
         user: null,
         accessToken: null,
         refreshToken: null,
-        isLoading: false
+        isLoading: false,
       }
-    
+
     case 'LOGOUT':
       return {
         ...state,
@@ -68,21 +78,21 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
         user: null,
         accessToken: null,
         refreshToken: null,
-        isLoading: false
+        isLoading: false,
       }
-    
+
     case 'UPDATE_USER':
       return {
         ...state,
-        user: action.payload.user
+        user: action.payload.user,
       }
-    
+
     case 'SET_LOADING':
       return { ...state, isLoading: action.payload }
-    
+
     case 'SET_USER':
       return { ...state, user: action.payload }
-    
+
     default:
       return state
   }
@@ -112,11 +122,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const accessToken = tokenUtils.getAccessToken()
       const refreshToken = tokenUtils.getRefreshToken()
 
-      console.log('초기 인증 상태 확인:', { 
-        hasAccessToken: !!accessToken, 
+      console.log('초기 인증 상태 확인:', {
+        hasAccessToken: !!accessToken,
         hasRefreshToken: !!refreshToken,
-        accessTokenValid: accessToken ? tokenUtils.isTokenValid(accessToken) : false,
-        refreshTokenValid: refreshToken ? tokenUtils.isTokenValid(refreshToken) : false
+        accessTokenValid: accessToken
+          ? tokenUtils.isTokenValid(accessToken)
+          : false,
+        refreshTokenValid: refreshToken
+          ? tokenUtils.isTokenValid(refreshToken)
+          : false,
       })
 
       // 토큰이 없으면 즉시 로그아웃 상태로 설정
@@ -133,7 +147,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           const user = await authApi.getCurrentUser()
           dispatch({
             type: 'LOGIN_SUCCESS',
-            payload: { user, accessToken, refreshToken: refreshToken || '' }
+            payload: { user, accessToken, refreshToken: refreshToken || '' },
           })
         } catch (error) {
           console.warn('토큰이 유효하지 않음, 로그아웃 처리:', error)
@@ -148,15 +162,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
           const response = await authApi.refreshToken(refreshToken)
           tokenUtils.setAccessToken(response.accessToken)
           tokenUtils.setRefreshToken(response.refreshToken)
-          
+
           const user = await authApi.getCurrentUser()
           dispatch({
             type: 'LOGIN_SUCCESS',
-            payload: { 
-              user, 
-              accessToken: response.accessToken, 
-              refreshToken: response.refreshToken 
-            }
+            payload: {
+              user,
+              accessToken: response.accessToken,
+              refreshToken: response.refreshToken,
+            },
           })
         } catch (error) {
           console.warn('리프레시 토큰이 유효하지 않음, 로그아웃 처리:', error)
@@ -178,26 +192,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const login = async (credentials: LoginRequest): Promise<void> => {
     try {
       dispatch({ type: 'LOGIN_START' })
-      
+
       const response = await authApi.login(credentials)
-      
+
       // 토큰 저장
       tokenUtils.setAccessToken(response.accessToken)
       tokenUtils.setRefreshToken(response.refreshToken)
-      
+
       dispatch({
         type: 'LOGIN_SUCCESS',
         payload: {
           user: response.user,
           accessToken: response.accessToken,
-          refreshToken: response.refreshToken
-        }
+          refreshToken: response.refreshToken,
+        },
       })
-      
+
       toast.success('로그인에 성공했습니다')
     } catch (error: any) {
       dispatch({ type: 'LOGIN_FAILURE' })
-      const errorMessage = error.response?.data?.message || '로그인에 실패했습니다'
+      const errorMessage =
+        error.response?.data?.message || '로그인에 실패했습니다'
       toast.error(errorMessage)
       throw error
     }
@@ -226,7 +241,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // 인증 갱신 함수
   const refreshAuth = async (): Promise<void> => {
     const refreshToken = tokenUtils.getRefreshToken()
-    
+
     if (!refreshToken || !tokenUtils.isTokenValid(refreshToken)) {
       dispatch({ type: 'LOGOUT' })
       return
@@ -236,15 +251,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const response = await authApi.refreshToken(refreshToken)
       tokenUtils.setAccessToken(response.accessToken)
       tokenUtils.setRefreshToken(response.refreshToken)
-      
+
       const user = await authApi.getCurrentUser()
       dispatch({
         type: 'LOGIN_SUCCESS',
         payload: {
           user,
           accessToken: response.accessToken,
-          refreshToken: response.refreshToken
-        }
+          refreshToken: response.refreshToken,
+        },
       })
     } catch (error) {
       tokenUtils.clearTokens()
@@ -257,14 +272,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     login,
     logout,
     updateUser,
-    refreshAuth
+    refreshAuth,
   }
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  )
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
 // 훅
@@ -275,6 +286,3 @@ export function useAuth(): AuthContextType {
   }
   return context
 }
-
-
-

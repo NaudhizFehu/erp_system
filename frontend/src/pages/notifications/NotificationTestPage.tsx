@@ -1,15 +1,22 @@
+import { ArrowLeft, Bell, Send, RefreshCw } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Bell, Send, RefreshCw } from 'lucide-react'
+
+import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { notificationService } from '@/services/notificationService'
 import { useNotifications } from '@/contexts/NotificationContext'
-import { LoadingSpinner } from '@/components/common/LoadingSpinner'
+import { notificationService } from '@/services/notificationService'
 
 /**
  * 알림 테스트 페이지
@@ -21,12 +28,12 @@ function NotificationTestPage() {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  
+
   const [formData, setFormData] = useState({
     title: '',
     message: '',
     type: 'INFO' as 'INFO' | 'WARNING' | 'ERROR' | 'SUCCESS',
-    actionUrl: ''
+    actionUrl: '',
   })
 
   /**
@@ -54,20 +61,20 @@ function NotificationTestPage() {
         title: formData.title,
         message: formData.message,
         type: formData.type,
-        actionUrl: formData.actionUrl || undefined
+        actionUrl: formData.actionUrl || undefined,
       })
 
       setSuccess('테스트 알림이 성공적으로 생성되었습니다!')
-      
+
       // 전역 알림 상태 갱신
       await refreshNotifications()
-      
+
       // 폼 초기화
       setFormData({
         title: '',
         message: '',
         type: 'INFO',
-        actionUrl: ''
+        actionUrl: '',
       })
     } catch (error) {
       console.error('테스트 알림 생성 실패:', error)
@@ -80,32 +87,38 @@ function NotificationTestPage() {
   /**
    * 빠른 테스트 알림 생성
    */
-  const createQuickTestNotification = async (type: 'INFO' | 'WARNING' | 'ERROR' | 'SUCCESS') => {
+  const createQuickTestNotification = async (
+    type: 'INFO' | 'WARNING' | 'ERROR' | 'SUCCESS',
+  ) => {
     const testData = {
       INFO: {
         title: '정보 알림 테스트',
-        message: '이것은 정보 타입의 테스트 알림입니다. 시스템이 정상적으로 작동하고 있습니다.',
-        actionUrl: '/dashboard'
+        message:
+          '이것은 정보 타입의 테스트 알림입니다. 시스템이 정상적으로 작동하고 있습니다.',
+        actionUrl: '/dashboard',
       },
       WARNING: {
         title: '경고 알림 테스트',
-        message: '이것은 경고 타입의 테스트 알림입니다. 주의가 필요한 상황입니다.',
-        actionUrl: '/inventory'
+        message:
+          '이것은 경고 타입의 테스트 알림입니다. 주의가 필요한 상황입니다.',
+        actionUrl: '/inventory',
       },
       ERROR: {
         title: '오류 알림 테스트',
-        message: '이것은 오류 타입의 테스트 알림입니다. 즉시 확인이 필요합니다.',
-        actionUrl: '/sales'
+        message:
+          '이것은 오류 타입의 테스트 알림입니다. 즉시 확인이 필요합니다.',
+        actionUrl: '/sales',
       },
       SUCCESS: {
         title: '성공 알림 테스트',
-        message: '이것은 성공 타입의 테스트 알림입니다. 작업이 성공적으로 완료되었습니다.',
-        actionUrl: '/hr'
-      }
+        message:
+          '이것은 성공 타입의 테스트 알림입니다. 작업이 성공적으로 완료되었습니다.',
+        actionUrl: '/hr',
+      },
     }
 
     const data = testData[type]
-    
+
     try {
       setLoading(true)
       setError(null)
@@ -115,11 +128,11 @@ function NotificationTestPage() {
         title: data.title,
         message: data.message,
         type: type,
-        actionUrl: data.actionUrl
+        actionUrl: data.actionUrl,
       })
 
       setSuccess(`${type} 타입 테스트 알림이 성공적으로 생성되었습니다!`)
-      
+
       // 전역 알림 상태 갱신
       await refreshNotifications()
     } catch (error) {
@@ -133,7 +146,7 @@ function NotificationTestPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       {/* 헤더 */}
-      <div className="flex items-center gap-4 mb-6">
+      <div className="mb-6 flex items-center gap-4">
         <Button
           variant="ghost"
           onClick={() => navigate(-1)}
@@ -143,7 +156,7 @@ function NotificationTestPage() {
           뒤로가기
         </Button>
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
+          <h1 className="flex items-center gap-2 text-2xl font-bold">
             <Bell className="h-6 w-6" />
             알림 테스트
           </h1>
@@ -153,7 +166,7 @@ function NotificationTestPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* 커스텀 알림 생성 */}
         <Card>
           <CardHeader>
@@ -165,7 +178,7 @@ function NotificationTestPage() {
               <Input
                 id="title"
                 value={formData.title}
-                onChange={(e) => updateFormData('title', e.target.value)}
+                onChange={e => updateFormData('title', e.target.value)}
                 placeholder="알림 제목을 입력하세요"
               />
             </div>
@@ -175,7 +188,7 @@ function NotificationTestPage() {
               <Textarea
                 id="message"
                 value={formData.message}
-                onChange={(e) => updateFormData('message', e.target.value)}
+                onChange={e => updateFormData('message', e.target.value)}
                 placeholder="알림 메시지를 입력하세요"
                 rows={3}
               />
@@ -183,7 +196,10 @@ function NotificationTestPage() {
 
             <div>
               <Label htmlFor="type">알림 타입</Label>
-              <Select value={formData.type} onValueChange={(value: any) => updateFormData('type', value)}>
+              <Select
+                value={formData.type}
+                onValueChange={(value: any) => updateFormData('type', value)}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -201,13 +217,13 @@ function NotificationTestPage() {
               <Input
                 id="actionUrl"
                 value={formData.actionUrl}
-                onChange={(e) => updateFormData('actionUrl', e.target.value)}
+                onChange={e => updateFormData('actionUrl', e.target.value)}
                 placeholder="/dashboard, /inventory 등"
               />
             </div>
 
-            <Button 
-              onClick={createTestNotification} 
+            <Button
+              onClick={createTestNotification}
               disabled={loading}
               className="w-full"
             >
@@ -245,7 +261,7 @@ function NotificationTestPage() {
               >
                 ℹ️ 정보 알림
               </Button>
-              
+
               <Button
                 variant="outline"
                 onClick={() => createQuickTestNotification('WARNING')}
@@ -254,7 +270,7 @@ function NotificationTestPage() {
               >
                 ⚠️ 경고 알림
               </Button>
-              
+
               <Button
                 variant="outline"
                 onClick={() => createQuickTestNotification('ERROR')}
@@ -263,7 +279,7 @@ function NotificationTestPage() {
               >
                 ❌ 오류 알림
               </Button>
-              
+
               <Button
                 variant="outline"
                 onClick={() => createQuickTestNotification('SUCCESS')}
@@ -274,7 +290,7 @@ function NotificationTestPage() {
               </Button>
             </div>
 
-            <div className="pt-4 border-t">
+            <div className="border-t pt-4">
               <Button
                 variant="ghost"
                 onClick={() => navigate('/notifications')}
@@ -312,11 +328,26 @@ function NotificationTestPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-2 text-sm">
-            <p><strong>1. 알림 생성:</strong> 위의 폼을 사용하여 테스트 알림을 생성합니다.</p>
-            <p><strong>2. 실시간 확인:</strong> 알림 생성 후 헤더의 알림 아이콘을 확인해보세요.</p>
-            <p><strong>3. 알림 개수:</strong> 읽지 않은 알림 개수가 실시간으로 업데이트됩니다.</p>
-            <p><strong>4. 드롭다운 테스트:</strong> 알림 드롭다운을 열어 새로 생성된 알림을 확인하세요.</p>
-            <p><strong>5. 페이지 이동:</strong> "모든 알림 보기" 버튼으로 전체 알림 페이지에서 확인하세요.</p>
+            <p>
+              <strong>1. 알림 생성:</strong> 위의 폼을 사용하여 테스트 알림을
+              생성합니다.
+            </p>
+            <p>
+              <strong>2. 실시간 확인:</strong> 알림 생성 후 헤더의 알림 아이콘을
+              확인해보세요.
+            </p>
+            <p>
+              <strong>3. 알림 개수:</strong> 읽지 않은 알림 개수가 실시간으로
+              업데이트됩니다.
+            </p>
+            <p>
+              <strong>4. 드롭다운 테스트:</strong> 알림 드롭다운을 열어 새로
+              생성된 알림을 확인하세요.
+            </p>
+            <p>
+              <strong>5. 페이지 이동:</strong> "모든 알림 보기" 버튼으로 전체
+              알림 페이지에서 확인하세요.
+            </p>
           </div>
         </CardContent>
       </Card>

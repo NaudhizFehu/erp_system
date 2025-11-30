@@ -175,7 +175,16 @@ export interface StatCard {
  */
 export interface FilterCondition {
   field: string
-  operator: 'eq' | 'ne' | 'gt' | 'gte' | 'lt' | 'lte' | 'like' | 'in' | 'between'
+  operator:
+    | 'eq'
+    | 'ne'
+    | 'gt'
+    | 'gte'
+    | 'lt'
+    | 'lte'
+    | 'like'
+    | 'in'
+    | 'between'
   value: any
   values?: any[]
 }
@@ -275,7 +284,3 @@ export interface ProgressStatus {
   completed: boolean
   error?: string
 }
-
-
-
-

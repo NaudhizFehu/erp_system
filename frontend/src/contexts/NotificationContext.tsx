@@ -1,6 +1,13 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
-import { notificationService } from '@/services/notificationService'
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from 'react'
+
 import { useAuth } from '@/contexts/AuthContext'
+import { notificationService } from '@/services/notificationService'
 
 /**
  * 알림 전역 상태 관리 Context
@@ -15,7 +22,9 @@ interface NotificationContextType {
   stopPolling: () => void
 }
 
-const NotificationContext = createContext<NotificationContextType | undefined>(undefined)
+const NotificationContext = createContext<NotificationContextType | undefined>(
+  undefined,
+)
 
 interface NotificationProviderProps {
   children: ReactNode
@@ -28,7 +37,9 @@ function NotificationProvider({ children }: NotificationProviderProps) {
   const { isAuthenticated } = useAuth()
   const [unreadCount, setUnreadCount] = useState(0)
   const [isPolling, setIsPolling] = useState(false)
-  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null)
+  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(
+    null,
+  )
 
   /**
    * 알림 개수 갱신
@@ -100,20 +111,20 @@ function NotificationProvider({ children }: NotificationProviderProps) {
    */
   const startPolling = () => {
     if (isPolling || !isAuthenticated) return
-    
+
     console.log('알림 폴링 시작')
     setIsPolling(true)
-    
+
     // 토큰이 localStorage에 저장될 시간을 주기 위해 약간의 딜레이 후 실행
     setTimeout(() => {
       refreshNotifications()
     }, 1000) // 1초 딜레이
-    
+
     // 30초마다 갱신
     const interval = setInterval(() => {
       refreshNotifications()
     }, 30000) // 30초
-    
+
     setPollingInterval(interval)
   }
 
@@ -141,7 +152,7 @@ function NotificationProvider({ children }: NotificationProviderProps) {
       stopPolling()
       setUnreadCount(0) // 로그아웃 시 알림 개수 초기화
     }
-    
+
     // 컴포넌트 언마운트 시 폴링 중지
     return () => {
       stopPolling()
@@ -163,7 +174,7 @@ function NotificationProvider({ children }: NotificationProviderProps) {
     }
 
     document.addEventListener('visibilitychange', handleVisibilityChange)
-    
+
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
@@ -176,7 +187,7 @@ function NotificationProvider({ children }: NotificationProviderProps) {
     markAllAsRead,
     isPolling,
     startPolling,
-    stopPolling
+    stopPolling,
   }
 
   return (
@@ -192,7 +203,9 @@ function NotificationProvider({ children }: NotificationProviderProps) {
 function useNotifications() {
   const context = useContext(NotificationContext)
   if (context === undefined) {
-    throw new Error('useNotifications must be used within a NotificationProvider')
+    throw new Error(
+      'useNotifications must be used within a NotificationProvider',
+    )
   }
   return context
 }

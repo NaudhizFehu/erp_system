@@ -3,10 +3,6 @@
  * 주요 지표들을 한눈에 볼 수 있는 요약 위젯입니다
  */
 
-import React from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import {
   TrendingUp,
   TrendingDown,
@@ -18,16 +14,21 @@ import {
   AlertTriangle,
   RefreshCw,
   MoreHorizontal,
-  ArrowRight
+  ArrowRight,
 } from 'lucide-react'
+import React from 'react'
+
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { formatCurrency, formatNumber } from '@/utils/format'
 import type { OverviewSummary } from '@/types/dashboard'
+import { formatCurrency, formatNumber } from '@/utils/format'
 
 interface OverviewWidgetProps {
   data: OverviewSummary
@@ -64,7 +65,7 @@ const MetricCard = ({
   format = 'number',
   onClick,
   badge,
-  alert = false
+  alert = false,
 }: MetricCardProps) => {
   const formatValue = (val: number | string) => {
     if (typeof val === 'string') return val
@@ -82,7 +83,7 @@ const MetricCard = ({
   const hasGrowth = growthRate !== undefined && growthRate !== 0
 
   return (
-    <Card 
+    <Card
       className={`relative overflow-hidden transition-all duration-200 hover:shadow-lg ${
         onClick ? 'cursor-pointer hover:scale-105' : ''
       } ${alert ? 'ring-2 ring-red-200' : ''}`}
@@ -91,8 +92,8 @@ const MetricCard = ({
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div 
-              className="p-2 rounded-lg"
+            <div
+              className="rounded-lg p-2"
               style={{ backgroundColor: `${color}20`, color }}
             >
               {icon}
@@ -108,17 +109,15 @@ const MetricCard = ({
                     {badge}
                   </Badge>
                 )}
-                {alert && (
-                  <AlertTriangle className="h-4 w-4 text-red-500" />
-                )}
+                {alert && <AlertTriangle className="h-4 w-4 text-red-500" />}
               </div>
             </div>
           </div>
           {onClick && (
-            <ArrowRight className="h-4 w-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <ArrowRight className="h-4 w-4 text-gray-400 opacity-0 transition-opacity group-hover:opacity-100" />
           )}
         </div>
-        
+
         {hasGrowth && (
           <div className="mt-3 flex items-center space-x-2">
             {isPositiveGrowth ? (
@@ -126,9 +125,11 @@ const MetricCard = ({
             ) : (
               <TrendingDown className="h-4 w-4 text-red-500" />
             )}
-            <span className={`text-sm font-medium ${
-              isPositiveGrowth ? 'text-green-600' : 'text-red-600'
-            }`}>
+            <span
+              className={`text-sm font-medium ${
+                isPositiveGrowth ? 'text-green-600' : 'text-red-600'
+              }`}
+            >
               {Math.abs(growthRate!).toFixed(1)}%
             </span>
             <span className="text-xs text-gray-500">vs 이전 기간</span>
@@ -145,7 +146,7 @@ function OverviewWidget({
   error,
   className = '',
   onRefresh,
-  onViewDetails
+  onViewDetails,
 }: OverviewWidgetProps) {
   if (loading) {
     return (
@@ -153,13 +154,16 @@ function OverviewWidget({
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>전체 현황</CardTitle>
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+            <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-primary" />
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
             {[...Array(8)].map((_, index) => (
-              <div key={index} className="h-24 bg-gray-100 rounded-lg animate-pulse" />
+              <div
+                key={index}
+                className="h-24 animate-pulse rounded-lg bg-gray-100"
+              />
             ))}
           </div>
         </CardContent>
@@ -179,10 +183,12 @@ function OverviewWidget({
           </div>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8">
-            <p className="text-red-500 mb-4">데이터 로딩 중 오류가 발생했습니다</p>
+          <div className="py-8 text-center">
+            <p className="mb-4 text-red-500">
+              데이터 로딩 중 오류가 발생했습니다
+            </p>
             <Button variant="outline" onClick={onRefresh}>
-              <RefreshCw className="h-4 w-4 mr-2" />
+              <RefreshCw className="mr-2 h-4 w-4" />
               다시 시도
             </Button>
           </div>
@@ -230,7 +236,7 @@ function OverviewWidget({
         </div>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           {/* 매출 관련 지표 */}
           <MetricCard
             title="월 매출"
@@ -241,7 +247,7 @@ function OverviewWidget({
             format="currency"
             onClick={() => onViewDetails?.('revenue')}
           />
-          
+
           <MetricCard
             title="총 매출"
             value={data.totalRevenue}
@@ -345,44 +351,64 @@ function OverviewWidget({
             color="#f43f5e"
             format="number"
             onClick={() => onViewDetails?.('inventory')}
-            badge={data.inventoryTurnover > 6 ? '우수' : data.inventoryTurnover > 4 ? '양호' : '개선필요'}
+            badge={
+              data.inventoryTurnover > 6
+                ? '우수'
+                : data.inventoryTurnover > 4
+                  ? '양호'
+                  : '개선필요'
+            }
           />
         </div>
 
         {/* 요약 정보 */}
-        <div className="mt-6 pt-4 border-t">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+        <div className="mt-6 border-t pt-4">
+          <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-3">
             <div className="text-center">
               <p className="text-gray-500">이번 달 성과</p>
-              <div className="flex items-center justify-center space-x-2 mt-1">
+              <div className="mt-1 flex items-center justify-center space-x-2">
                 <span className="font-semibold text-green-600">
-                  +{((data.revenueGrowthRate + data.orderGrowthRate + data.customerGrowthRate) / 3).toFixed(1)}%
+                  +
+                  {(
+                    (data.revenueGrowthRate +
+                      data.orderGrowthRate +
+                      data.customerGrowthRate) /
+                    3
+                  ).toFixed(1)}
+                  %
                 </span>
                 <span className="text-gray-500">평균 성장률</span>
               </div>
             </div>
             <div className="text-center">
               <p className="text-gray-500">주의 항목</p>
-              <div className="flex items-center justify-center space-x-2 mt-1">
+              <div className="mt-1 flex items-center justify-center space-x-2">
                 <span className="font-semibold text-red-600">
-                  {(data.pendingOrders > 10 ? 1 : 0) + (data.lowStockProducts > 5 ? 1 : 0) + (data.attendanceRate < 90 ? 1 : 0)}건
+                  {(data.pendingOrders > 10 ? 1 : 0) +
+                    (data.lowStockProducts > 5 ? 1 : 0) +
+                    (data.attendanceRate < 90 ? 1 : 0)}
+                  건
                 </span>
                 <span className="text-gray-500">확인 필요</span>
               </div>
             </div>
             <div className="text-center">
               <p className="text-gray-500">전체 평가</p>
-              <div className="flex items-center justify-center space-x-2 mt-1">
-                <Badge 
+              <div className="mt-1 flex items-center justify-center space-x-2">
+                <Badge
                   variant={
-                    data.revenueGrowthRate > 10 ? 'default' : 
-                    data.revenueGrowthRate > 5 ? 'secondary' : 
-                    'destructive'
+                    data.revenueGrowthRate > 10
+                      ? 'default'
+                      : data.revenueGrowthRate > 5
+                        ? 'secondary'
+                        : 'destructive'
                   }
                 >
-                  {data.revenueGrowthRate > 10 ? '우수' : 
-                   data.revenueGrowthRate > 5 ? '양호' : 
-                   '개선필요'}
+                  {data.revenueGrowthRate > 10
+                    ? '우수'
+                    : data.revenueGrowthRate > 5
+                      ? '양호'
+                      : '개선필요'}
                 </Badge>
               </div>
             </div>
@@ -394,7 +420,3 @@ function OverviewWidget({
 }
 
 export { OverviewWidget }
-
-
-
-

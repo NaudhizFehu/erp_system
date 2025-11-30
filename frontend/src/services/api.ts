@@ -29,16 +29,16 @@ const api = axios.create({
  * 모든 요청에 공통 헤더나 인증 토큰을 추가할 수 있습니다
  */
 api.interceptors.request.use(
-  (config) => {
+  config => {
     // 인증 토큰 추가
     const token = localStorage.getItem('accessToken')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
-    
+
     return config
   },
-  (error) => {
+  error => {
     return Promise.reject(error)
   }
 )
@@ -52,11 +52,14 @@ api.interceptors.response.use(
     // 성공 응답인 경우 전체 응답 반환
     return response
   },
-  (error) => {
+  error => {
     // 에러 응답 처리
     if (error.response?.status === 401) {
       // 401 오류는 조용히 처리 (토큰 만료 등)
-      console.warn('인증 오류:', error.response?.data?.message || 'Unauthorized')
+      console.warn(
+        '인증 오류:',
+        error.response?.data?.message || 'Unauthorized',
+      )
     } else if (error.response?.data?.message) {
       // 백엔드에서 제공하는 한국어 에러 메시지 표시
       toast.error(error.response.data.message)
@@ -67,11 +70,9 @@ api.interceptors.response.use(
     } else {
       toast.error('알 수 없는 오류가 발생했습니다')
     }
-    
+
     return Promise.reject(error)
   }
 )
 
 export default api
-
-

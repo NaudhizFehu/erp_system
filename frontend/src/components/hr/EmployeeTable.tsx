@@ -3,8 +3,29 @@
  * 직원 목록을 테이블 형태로 표시합니다
  */
 
+import {
+  MoreHorizontal,
+  User,
+  Edit,
+  Trash2,
+  Calendar,
+  ArrowUpDown,
+  ChevronUp,
+  ChevronDown,
+} from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
   Table,
   TableBody,
@@ -13,29 +34,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Checkbox } from '@/components/ui/checkbox'
-import { 
-  MoreHorizontal,
-  User,
-  Edit,
-  Trash2,
-  Calendar,
-  ArrowUpDown,
-  ChevronUp,
-  ChevronDown
-} from 'lucide-react'
+import { hrUtils } from '@/services/hrApi'
 import type { Employee } from '@/types/hr'
 import { KOREAN_LABELS } from '@/types/hr'
-import { hrUtils } from '@/services/hrApi'
 
 interface EmployeeTableProps {
   employees: Employee[]
@@ -50,7 +51,13 @@ interface EmployeeTableProps {
   className?: string
 }
 
-type SortField = 'name' | 'employeeNumber' | 'department' | 'position' | 'hireDate' | 'employmentStatus'
+type SortField =
+  | 'name'
+  | 'employeeNumber'
+  | 'department'
+  | 'position'
+  | 'hireDate'
+  | 'employmentStatus'
 type SortDirection = 'asc' | 'desc'
 
 /**
@@ -66,7 +73,7 @@ export function EmployeeTable({
   onSelectionChange,
   showActions = true,
   showSelection = false,
-  className = ''
+  className = '',
 }: EmployeeTableProps) {
   const navigate = useNavigate()
   const [selectedIds, setSelectedIds] = useState<number[]>([])
@@ -79,7 +86,11 @@ export function EmployeeTable({
   const handleRowClick = (employeeId: number, event: React.MouseEvent) => {
     // 액션 버튼이나 체크박스 클릭 시에는 상세 페이지로 이동하지 않음
     const target = event.target as HTMLElement
-    if (target.closest('button') || target.closest('[role="checkbox"]') || target.closest('a')) {
+    if (
+      target.closest('button') ||
+      target.closest('[role="checkbox"]') ||
+      target.closest('a')
+    ) {
       return
     }
     navigate(`/hr/employees/${employeeId}`)
@@ -161,15 +172,15 @@ export function EmployeeTable({
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
       case 'ACTIVE':
-        return 'default'          // 재직 - 파랑
+        return 'default' // 재직 - 파랑
       case 'ON_LEAVE':
-        return 'secondary'        // 휴가 - 회색
+        return 'secondary' // 휴가 - 회색
       case 'INACTIVE':
-        return 'purple'           // 휴직 - 연보라색
+        return 'purple' // 휴직 - 연보라색
       case 'SUSPENDED':
-        return 'black'            // 정직 - 검은색
+        return 'black' // 정직 - 검은색
       case 'TERMINATED':
-        return 'destructive'      // 퇴직 - 빨강
+        return 'destructive' // 퇴직 - 빨강
       default:
         return 'secondary'
     }
@@ -180,9 +191,11 @@ export function EmployeeTable({
     if (sortField !== field) {
       return <ArrowUpDown className="ml-2 h-4 w-4" />
     }
-    return sortDirection === 'asc' 
-      ? <ChevronUp className="ml-2 h-4 w-4" />
-      : <ChevronDown className="ml-2 h-4 w-4" />
+    return sortDirection === 'asc' ? (
+      <ChevronUp className="ml-2 h-4 w-4" />
+    ) : (
+      <ChevronDown className="ml-2 h-4 w-4" />
+    )
   }
 
   // 직원 이름 첫 글자 추출
@@ -194,7 +207,7 @@ export function EmployeeTable({
     return (
       <div className="space-y-3">
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="h-16 bg-gray-100 animate-pulse rounded" />
+          <div key={i} className="h-16 animate-pulse rounded bg-gray-100" />
         ))}
       </div>
     )
@@ -208,18 +221,21 @@ export function EmployeeTable({
             {showSelection && (
               <TableHead className="w-12">
                 <Checkbox
-                  checked={selectedIds.length === employees.length && employees.length > 0}
+                  checked={
+                    selectedIds.length === employees.length &&
+                    employees.length > 0
+                  }
                   onCheckedChange={handleSelectAll}
                   aria-label="전체 선택"
                 />
               </TableHead>
             )}
-            
+
             <TableHead className="w-16">프로필</TableHead>
-            
+
             <TableHead>
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 onClick={() => handleSort('name')}
                 className="h-auto p-0 font-semibold"
               >
@@ -227,10 +243,10 @@ export function EmployeeTable({
                 {renderSortIcon('name')}
               </Button>
             </TableHead>
-            
+
             <TableHead>
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 onClick={() => handleSort('employeeNumber')}
                 className="h-auto p-0 font-semibold"
               >
@@ -238,10 +254,10 @@ export function EmployeeTable({
                 {renderSortIcon('employeeNumber')}
               </Button>
             </TableHead>
-            
+
             <TableHead>
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 onClick={() => handleSort('department')}
                 className="h-auto p-0 font-semibold"
               >
@@ -249,10 +265,10 @@ export function EmployeeTable({
                 {renderSortIcon('department')}
               </Button>
             </TableHead>
-            
+
             <TableHead>
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 onClick={() => handleSort('position')}
                 className="h-auto p-0 font-semibold"
               >
@@ -260,12 +276,12 @@ export function EmployeeTable({
                 {renderSortIcon('position')}
               </Button>
             </TableHead>
-            
+
             <TableHead>연락처</TableHead>
-            
+
             <TableHead>
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 onClick={() => handleSort('hireDate')}
                 className="h-auto p-0 font-semibold"
               >
@@ -273,10 +289,10 @@ export function EmployeeTable({
                 {renderSortIcon('hireDate')}
               </Button>
             </TableHead>
-            
+
             <TableHead>
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 onClick={() => handleSort('employmentStatus')}
                 className="h-auto p-0 font-semibold"
               >
@@ -285,28 +301,32 @@ export function EmployeeTable({
               </Button>
             </TableHead>
 
-            {showActions && (
-              <TableHead className="w-12">액션</TableHead>
-            )}
+            {showActions && <TableHead className="w-12">액션</TableHead>}
           </TableRow>
         </TableHeader>
 
         <TableBody>
           {sortedEmployees.length === 0 ? (
             <TableRow>
-              <TableCell 
-                colSpan={showSelection && showActions ? 10 : showSelection || showActions ? 9 : 8}
-                className="text-center py-8 text-muted-foreground"
+              <TableCell
+                colSpan={
+                  showSelection && showActions
+                    ? 10
+                    : showSelection || showActions
+                      ? 9
+                      : 8
+                }
+                className="py-8 text-center text-muted-foreground"
               >
                 직원 데이터가 없습니다.
               </TableCell>
             </TableRow>
           ) : (
-            sortedEmployees.map((employee) => (
-              <TableRow 
+            sortedEmployees.map(employee => (
+              <TableRow
                 key={employee.id}
-                onClick={(e) => handleRowClick(employee.id, e)}
-                className={`cursor-pointer hover:bg-muted/50 transition-colors ${
+                onClick={e => handleRowClick(employee.id, e)}
+                className={`cursor-pointer transition-colors hover:bg-muted/50 ${
                   selectedIds.includes(employee.id) ? 'bg-muted/50' : ''
                 }`}
               >
@@ -314,7 +334,7 @@ export function EmployeeTable({
                   <TableCell>
                     <Checkbox
                       checked={selectedIds.includes(employee.id)}
-                      onCheckedChange={(checked) => 
+                      onCheckedChange={checked =>
                         handleSelectRow(employee.id, checked as boolean)
                       }
                       aria-label={`${employee.name} 선택`}
@@ -325,11 +345,11 @@ export function EmployeeTable({
                 {/* 프로필 이미지 */}
                 <TableCell>
                   <Avatar className="h-10 w-10">
-                    <AvatarImage 
-                      src={employee.profileImageUrl} 
+                    <AvatarImage
+                      src={employee.profileImageUrl}
                       alt={employee.name}
                     />
-                    <AvatarFallback className="bg-primary text-primary-foreground text-sm">
+                    <AvatarFallback className="bg-primary text-sm text-primary-foreground">
                       {getInitials(employee.name)}
                     </AvatarFallback>
                   </Avatar>
@@ -365,7 +385,10 @@ export function EmployeeTable({
                 <TableCell>
                   <div className="text-sm">
                     {employee.email && (
-                      <div className="truncate max-w-[200px]" title={employee.email}>
+                      <div
+                        className="max-w-[200px] truncate"
+                        title={employee.email}
+                      >
                         {employee.email}
                       </div>
                     )}
@@ -390,16 +413,16 @@ export function EmployeeTable({
                 {/* 상태 */}
                 <TableCell>
                   <div className="flex flex-col gap-1">
-                    <Badge 
+                    <Badge
                       variant={getStatusBadgeVariant(employee.employmentStatus)}
-                      className="w-16 text-xs px-2 py-1 flex items-center justify-center"
+                      className="flex w-16 items-center justify-center px-2 py-1 text-xs"
                     >
                       {KOREAN_LABELS[employee.employmentStatus]}
                     </Badge>
                     {employee.employmentType && (
-                      <Badge 
-                        variant="outline" 
-                        className="w-16 text-xs px-2 py-1 flex items-center justify-center"
+                      <Badge
+                        variant="outline"
+                        className="flex w-16 items-center justify-center px-2 py-1 text-xs"
                       >
                         {KOREAN_LABELS[employee.employmentType]}
                       </Badge>
@@ -429,17 +452,18 @@ export function EmployeeTable({
                             수정
                           </DropdownMenuItem>
                         )}
-                        {onTerminate && employee.employmentStatus === 'ACTIVE' && (
-                          <DropdownMenuItem 
-                            onClick={() => onTerminate(employee)}
-                            className="text-orange-600"
-                          >
-                            <Calendar className="mr-2 h-4 w-4" />
-                            퇴직처리
-                          </DropdownMenuItem>
-                        )}
+                        {onTerminate &&
+                          employee.employmentStatus === 'ACTIVE' && (
+                            <DropdownMenuItem
+                              onClick={() => onTerminate(employee)}
+                              className="text-orange-600"
+                            >
+                              <Calendar className="mr-2 h-4 w-4" />
+                              퇴직처리
+                            </DropdownMenuItem>
+                          )}
                         {onDelete && (
-                          <DropdownMenuItem 
+                          <DropdownMenuItem
                             onClick={() => onDelete(employee)}
                             className="text-destructive"
                           >
@@ -459,4 +483,3 @@ export function EmployeeTable({
     </div>
   )
 }
-

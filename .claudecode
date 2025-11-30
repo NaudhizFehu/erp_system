@@ -1,0 +1,618 @@
+# Claude Code Development Rules
+# 통합 기업 자원 관리 시스템 (ERP System) - 개발 규칙
+
+## 📋 프로젝트 개요
+
+**프로젝트명**: Cursor ERP System
+**설명**: 통합 기업 자원 관리 시스템 (인사, 재고, 영업, 회계, 회사 관리)
+**언어**: Korean (한국어)
+**기술 스택**:
+- Frontend: React 18 + TypeScript + Vite
+- UI: Radix UI + Tailwind CSS
+- State: React Query (@tanstack/react-query)
+- Forms: React Hook Form + Zod
+- Backend: Spring Boot (Java)
+
+---
+
+## 🎯 핵심 개발 원칙
+
+### 1. 대화 언어
+- **모든 대화는 한국어로 진행합니다.**
+- 코드 주석, 변수명, 함수명은 영어 사용
+- 사용자 인터페이스 텍스트는 한국어 사용
+
+### 2. 완전성 원칙
+- **시작한 기능은 반드시 완료합니다.**
+- TODO 주석이나 미완성 코드를 남기지 않습니다.
+- Mock 데이터나 Placeholder를 사용하지 않습니다.
+- 모든 함수는 실제 동작하는 코드로 구현합니다.
+
+### 3. 타입 안정성
+- **TypeScript strict mode 사용**
+- 모든 API 응답에 대한 타입 정의 필수
+- `any` 타입 사용 최소화
+- Zod 스키마로 런타임 검증 추가
+
+### 4. 컴포넌트 설계
+- **재사용 가능한 컴포넌트 작성**
+- Radix UI 컴포넌트 우선 사용
+- shadcn/ui 패턴 따르기
+- Props 인터페이스 명확히 정의
+
+---
+
+## 📁 프로젝트 구조
+
+```
+frontend/
+├── src/
+│   ├── components/        # 재사용 컴포넌트
+│   │   ├── ui/           # Radix UI 기반 기본 컴포넌트
+│   │   ├── auth/         # 인증 관련 컴포넌트
+│   │   ├── layout/       # 레이아웃 컴포넌트
+│   │   ├── hr/           # 인사 모듈 컴포넌트
+│   │   ├── inventory/    # 재고 모듈 컴포넌트
+│   │   ├── sales/        # 영업 모듈 컴포넌트
+│   │   └── accounting/   # 회계 모듈 컴포넌트
+│   ├── pages/            # 페이지 컴포넌트
+│   │   ├── auth/
+│   │   ├── hr/
+│   │   ├── inventory/
+│   │   ├── sales/
+│   │   ├── accounting/
+│   │   └── company/
+│   ├── hooks/            # Custom Hooks (React Query)
+│   ├── services/         # API Service Layer
+│   ├── types/            # TypeScript 타입 정의
+│   ├── contexts/         # React Context
+│   ├── utils/            # 유틸리티 함수
+│   ├── lib/              # 라이브러리 설정
+│   └── App.tsx           # 메인 앱 및 라우팅
+├── docs/
+│   └── work-logs/        # 작업 로그 및 문서
+└── claudedocs/           # Claude 작업 분석 문서
+
+backend/
+└── src/main/java/com/erp/
+    ├── accounting/       # 회계 모듈
+    ├── hr/              # 인사 모듈
+    ├── inventory/       # 재고 모듈
+    ├── sales/           # 영업 모듈
+    └── company/         # 회사 관리 모듈
+```
+
+---
+
+## 💻 코딩 컨벤션
+
+### TypeScript/JavaScript
+
+#### 네이밍
+```typescript
+// ✅ 올바른 예시
+const userName = 'John'                    // camelCase for variables
+const MAX_RETRY_COUNT = 3                  // UPPER_SNAKE_CASE for constants
+interface UserProfile { }                  // PascalCase for interfaces
+type AccountType = 'ASSET' | 'LIABILITY'   // PascalCase for types
+enum DebitCreditType { }                   // PascalCase for enums
+function getUserData() { }                 // camelCase for functions
+const AccountForm = () => { }              // PascalCase for components
+
+// ❌ 잘못된 예시
+const user_name = 'John'                   // snake_case 금지
+const account_form = () => { }             // 컴포넌트는 PascalCase
+```
+
+#### 파일명
+```
+// ✅ 올바른 예시
+AccountList.tsx                            // PascalCase for components
+useAccounts.ts                             // camelCase for hooks
+accountService.ts                          // camelCase for services
+accounting.ts                              // camelCase for types
+
+// ❌ 잘못된 예시
+account_list.tsx                           // snake_case 금지
+AccountService.ts                          // service는 camelCase
+```
+
+#### Import 순서
+```typescript
+// 1. React 및 외부 라이브러리
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+
+// 2. UI 컴포넌트
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+
+// 3. 커스텀 훅 및 서비스
+import { useAccounts } from '@/hooks/useAccounts'
+import { accountService } from '@/services/accountService'
+
+// 4. 타입
+import { Account, AccountType } from '@/types/accounting'
+```
+
+### React Query 패턴
+
+```typescript
+// ✅ 올바른 패턴
+// 1. Service Layer (services/accountService.ts)
+export const accountService = {
+  getAccounts: async (params?: AccountSearchParams) => {
+    const response = await api.get<PaginatedResponse<Account>>('/api/accounts', { params })
+    return response.data
+  },
+}
+
+// 2. Custom Hook (hooks/useAccounts.ts)
+export const useAccounts = (params?: AccountSearchParams) => {
+  return useQuery({
+    queryKey: ['accounts', params],
+    queryFn: () => accountService.getAccounts(params),
+  })
+}
+
+// 3. Component Usage
+const { data, isLoading, error } = useAccounts(params)
+```
+
+### Form 패턴
+
+```typescript
+// ✅ React Hook Form + Zod 패턴
+const accountFormSchema = z.object({
+  accountCode: z.string().min(1, '계정코드는 필수입니다'),
+  accountName: z.string().min(2, '계정명은 2자 이상이어야 합니다'),
+})
+
+type AccountFormData = z.infer<typeof accountFormSchema>
+
+const form = useForm<AccountFormData>({
+  resolver: zodResolver(accountFormSchema),
+  defaultValues: { ... },
+})
+```
+
+---
+
+## 🔄 개발 워크플로우
+
+### 1. 작업 시작 전
+```bash
+# 1. 최신 코드 pull
+git pull origin develop
+
+# 2. Feature 브랜치 생성
+git checkout -b feature/accounting-module
+
+# 3. 의존성 설치 (필요시)
+npm install
+```
+
+### 2. 개발 진행
+```bash
+# 1. 개발 서버 실행
+npm run dev
+
+# 2. 타입 체크 (자주 실행)
+npm run type-check
+
+# 3. Lint 체크
+npm run lint
+```
+
+### 3. 작업 완료 후
+```bash
+# 1. Lint 검사 및 수정
+npm run lint:fix
+
+# 2. 타입 체크
+npm run type-check
+
+# 3. 빌드 테스트
+npm run build
+
+# 4. 커밋 전 모든 검사 통과 확인
+```
+
+### 4. Git 커밋 메시지
+```
+feat: 계정과목 관리 기능 구현
+fix: 계정과목 삭제 시 하위 계정 확인 로직 수정
+refactor: AccountForm 컴포넌트 리팩토링
+docs: 회계 모듈 구현 계획 문서 작성
+style: 코드 포맷팅 적용
+test: AccountService 단위 테스트 추가
+chore: 의존성 업데이트
+```
+
+---
+
+## 📊 토큰 사용량 관리 규칙
+
+### 🔴 중요: 세션 종료 전 문서화 규칙
+
+**토큰 사용량이 5% 이하 (10,000 tokens 이하) 남았을 때:**
+
+1. **즉시 작업 중단**
+2. **문서화 작업 시작**
+3. **다음 파일들을 생성/업데이트:**
+
+#### 필수 문서 1: 작업 진행 상황 (claudedocs/session-[날짜]-progress.md)
+```markdown
+# 세션 작업 진행 상황
+날짜: YYYY-MM-DD
+시작 시간: HH:MM
+종료 시간: HH:MM
+
+## 완료된 작업
+- [ ] STEP 1: AccountList 페이지 API 연동 ✅
+- [ ] STEP 2: AccountForm 컴포넌트 구현 ✅
+- [ ] STEP 3: AccountDetail 페이지 구현 ✅
+- [ ] STEP 4: 라우팅 설정 완료 🔄 (진행 중)
+
+## 수정/생성된 파일
+1. `/frontend/src/pages/accounting/AccountList.tsx` - API 연동 완료
+2. `/frontend/src/components/accounting/AccountForm.tsx` - 신규 생성
+3. `/frontend/src/pages/accounting/AccountDetail.tsx` - 신규 생성
+
+## 발생한 문제 및 해결
+1. **문제**: AccountList에서 unused React import 경고
+   **해결**: `import React, { ... }` → `import { ... }` 수정
+
+## 주요 기술 결정
+1. React Hook Form + Zod 사용 (이유: 타입 안전성)
+2. useDebounce 300ms 적용 (이유: API 호출 최적화)
+
+## 테스트 필요 항목
+- [ ] AccountList 검색 기능
+- [ ] AccountForm 계정코드 중복 체크
+- [ ] AccountDetail 하위 계정 목록 표시
+```
+
+#### 필수 문서 2: 다음 작업 계획 (claudedocs/session-[날짜]-next.md)
+```markdown
+# 다음 세션 작업 계획
+
+## 우선순위 1 (즉시 착수)
+### STEP 4: 라우팅 설정 완료 ⏱️ 15분
+**파일**: `/frontend/src/App.tsx`
+**작업 내용**:
+1. AccountDetail import 추가
+2. `/accounting/accounts/:id` 라우트 추가
+3. RoleProtectedRoute로 ADMIN 권한 체크
+
+**예상 코드**:
+```typescript
+import AccountDetail from '@/pages/accounting/AccountDetail'
+
+// Route 추가
+<Route
+  path="/accounting/accounts/:id"
+  element={
+    <RoleProtectedRoute requiredRoles={['SUPER_ADMIN', 'ADMIN']}>
+      <AccountDetail />
+    </RoleProtectedRoute>
+  }
+/>
+```
+
+## 우선순위 2 (후속 작업)
+### STEP 5: AccountList 모달 통합 ⏱️ 15분
+**파일**: `/frontend/src/pages/accounting/AccountList.tsx`
+**작업 내용**:
+1. Dialog 상태 추가 (생성/수정)
+2. AccountForm을 Dialog로 통합
+3. 생성/수정 성공 시 목록 새로고침
+
+## 주의사항
+- AccountForm의 mode prop 사용 ('create' | 'edit')
+- 수정 모드일 때 account prop 전달 필수
+- 성공 후 refetch() 호출하여 목록 갱신
+
+## 예상 소요 시간
+- STEP 4: 15분
+- STEP 5: 15분
+- 총 30분 예상
+```
+
+#### 필수 문서 3: 기술 부채 및 개선 사항 (claudedocs/technical-debt.md)
+```markdown
+# 기술 부채 및 개선 사항
+
+## 🔴 긴급 (다음 세션)
+- [ ] App.tsx에 AccountDetail 라우트 추가
+- [ ] AccountList 모달 통합
+
+## 🟡 중요 (1주 내)
+- [ ] AccountForm 테스트 코드 작성
+- [ ] AccountDetail E2E 테스트
+- [ ] 에러 바운더리 추가
+
+## 🟢 개선 (추후)
+- [ ] AccountList 페이지네이션 개선 (무한 스크롤)
+- [ ] AccountForm 저장 시 낙관적 업데이트
+- [ ] 계정과목 트리 뷰 성능 최적화
+
+## 코드 품질 개선
+- [ ] Console.log 제거 (13개 경고)
+- [ ] ESLint 경고 0개로 만들기
+```
+
+### 문서화 체크리스트
+```
+토큰 사용량 5% 이하 도달 시:
+☐ session-[날짜]-progress.md 생성
+☐ session-[날짜]-next.md 생성
+☐ technical-debt.md 업데이트
+☐ TodoWrite 상태를 문서에 반영
+☐ 수정된 모든 파일 경로 기록
+☐ 발생한 에러 및 해결 방법 기록
+☐ 다음 작업의 구체적인 코드 예시 작성
+☐ 예상 소요 시간 명시
+```
+
+---
+
+## 🛡️ 권한 관리
+
+### Role 기반 접근 제어
+```typescript
+// 권한 레벨
+SUPER_ADMIN > ADMIN > MANAGER > USER
+
+// 페이지별 권한
+- 대시보드: 모든 권한
+- 직원 관리: SUPER_ADMIN, ADMIN, MANAGER
+- 본인 정보: 모든 권한
+- 회계 관리: SUPER_ADMIN, ADMIN
+- 재고 관리: SUPER_ADMIN, ADMIN, MANAGER
+- 영업 관리: SUPER_ADMIN, ADMIN, MANAGER
+```
+
+### 컴포넌트에서 권한 체크
+```typescript
+<RoleProtectedRoute requiredRoles={['SUPER_ADMIN', 'ADMIN']}>
+  <AccountList />
+</RoleProtectedRoute>
+```
+
+---
+
+## 🧪 테스트 전략
+
+### 우선순위
+1. **Critical Path**: 인증, 권한, 데이터 생성/수정/삭제
+2. **User Flows**: 직원 등록, 계정과목 생성, 주문 처리
+3. **Edge Cases**: 에러 처리, 빈 상태, 로딩 상태
+
+### 테스트 도구
+```bash
+npm run test              # Vitest 실행
+npm run test:ui           # Vitest UI
+npm run test:coverage     # Coverage 리포트
+```
+
+---
+
+## 🚨 에러 처리 패턴
+
+### API 에러
+```typescript
+try {
+  await createAccount(data)
+  toast({
+    title: '계정과목 생성 완료',
+    description: `${data.accountName} 계정과목이 성공적으로 생성되었습니다.`,
+  })
+} catch (error: any) {
+  toast({
+    title: '계정과목 생성 실패',
+    description: error.response?.data?.message || '계정과목 생성에 실패했습니다.',
+    variant: 'destructive',
+  })
+}
+```
+
+### 폼 검증 에러
+```typescript
+// Zod 스키마로 자동 처리
+const accountFormSchema = z.object({
+  accountCode: z.string().min(1, '계정코드는 필수입니다'),
+})
+```
+
+---
+
+## 📝 주석 작성 규칙
+
+### 함수/컴포넌트 주석
+```typescript
+/**
+ * 계정과목 목록 페이지
+ *
+ * @description 계정과목 조회, 검색, 필터링, 생성, 수정, 삭제 기능 제공
+ * @permission ADMIN, SUPER_ADMIN
+ */
+export const AccountList = () => { ... }
+```
+
+### 복잡한 로직 주석
+```typescript
+// 계정 레벨에 따른 상위 계정 필터링
+// Level 1: 상위 계정 없음
+// Level 2: Level 1만 선택 가능
+// Level 3: Level 2만 선택 가능
+const filteredParents = parentAccounts?.filter(p =>
+  p.accountLevel === currentLevel - 1 &&
+  p.accountType === currentType
+)
+```
+
+---
+
+## 🔍 코드 리뷰 체크리스트
+
+### 제출 전 확인
+- [ ] TypeScript 에러 0개
+- [ ] ESLint 에러 0개 (경고는 허용)
+- [ ] 빌드 성공
+- [ ] 모든 기능 테스트 완료
+- [ ] 불필요한 console.log 제거
+- [ ] TODO 주석 제거 (또는 이슈 등록)
+- [ ] 타입 정의 완료 (any 타입 최소화)
+- [ ] 에러 처리 추가
+- [ ] 로딩 상태 처리
+- [ ] 빈 상태 처리
+
+### 성능 체크
+- [ ] 불필요한 리렌더링 방지 (useMemo, useCallback)
+- [ ] 큰 리스트는 가상화 고려
+- [ ] 이미지 최적화
+- [ ] 번들 사이즈 체크
+
+---
+
+## 📚 참고 문서
+
+### 내부 문서
+- `/docs/work-logs/` - 작업 로그
+- `/claudedocs/` - Claude 작업 분석
+
+### 외부 문서
+- React Query: https://tanstack.com/query/latest
+- Radix UI: https://www.radix-ui.com/
+- React Hook Form: https://react-hook-form.com/
+- Zod: https://zod.dev/
+
+---
+
+## 🎨 UI/UX 가이드
+
+### 컬러 시스템
+- Primary: 브랜드 컬러
+- Destructive: 삭제, 에러 (빨강)
+- Secondary: 보조 액션 (회색)
+- Muted: 비활성 상태
+
+### 컴포넌트 사용
+```typescript
+// ✅ 일관된 컴포넌트 사용
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Dialog } from '@/components/ui/dialog'
+
+// ❌ 직접 스타일링 금지
+<button className="px-4 py-2 bg-blue-500">Click</button>
+```
+
+### 반응형 디자인
+```typescript
+// Tailwind 반응형 클래스 사용
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+```
+
+---
+
+## ⚡ 성능 최적화
+
+### React Query 캐싱
+```typescript
+// 적절한 staleTime 설정
+useQuery({
+  queryKey: ['accounts'],
+  queryFn: getAccounts,
+  staleTime: 5 * 60 * 1000, // 5분
+})
+```
+
+### 코드 스플리팅
+```typescript
+// 페이지 단위 lazy loading
+const AccountDetail = lazy(() => import('@/pages/accounting/AccountDetail'))
+```
+
+---
+
+## 🔐 보안 규칙
+
+1. **환경 변수**: .env 파일에 민감 정보 저장 (Git 제외)
+2. **API 키**: 절대 하드코딩 금지
+3. **XSS 방지**: 사용자 입력 sanitization
+4. **CSRF 방지**: API 요청에 토큰 포함
+5. **권한 체크**: 프론트엔드 + 백엔드 이중 체크
+
+---
+
+## 📌 Claude Code 특별 규칙
+
+### 1. 작업 시작 시
+```
+1. git status 확인
+2. 현재 브랜치 확인
+3. 관련 문서 읽기 (work-logs, claudedocs)
+4. TodoWrite로 작업 계획 수립
+```
+
+### 2. 작업 중
+```
+1. 각 STEP 완료 시 TodoWrite 업데이트
+2. 파일 수정 시 관련 타입/서비스 먼저 확인
+3. 에러 발생 시 즉시 기록
+4. 린트/타입 체크 자주 실행
+```
+
+### 3. 작업 완료 시
+```
+1. 모든 TODO 완료 확인
+2. 린트/타입 체크 통과 확인
+3. 빌드 테스트
+4. work-log 문서 작성
+5. 토큰 사용량 5% 이하면 세션 문서 작성
+```
+
+### 4. 토큰 관리
+```
+- 현재 사용량: [TOKEN_USED] / 200,000
+- 남은 토큰: [TOKEN_REMAINING]
+
+if (TOKEN_REMAINING < 10,000) {
+  // 즉시 문서화 시작
+  작업 중단
+  → session-[날짜]-progress.md 생성
+  → session-[날짜]-next.md 생성
+  → technical-debt.md 업데이트
+}
+```
+
+---
+
+## 🎯 작업 우선순위
+
+### P0 (긴급)
+- 빌드 실패 수정
+- 프로덕션 버그 수정
+- 보안 취약점 패치
+
+### P1 (높음)
+- 새 기능 구현
+- 성능 개선
+- 사용자 피드백 반영
+
+### P2 (중간)
+- 코드 리팩토링
+- 테스트 추가
+- 문서 업데이트
+
+### P3 (낮음)
+- 코드 정리
+- 주석 개선
+- 개발자 경험 개선
+
+---
+
+**마지막 업데이트**: 2025-11-07
+**버전**: 1.0.0

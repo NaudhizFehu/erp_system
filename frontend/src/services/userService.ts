@@ -63,7 +63,10 @@ class UserService {
       console.log('사용자 정보 업데이트 API 응답:', response)
       console.log('응답 데이터 구조:', response.data)
       console.log('응답 data 필드:', response.data.data)
-      console.log('응답 data 필드 상세:', JSON.stringify(response.data.data, null, 2))
+      console.log(
+        '응답 data 필드 상세:',
+        JSON.stringify(response.data.data, null, 2),
+      )
       // ApiResponse 구조에서 실제 데이터 추출
       const userData = response.data.data || response.data
       console.log('최종 반환할 사용자 데이터:', userData)
@@ -103,13 +106,20 @@ class UserService {
     try {
       const formData = new FormData()
       formData.append('image', file)
-      
-      console.log('프로필 이미지 업로드 API 호출:', `${this.baseUrl}/profile-image`)
-      const response = await api.post(`${this.baseUrl}/profile-image`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      })
+
+      console.log(
+        '프로필 이미지 업로드 API 호출:',
+        `${this.baseUrl}/profile-image`,
+      )
+      const response = await api.post(
+        `${this.baseUrl}/profile-image`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        },
+      )
       console.log('프로필 이미지 업로드 API 응답:', response)
       return response.data
     } catch (error) {

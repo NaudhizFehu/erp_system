@@ -3,15 +3,24 @@
  * 상품 목록을 테이블 형태로 표시하고 관리 기능을 제공합니다
  */
 
-import { useState } from 'react'
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+  MoreHorizontal,
+  Edit,
+  Trash2,
+  Eye,
+  Package,
+  AlertTriangle,
+  CheckCircle,
+  XCircle,
+  BarChart3,
+  Settings,
+} from 'lucide-react'
+import { useState } from 'react'
+
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,23 +29,22 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { 
-  MoreHorizontal, 
-  Edit, 
-  Trash2, 
-  Eye, 
-  Package, 
-  AlertTriangle,
-  CheckCircle,
-  XCircle,
-  BarChart3,
-  Settings
-} from 'lucide-react'
-import { Product, ProductStatus, ProductType, StockStatus, KOREAN_LABELS } from '../../types/inventory'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+
+import {
+  Product,
+  ProductStatus,
+  ProductType,
+  StockStatus,
+  KOREAN_LABELS,
+} from '../../types/inventory'
 import { formatCurrency, formatNumber, formatDate } from '../../utils/format'
 
 interface ProductTableProps {
@@ -58,8 +66,14 @@ function ProductStatusBadge({ status }: { status: ProductStatus }) {
   const variants = {
     [ProductStatus.ACTIVE]: { variant: 'default' as const, icon: CheckCircle },
     [ProductStatus.INACTIVE]: { variant: 'secondary' as const, icon: XCircle },
-    [ProductStatus.DISCONTINUED]: { variant: 'destructive' as const, icon: XCircle },
-    [ProductStatus.PENDING]: { variant: 'outline' as const, icon: AlertTriangle },
+    [ProductStatus.DISCONTINUED]: {
+      variant: 'destructive' as const,
+      icon: XCircle,
+    },
+    [ProductStatus.PENDING]: {
+      variant: 'outline' as const,
+      icon: AlertTriangle,
+    },
     [ProductStatus.DRAFT]: { variant: 'outline' as const, icon: Settings },
   }
 
@@ -77,12 +91,12 @@ function ProductStatusBadge({ status }: { status: ProductStatus }) {
 /**
  * 재고 상태에 따른 뱃지 컴포넌트
  */
-function StockStatusBadge({ 
-  isLowStock, 
-  isOutOfStock, 
-  isOverStock, 
-  quantity 
-}: { 
+function StockStatusBadge({
+  isLowStock,
+  isOutOfStock,
+  isOverStock,
+  quantity,
+}: {
   isLowStock: boolean
   isOutOfStock: boolean
   isOverStock: boolean
@@ -96,19 +110,25 @@ function StockStatusBadge({
       </Badge>
     )
   }
-  
+
   if (isLowStock) {
     return (
-      <Badge variant="secondary" className="flex items-center space-x-1 bg-yellow-100 text-yellow-800">
+      <Badge
+        variant="secondary"
+        className="flex items-center space-x-1 bg-yellow-100 text-yellow-800"
+      >
         <AlertTriangle className="h-3 w-3" />
         <span>안전재고 미달</span>
       </Badge>
     )
   }
-  
+
   if (isOverStock) {
     return (
-      <Badge variant="outline" className="flex items-center space-x-1 bg-blue-100 text-blue-800">
+      <Badge
+        variant="outline"
+        className="flex items-center space-x-1 bg-blue-100 text-blue-800"
+      >
         <Package className="h-3 w-3" />
         <span>과재고</span>
       </Badge>
@@ -116,7 +136,10 @@ function StockStatusBadge({
   }
 
   return (
-    <Badge variant="default" className="flex items-center space-x-1 bg-green-100 text-green-800">
+    <Badge
+      variant="default"
+      className="flex items-center space-x-1 bg-green-100 text-green-800"
+    >
       <CheckCircle className="h-3 w-3" />
       <span>정상</span>
     </Badge>
@@ -154,7 +177,7 @@ function ProductTable({
   onDelete,
   onView,
   onToggleActive,
-  isLoading = false
+  isLoading = false,
 }: ProductTableProps) {
   const [sortField, setSortField] = useState<keyof Product>('productName')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
@@ -173,40 +196,44 @@ function ProductTable({
   const sortedProducts = [...products].sort((a, b) => {
     const aValue = a[sortField]
     const bValue = b[sortField]
-    
+
     if (typeof aValue === 'string' && typeof bValue === 'string') {
-      return sortDirection === 'asc' 
+      return sortDirection === 'asc'
         ? aValue.localeCompare(bValue)
         : bValue.localeCompare(aValue)
     }
-    
+
     if (typeof aValue === 'number' && typeof bValue === 'number') {
-      return sortDirection === 'asc' 
-        ? aValue - bValue
-        : bValue - aValue
+      return sortDirection === 'asc' ? aValue - bValue : bValue - aValue
     }
-    
+
     return 0
   })
 
   // 전체 선택 상태
-  const isAllSelected = products.length > 0 && selectedProducts.length === products.length
-  const isPartiallySelected = selectedProducts.length > 0 && selectedProducts.length < products.length
+  const isAllSelected =
+    products.length > 0 && selectedProducts.length === products.length
+  const isPartiallySelected =
+    selectedProducts.length > 0 && selectedProducts.length < products.length
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary" />
       </div>
     )
   }
 
   if (products.length === 0) {
     return (
-      <div className="text-center py-8">
+      <div className="py-8 text-center">
         <Package className="mx-auto h-12 w-12 text-gray-400" />
-        <h3 className="mt-2 text-sm font-semibold text-gray-900">상품이 없습니다</h3>
-        <p className="mt-1 text-sm text-gray-500">새로운 상품을 등록해보세요.</p>
+        <h3 className="mt-2 text-sm font-semibold text-gray-900">
+          상품이 없습니다
+        </h3>
+        <p className="mt-1 text-sm text-gray-500">
+          새로운 상품을 등록해보세요.
+        </p>
       </div>
     )
   }
@@ -217,19 +244,16 @@ function ProductTable({
         <TableHeader>
           <TableRow>
             <TableHead className="w-[50px]">
-              <Checkbox
-                checked={isAllSelected}
-                onCheckedChange={onSelectAll}
-              />
+              <Checkbox checked={isAllSelected} onCheckedChange={onSelectAll} />
             </TableHead>
             <TableHead className="w-[80px]">이미지</TableHead>
-            <TableHead 
+            <TableHead
               className="cursor-pointer hover:bg-gray-50"
               onClick={() => handleSort('productCode')}
             >
               상품코드
             </TableHead>
-            <TableHead 
+            <TableHead
               className="cursor-pointer hover:bg-gray-50"
               onClick={() => handleSort('productName')}
             >
@@ -242,14 +266,16 @@ function ProductTable({
             <TableHead className="text-right">현재재고</TableHead>
             <TableHead>재고상태</TableHead>
             <TableHead>등록일</TableHead>
-            <TableHead className="w-[50px]"></TableHead>
+            <TableHead className="w-[50px]" />
           </TableRow>
         </TableHeader>
         <TableBody>
-          {sortedProducts.map((product) => (
-            <TableRow 
+          {sortedProducts.map(product => (
+            <TableRow
               key={product.id}
-              className={selectedProducts.includes(product.id) ? 'bg-gray-50' : ''}
+              className={
+                selectedProducts.includes(product.id) ? 'bg-gray-50' : ''
+              }
             >
               <TableCell>
                 <Checkbox
@@ -257,11 +283,11 @@ function ProductTable({
                   onCheckedChange={() => onSelectProduct(product.id)}
                 />
               </TableCell>
-              
+
               <TableCell>
                 <Avatar className="h-10 w-10">
-                  <AvatarImage 
-                    src={product.imagePaths?.split(',')[0]} 
+                  <AvatarImage
+                    src={product.imagePaths?.split(',')[0]}
                     alt={product.productName}
                   />
                   <AvatarFallback>
@@ -269,52 +295,57 @@ function ProductTable({
                   </AvatarFallback>
                 </Avatar>
               </TableCell>
-              
+
               <TableCell className="font-mono text-sm">
                 {product.productCode}
               </TableCell>
-              
+
               <TableCell>
                 <div className="space-y-1">
                   <div className="font-medium">{product.productName}</div>
                   {product.productNameEn && (
-                    <div className="text-sm text-muted-foreground">{product.productNameEn}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {product.productNameEn}
+                    </div>
                   )}
                   {product.brand && (
-                    <div className="text-xs text-muted-foreground">브랜드: {product.brand}</div>
+                    <div className="text-xs text-muted-foreground">
+                      브랜드: {product.brand}
+                    </div>
                   )}
                 </div>
               </TableCell>
-              
+
               <TableCell>
                 <div className="text-sm">{product.categoryName}</div>
               </TableCell>
-              
+
               <TableCell>
                 <ProductTypeBadge type={product.productType} />
               </TableCell>
-              
+
               <TableCell>
                 <ProductStatusBadge status={product.productStatus} />
               </TableCell>
-              
+
               <TableCell className="text-right font-mono">
                 {formatCurrency(product.sellingPrice)}
               </TableCell>
-              
+
               <TableCell className="text-right">
                 <div className="space-y-1">
                   <div className="font-mono">
                     {formatNumber(product.totalStock)} {product.baseUnit}
                   </div>
-                  {product.trackInventory && product.availableStock !== product.totalStock && (
-                    <div className="text-xs text-muted-foreground">
-                      사용가능: {formatNumber(product.availableStock)}
-                    </div>
-                  )}
+                  {product.trackInventory &&
+                    product.availableStock !== product.totalStock && (
+                      <div className="text-xs text-muted-foreground">
+                        사용가능: {formatNumber(product.availableStock)}
+                      </div>
+                    )}
                 </div>
               </TableCell>
-              
+
               <TableCell>
                 <StockStatusBadge
                   isLowStock={product.isLowStock}
@@ -323,11 +354,11 @@ function ProductTable({
                   quantity={product.totalStock}
                 />
               </TableCell>
-              
+
               <TableCell className="text-sm text-muted-foreground">
                 {formatDate(product.createdAt)}
               </TableCell>
-              
+
               <TableCell>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -361,7 +392,7 @@ function ProductTable({
                       )}
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem 
+                    <DropdownMenuItem
                       onClick={() => onDelete(product)}
                       className="text-red-600"
                     >
@@ -380,7 +411,3 @@ function ProductTable({
 }
 
 export { ProductTable }
-
-
-
-

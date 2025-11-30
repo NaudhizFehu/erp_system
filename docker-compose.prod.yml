@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  # 백엔드 서비스
+  backend:
+    container_name: erp-backend
+    image: cursor-erp-backend:${VERSION:-latest}
+    ports:
+      - "8991:8991"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://fehu.kr:5432/ecursor_erp_system
+      - SPRING_DATASOURCE_USERNAME=cursor_erp_system
+      - SPRING_DATASOURCE_PASSWORD=cursor_erp_system
+    restart: unless-stopped
+    networks:
+      - erp-network
+    labels:
+      - "com.docker.compose.project=cursor-erp-system"
+      - "project.name=cursor-erp-system"
+      - "service.type=backend"
+
+  # 프론트엔드 서비스 (Nginx)
+  frontend:
+    container_name: erp-frontend
+    image: cursor-erp-frontend:${VERSION:-latest}
+    ports:
+      - "8990:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - erp-network
+    labels:
+      - "com.docker.compose.project=cursor-erp-system"
+      - "project.name=cursor-erp-system"
+      - "service.type=frontend"
+
+networks:
+  erp-network:
+    driver: bridge
+    labels:
+      - "com.docker.compose.project=cursor-erp-system"
+      - "project.name=cursor-erp-system"

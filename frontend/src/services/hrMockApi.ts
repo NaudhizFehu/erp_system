@@ -3,16 +3,6 @@
  * 백엔드 서버 없이 프론트엔드 테스트를 위한 Mock API
  */
 
-import type {
-  PageResponse,
-  Employee,
-  Position,
-  EmployeeCreateRequest,
-  EmployeeUpdateRequest,
-  SearchParams,
-  StatisticsData
-} from '@/types/hr'
-import { EmploymentStatus } from '@/types/hr'
 import {
   mockEmployees,
   mockPositions,
@@ -22,37 +12,50 @@ import {
   mockDepartmentStats,
   mockGenderStats,
   mockAgeGroupStats,
-  createMockPageResponse
+  createMockPageResponse,
 } from '@/mocks/hrMockData'
+import type {
+  PageResponse,
+  Employee,
+  Position,
+  EmployeeCreateRequest,
+  EmployeeUpdateRequest,
+  SearchParams,
+  StatisticsData,
+} from '@/types/hr'
+import { EmploymentStatus } from '@/types/hr'
 
 // Mock API 서비스
 export const mockEmployeeApi = {
   /**
    * 직원 목록 조회 (페이징)
    */
-  getEmployees: async (params: SearchParams = {}): Promise<PageResponse<Employee>> => {
+  getEmployees: async (
+    params: SearchParams = {},
+  ): Promise<PageResponse<Employee>> => {
     // 실제 API 호출을 시뮬레이션하기 위한 지연
     await new Promise(resolve => setTimeout(resolve, 500))
-    
+
     let filteredEmployees = [...mockEmployees]
-    
+
     // 상태 필터링
     if (params.employmentStatus && params.employmentStatus !== 'all') {
       filteredEmployees = filteredEmployees.filter(
         emp => emp.employmentStatus === params.employmentStatus
       )
     }
-    
+
     // 검색어 필터링
     if (params.searchTerm) {
       const searchTerm = params.searchTerm.toLowerCase()
-      filteredEmployees = filteredEmployees.filter(emp =>
-        emp.name.toLowerCase().includes(searchTerm) ||
-        emp.employeeNumber.toLowerCase().includes(searchTerm) ||
-        emp.email.toLowerCase().includes(searchTerm)
+      filteredEmployees = filteredEmployees.filter(
+        emp =>
+          emp.name.toLowerCase().includes(searchTerm) ||
+          emp.employeeNumber.toLowerCase().includes(searchTerm) ||
+          emp.email.toLowerCase().includes(searchTerm)
       )
     }
-    
+
     return createMockPageResponse(
       filteredEmployees,
       params.page || 0,
@@ -77,7 +80,9 @@ export const mockEmployeeApi = {
    */
   getEmployeeByNumber: async (employeeNumber: string): Promise<Employee> => {
     await new Promise(resolve => setTimeout(resolve, 300))
-    const employee = mockEmployees.find(emp => emp.employeeNumber === employeeNumber)
+    const employee = mockEmployees.find(
+      emp => emp.employeeNumber === employeeNumber,
+    )
     if (!employee) {
       throw new Error('직원을 찾을 수 없습니다')
     }
@@ -99,18 +104,23 @@ export const mockEmployeeApi = {
   /**
    * 직원 검색
    */
-  searchEmployees: async (searchTerm: string, params: SearchParams = {}): Promise<PageResponse<Employee>> => {
+  searchEmployees: async (
+    searchTerm: string,
+    params: SearchParams = {},
+  ): Promise<PageResponse<Employee>> => {
     await new Promise(resolve => setTimeout(resolve, 500))
-    
+
     const filteredEmployees = mockEmployees.filter(emp => {
       const term = searchTerm.toLowerCase()
-      return emp.name.toLowerCase().includes(term) ||
-             emp.employeeNumber.toLowerCase().includes(term) ||
-             emp.email.toLowerCase().includes(term) ||
-             emp.department.name.toLowerCase().includes(term) ||
-             emp.position.name.toLowerCase().includes(term)
+      return (
+        emp.name.toLowerCase().includes(term) ||
+        emp.employeeNumber.toLowerCase().includes(term) ||
+        emp.email.toLowerCase().includes(term) ||
+        emp.department.name.toLowerCase().includes(term) ||
+        emp.position.name.toLowerCase().includes(term)
+      )
     })
-    
+
     return createMockPageResponse(
       filteredEmployees,
       params.page || 0,
@@ -121,11 +131,16 @@ export const mockEmployeeApi = {
   /**
    * 회사별 직원 목록 조회
    */
-  getEmployeesByCompany: async (companyId: number, params: SearchParams = {}): Promise<PageResponse<Employee>> => {
+  getEmployeesByCompany: async (
+    companyId: number,
+    params: SearchParams = {},
+  ): Promise<PageResponse<Employee>> => {
     await new Promise(resolve => setTimeout(resolve, 500))
-    
-    const filteredEmployees = mockEmployees.filter(emp => emp.company.id === companyId)
-    
+
+    const filteredEmployees = mockEmployees.filter(
+      emp => emp.company.id === companyId,
+    )
+
     return createMockPageResponse(
       filteredEmployees,
       params.page || 0,
@@ -136,11 +151,16 @@ export const mockEmployeeApi = {
   /**
    * 부서별 직원 목록 조회
    */
-  getEmployeesByDepartment: async (departmentId: number, params: SearchParams = {}): Promise<PageResponse<Employee>> => {
+  getEmployeesByDepartment: async (
+    departmentId: number,
+    params: SearchParams = {},
+  ): Promise<PageResponse<Employee>> => {
     await new Promise(resolve => setTimeout(resolve, 500))
-    
-    const filteredEmployees = mockEmployees.filter(emp => emp.department.id === departmentId)
-    
+
+    const filteredEmployees = mockEmployees.filter(
+      emp => emp.department.id === departmentId,
+    )
+
     return createMockPageResponse(
       filteredEmployees,
       params.page || 0,
@@ -153,25 +173,33 @@ export const mockEmployeeApi = {
    */
   getActiveEmployees: async (): Promise<Employee[]> => {
     await new Promise(resolve => setTimeout(resolve, 300))
-    return mockEmployees.filter(emp => emp.employmentStatus === EmploymentStatus.ACTIVE)
+    return mockEmployees.filter(
+      emp => emp.employmentStatus === EmploymentStatus.ACTIVE,
+    )
   },
 
   /**
    * 회사별 재직 중인 직원 목록 조회
    */
-  getActiveEmployeesByCompany: async (companyId: number): Promise<Employee[]> => {
+  getActiveEmployeesByCompany: async (
+    companyId: number,
+  ): Promise<Employee[]> => {
     await new Promise(resolve => setTimeout(resolve, 300))
     return mockEmployees.filter(
-      emp => emp.company.id === companyId && emp.employmentStatus === EmploymentStatus.ACTIVE
+      emp =>
+        emp.company.id === companyId &&
+        emp.employmentStatus === EmploymentStatus.ACTIVE
     )
   },
 
   /**
    * 직원 등록
    */
-  createEmployee: async (employee: EmployeeCreateRequest): Promise<Employee> => {
+  createEmployee: async (
+    employee: EmployeeCreateRequest,
+  ): Promise<Employee> => {
     await new Promise(resolve => setTimeout(resolve, 1000))
-    
+
     const newEmployee: Employee = {
       id: mockEmployees.length + 1,
       employeeNumber: employee.employeeNumber,
@@ -190,7 +218,7 @@ export const mockEmployeeApi = {
       position: mockPositions.find(p => p.id === employee.positionId)!,
       hireDate: employee.hireDate.toString().split('T')[0],
       employmentStatus: employee.employmentStatus || EmploymentStatus.ACTIVE,
-      employmentType: employee.employmentType || 'FULL_TIME' as any,
+      employmentType: employee.employmentType || ('FULL_TIME' as any),
       baseSalary: employee.baseSalary || 0,
       bankName: employee.bankName || '',
       accountNumber: employee.accountNumber || '',
@@ -208,9 +236,9 @@ export const mockEmployeeApi = {
       yearsOfService: Math.floor(Math.random() * 10) + 1,
       age: Math.floor(Math.random() * 20) + 25,
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     }
-    
+
     mockEmployees.push(newEmployee)
     return newEmployee
   },
@@ -218,20 +246,23 @@ export const mockEmployeeApi = {
   /**
    * 직원 정보 수정
    */
-  updateEmployee: async (id: number, employee: EmployeeUpdateRequest): Promise<Employee> => {
+  updateEmployee: async (
+    id: number,
+    employee: EmployeeUpdateRequest,
+  ): Promise<Employee> => {
     await new Promise(resolve => setTimeout(resolve, 1000))
-    
+
     const index = mockEmployees.findIndex(emp => emp.id === id)
     if (index === -1) {
       throw new Error('직원을 찾을 수 없습니다')
     }
-    
+
     const updatedEmployee = {
       ...mockEmployees[index],
       ...employee,
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     }
-    
+
     mockEmployees[index] = updatedEmployee
     return updatedEmployee
   },
@@ -241,23 +272,26 @@ export const mockEmployeeApi = {
    */
   deleteEmployee: async (id: number): Promise<void> => {
     await new Promise(resolve => setTimeout(resolve, 500))
-    
+
     const index = mockEmployees.findIndex(emp => emp.id === id)
     if (index === -1) {
       throw new Error('직원을 찾을 수 없습니다')
     }
-    
+
     mockEmployees.splice(index, 1)
   },
 
   /**
    * 사번 중복 확인
    */
-  checkEmployeeNumber: async (employeeNumber: string, excludeId?: number): Promise<boolean> => {
+  checkEmployeeNumber: async (
+    employeeNumber: string,
+    excludeId?: number,
+  ): Promise<boolean> => {
     await new Promise(resolve => setTimeout(resolve, 300))
-    
-    return mockEmployees.some(emp => 
-      emp.employeeNumber === employeeNumber && emp.id !== excludeId
+
+    return mockEmployees.some(
+      emp => emp.employeeNumber === employeeNumber && emp.id !== excludeId
     )
   },
 
@@ -266,9 +300,9 @@ export const mockEmployeeApi = {
    */
   checkEmail: async (email: string, excludeId?: number): Promise<boolean> => {
     await new Promise(resolve => setTimeout(resolve, 300))
-    
-    return mockEmployees.some(emp => 
-      emp.email === email && emp.id !== excludeId
+
+    return mockEmployees.some(
+      emp => emp.email === email && emp.id !== excludeId
     )
   },
 
@@ -307,22 +341,30 @@ export const mockEmployeeApi = {
   /**
    * 회사별 최근 직원 목록 조회 (사번 중복 방지용)
    */
-  getRecentEmployeesByCompany: async (companyId: number): Promise<Employee[]> => {
+  getRecentEmployeesByCompany: async (
+    companyId: number,
+  ): Promise<Employee[]> => {
     await new Promise(resolve => setTimeout(resolve, 300))
     return mockEmployees
       .filter(emp => emp.company.id === companyId)
       .sort((a, b) => b.employeeNumber.localeCompare(a.employeeNumber))
       .slice(0, 5)
-  }
+  },
 }
 
 export const mockPositionApi = {
   /**
    * 직급 목록 조회
    */
-  getPositions: async (params: SearchParams = {}): Promise<PageResponse<Position>> => {
+  getPositions: async (
+    params: SearchParams = {},
+  ): Promise<PageResponse<Position>> => {
     await new Promise(resolve => setTimeout(resolve, 300))
-    return createMockPageResponse(mockPositions, params.page || 0, params.size || 20)
+    return createMockPageResponse(
+      mockPositions,
+      params.page || 0,
+      params.size || 20,
+    )
   },
 
   /**
@@ -351,8 +393,5 @@ export const mockPositionApi = {
   getActivePositions: async (): Promise<Position[]> => {
     await new Promise(resolve => setTimeout(resolve, 300))
     return mockPositions.filter(pos => pos.isActive)
-  }
+  },
 }
-
-
-

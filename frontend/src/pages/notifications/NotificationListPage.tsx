@@ -1,12 +1,16 @@
+import { Bell, Check, X, ArrowLeft, Trash2 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bell, Check, X, ArrowLeft, Trash2 } from 'lucide-react'
+
+import { LoadingSpinner } from '@/components/common/LoadingSpinner'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { notificationService, type Notification } from '@/services/notificationService'
 import { useNotifications } from '@/contexts/NotificationContext'
-import { LoadingSpinner } from '@/components/common/LoadingSpinner'
+import {
+  notificationService,
+  type Notification,
+} from '@/services/notificationService'
 
 /**
  * 모든 알림 조회 페이지
@@ -14,7 +18,8 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner'
  */
 function NotificationListPage() {
   const navigate = useNavigate()
-  const { unreadCount, refreshNotifications, markAsRead, markAllAsRead } = useNotifications()
+  const { unreadCount, refreshNotifications, markAsRead, markAllAsRead } =
+    useNotifications()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -43,9 +48,9 @@ function NotificationListPage() {
     try {
       await markAsRead(id)
       // 로컬 상태 업데이트
-      setNotifications(prev => 
-        prev.map(notification => 
-          notification.id === id 
+      setNotifications(prev =>
+        prev.map(notification =>
+          notification.id === id
             ? { ...notification, isRead: true }
             : notification
         )
@@ -62,7 +67,9 @@ function NotificationListPage() {
     try {
       await notificationService.deleteNotification(id)
       // 로컬 상태에서 제거
-      setNotifications(prev => prev.filter(notification => notification.id !== id))
+      setNotifications(prev =>
+        prev.filter(notification => notification.id !== id),
+      )
     } catch (error) {
       console.error('알림 삭제 실패:', error)
     }
@@ -75,7 +82,7 @@ function NotificationListPage() {
     try {
       await markAllAsRead()
       // 로컬 상태 업데이트
-      setNotifications(prev => 
+      setNotifications(prev =>
         prev.map(notification => ({ ...notification, isRead: true }))
       )
     } catch (error) {
@@ -90,7 +97,7 @@ function NotificationListPage() {
     const now = new Date()
     const date = new Date(timestamp)
     const diff = now.getTime() - date.getTime()
-    
+
     if (diff < 1000 * 60) {
       return '방금 전'
     } else if (diff < 1000 * 60 * 60) {
@@ -144,7 +151,7 @@ function NotificationListPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex min-h-screen items-center justify-center">
         <LoadingSpinner />
       </div>
     )
@@ -153,7 +160,7 @@ function NotificationListPage() {
   if (error) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-6">
+        <div className="mb-6 flex items-center justify-between">
           <Button
             variant="ghost"
             onClick={() => navigate(-1)}
@@ -180,7 +187,7 @@ function NotificationListPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       {/* 헤더 */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
@@ -191,31 +198,35 @@ function NotificationListPage() {
             뒤로가기
           </Button>
           <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
+            <h1 className="flex items-center gap-2 text-2xl font-bold">
               <Bell className="h-6 w-6" />
               모든 알림
             </h1>
             <p className="text-muted-foreground">
               최근 2주 이내의 모든 알림 ({notifications.length}개)
               {unreadCount > 0 && (
-                <span className="ml-2 text-primary font-medium">
+                <span className="ml-2 font-medium text-primary">
                   (읽지 않음 {unreadCount}개)
                 </span>
               )}
             </p>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-2">
           {unreadCount > 0 && (
-            <Button onClick={handleMarkAllAsRead} variant="outline" className="flex items-center gap-2">
+            <Button
+              onClick={handleMarkAllAsRead}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
               <Check className="h-4 w-4" />
               모두 읽음 처리
             </Button>
           )}
-          <Button 
-            onClick={() => navigate('/notifications/test')} 
-            variant="outline" 
+          <Button
+            onClick={() => navigate('/notifications/test')}
+            variant="outline"
             className="flex items-center gap-2"
           >
             <Bell className="h-4 w-4" />
@@ -228,8 +239,8 @@ function NotificationListPage() {
       {notifications.length === 0 ? (
         <Card>
           <CardContent className="p-12 text-center">
-            <Bell className="h-16 w-16 mx-auto mb-4 opacity-50" />
-            <h3 className="text-lg font-semibold mb-2">알림이 없습니다</h3>
+            <Bell className="mx-auto mb-4 h-16 w-16 opacity-50" />
+            <h3 className="mb-2 text-lg font-semibold">알림이 없습니다</h3>
             <p className="text-muted-foreground">
               최근 2주 이내에 받은 알림이 없습니다.
             </p>
@@ -238,33 +249,37 @@ function NotificationListPage() {
       ) : (
         <div className="space-y-4">
           {notifications.map((notification, index) => (
-            <Card 
-              key={notification.id} 
+            <Card
+              key={notification.id}
               className={`transition-all duration-200 hover:shadow-md ${
-                !notification.isRead ? 'border-l-4 border-l-primary bg-muted/30' : ''
+                !notification.isRead
+                  ? 'border-l-4 border-l-primary bg-muted/30'
+                  : ''
               }`}
             >
               <CardContent className="p-6">
                 <div className="flex items-start justify-between">
-                  <div className="flex items-start gap-4 flex-1">
+                  <div className="flex flex-1 items-start gap-4">
                     {/* 읽음 상태 표시 */}
-                    <div className={`w-3 h-3 rounded-full mt-2 flex-shrink-0 ${
-                      !notification.isRead ? 'bg-primary' : 'bg-muted'
-                    }`} />
-                    
+                    <div
+                      className={`mt-2 h-3 w-3 flex-shrink-0 rounded-full ${
+                        !notification.isRead ? 'bg-primary' : 'bg-muted'
+                      }`}
+                    />
+
                     {/* 알림 타입 아이콘 */}
-                    <div className="text-2xl flex-shrink-0">
+                    <div className="flex-shrink-0 text-2xl">
                       {getTypeIcon(notification.type)}
                     </div>
-                    
+
                     {/* 알림 내용 */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h3 className="text-lg font-semibold truncate">
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-2 flex items-center gap-2">
+                        <h3 className="truncate text-lg font-semibold">
                           {notification.title}
                         </h3>
-                        <Badge 
-                          variant="secondary" 
+                        <Badge
+                          variant="secondary"
                           className={`text-xs ${getTypeColor(notification.type)}`}
                         >
                           {notification.type}
@@ -275,11 +290,11 @@ function NotificationListPage() {
                           </Badge>
                         )}
                       </div>
-                      
-                      <p className="text-muted-foreground mb-3 leading-relaxed">
+
+                      <p className="mb-3 leading-relaxed text-muted-foreground">
                         {notification.message}
                       </p>
-                      
+
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <span>{formatTime(notification.createdAt)}</span>
                         {notification.isRead && notification.readAt && (
@@ -288,9 +303,9 @@ function NotificationListPage() {
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* 액션 버튼들 */}
-                  <div className="flex items-center gap-2 ml-4">
+                  <div className="ml-4 flex items-center gap-2">
                     {!notification.isRead && (
                       <Button
                         variant="outline"

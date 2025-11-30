@@ -1,0 +1,116 @@
+version: '3.8'
+
+###############################################################################
+# ERP 시스템 로컬 개발 환경
+# 용도: 로컬에서 완전한 개발 환경 구성 (프론트엔드 + 백엔드 + DB)
+###############################################################################
+
+services:
+  # PostgreSQL 데이터베이스
+  postgres:
+    image: postgres:15-alpine
+    container_name: erp-postgres-dev
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-erp_dev}
+      POSTGRES_USER: ${POSTGRES_USER:-erp_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-erp_password}
+      TZ: Asia/Seoul
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/src/main/resources/db/init:/docker-entrypoint-initdb.d
+    networks:
+      - erp-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-erp_user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis (세션, 캐시용)
+  redis:
+    image: redis:7-alpine
+    container_name: erp-redis-dev
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - erp-network
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 백엔드 (SpringBoot)
+  # 주의: 로컬 개발 시에는 IntelliJ에서 직접 실행하는 것을 권장
+  # Docker로 실행하려면 아래 주석 해제
+  # backend:
+  #   build:
+  #     context: ./backend
+  #     dockerfile: Dockerfile.dev
+  #   container_name: erp-backend-dev
+  #   environment:
+  #     SPRING_PROFILES_ACTIVE: dev
+  #     SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-erp_dev}
+  #     SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-erp_user}
+  #     SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-erp_password}
+  #     SPRING_REDIS_HOST: redis
+  #     SPRING_REDIS_PORT: 6379
+  #   ports:
+  #     - "8080:8080"
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #   networks:
+  #     - erp-network
+  #   volumes:
+  #     - ./backend:/app
+
+  # 프론트엔드 (Vite + React)
+  # 주의: 로컬 개발 시에는 `npm run dev`로 직접 실행하는 것을 권장
+  # Docker로 실행하려면 아래 주석 해제
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile.dev
+  #   container_name: erp-frontend-dev
+  #   environment:
+  #     VITE_API_BASE_URL: http://localhost:8080
+  #   ports:
+  #     - "5173:5173"
+  #   networks:
+  #     - erp-network
+  #   volumes:
+  #     - ./frontend:/app
+  #     - /app/node_modules
+  #   command: npm run dev
+
+  # Adminer (DB 관리 도구 - 선택적)
+  adminer:
+    image: adminer:latest
+    container_name: erp-adminer-dev
+    ports:
+      - "8081:8080"
+    networks:
+      - erp-network
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+      ADMINER_DESIGN: hydra
+    depends_on:
+      - postgres
+
+networks:
+  erp-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
