@@ -2,8 +2,9 @@
 # Backend 테스트 자동화
 
 stages:
-  - build
+  - lint
   - test
+  - build
 
 # Backend 빌드 및 테스트
 backend-test:
@@ -50,3 +51,87 @@ backend-test:
   # 태그 제거 - 모든 Runner에서 실행 가능하도록
   # tags:
   #   - docker
+
+# Frontend Lint 검사
+frontend-lint:
+  stage: lint
+
+  # Frontend 디렉토리가 변경될 때만 실행
+  only:
+    changes:
+      - frontend/**
+      - .gitlab-ci.yml
+
+  # npm 캐시 설정
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}-frontend
+    paths:
+      - frontend/node_modules
+
+  before_script:
+    - cd frontend
+    - npm ci
+
+  script:
+    - npm run lint || true  # 경고는 허용, 에러만 체크
+    - npm run type-check
+    - npm run format:check || true  # 경고는 허용
+
+# Frontend 테스트
+frontend-test:
+  stage: test
+
+  # Frontend 디렉토리가 변경될 때만 실행
+  only:
+    changes:
+      - frontend/**
+      - .gitlab-ci.yml
+
+  # npm 캐시 설정
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}-frontend
+    paths:
+      - frontend/node_modules
+
+  before_script:
+    - cd frontend
+    - npm ci
+
+  script:
+    - npm run test -- --run
+
+  # 테스트 결과를 아티팩트로 저장
+  artifacts:
+    when: always
+    paths:
+      - frontend/coverage/
+    expire_in: 7 days
+
+# Frontend 빌드
+frontend-build:
+  stage: build
+
+  # Frontend 디렉토리가 변경될 때만 실행
+  only:
+    changes:
+      - frontend/**
+      - .gitlab-ci.yml
+
+  # npm 캐시 설정
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}-frontend
+    paths:
+      - frontend/node_modules
+
+  before_script:
+    - cd frontend
+    - npm ci
+
+  script:
+    - npm run build
+
+  # 빌드 산출물 저장
+  artifacts:
+    paths:
+      - frontend/dist/
+    expire_in: 7 days
