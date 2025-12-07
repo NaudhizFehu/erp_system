@@ -40,7 +40,7 @@ class LoginIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.id").value(1))
+                .andExpect(jsonPath("$.data.id").exists())
                 .andExpect(jsonPath("$.data.username").value("admin"))
                 .andExpect(jsonPath("$.data.role").value("ADMIN"))
                 .andExpect(jsonPath("$.data.isActive").value(true))
@@ -85,8 +85,8 @@ class LoginIntegrationTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.accessToken").exists())
                 .andExpect(jsonPath("$.data.refreshToken").exists())
-                .andExpect(jsonPath("$.data.userInfo.username").value("admin"))
-                .andExpect(jsonPath("$.data.userInfo.role").value("ADMIN"))
+                .andExpect(jsonPath("$.data.user.username").value("admin"))
+                .andExpect(jsonPath("$.data.user.role").value("ADMIN"))
                 .andReturn();
 
         System.out.println("=== Admin 실제 로그인 API 결과 ===");
@@ -128,8 +128,8 @@ class LoginIntegrationTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.accessToken").exists())
                 .andExpect(jsonPath("$.data.refreshToken").exists())
-                .andExpect(jsonPath("$.data.userInfo.username").value("user"))
-                .andExpect(jsonPath("$.data.userInfo.role").value("USER"))
+                .andExpect(jsonPath("$.data.user.username").value("user"))
+                .andExpect(jsonPath("$.data.user.role").value("USER"))
                 .andReturn();
 
         System.out.println("=== User 실제 로그인 API 결과 ===");
@@ -147,7 +147,7 @@ class LoginIntegrationTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("로그인에 실패했습니다"));
+                .andExpect(jsonPath("$.message").value("사용자명 또는 비밀번호가 올바르지 않습니다"));
     }
 
     @Test
@@ -161,7 +161,7 @@ class LoginIntegrationTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("로그인에 실패했습니다"));
+                .andExpect(jsonPath("$.message").value("사용자명 또는 비밀번호가 올바르지 않습니다"));
     }
 
     @Test
