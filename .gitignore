@@ -278,6 +278,9 @@ frontend/.env.local
 backend/logs/
 *.log
 
+# 배포 스크립트 (서버 정보 포함)
+scripts/
+
 
 
 
