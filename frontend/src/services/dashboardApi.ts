@@ -4,6 +4,7 @@
  */
 
 import axios, { AxiosResponse } from 'axios'
+
 import type {
   DashboardApiResponse,
   DashboardData,
@@ -24,7 +25,7 @@ import type {
   UserDashboardConfig,
   WidgetConfig,
   DepartmentPerformance,
-  SystemStatus
+  SystemStatus,
 } from '@/types/dashboard'
 
 // API 기본 설정 (api.ts에서 이미 /api가 설정되어 있음)
@@ -32,12 +33,12 @@ const dashboardApiClient = axios.create({
   baseURL: '/dashboard',
   timeout: 30000,
   headers: {
-    'Content-Type': 'application/json'
-  }
+    'Content-Type': 'application/json',
+  },
 })
 
 // 요청 인터셉터 - 인증 토큰 추가
-dashboardApiClient.interceptors.request.use((config) => {
+dashboardApiClient.interceptors.request.use(config => {
   const token = localStorage.getItem('accessToken')
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
@@ -47,8 +48,8 @@ dashboardApiClient.interceptors.request.use((config) => {
 
 // 응답 인터셉터 - 에러 처리
 dashboardApiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
+  response => response,
+  error => {
     console.error('Dashboard API Error:', error)
     if (error.response?.status === 401) {
       localStorage.removeItem('accessToken')
@@ -73,13 +74,11 @@ export const dashboardApiService = {
     const params = {
       startDate: filter?.startDate,
       endDate: filter?.endDate,
-      timeRange: filter?.timeRange
+      timeRange: filter?.timeRange,
     }
-    
-    const response: AxiosResponse<DashboardApiResponse<OverviewSummary>> = await dashboardApiClient.get(
-      `/overview/${companyId}`,
-      { params }
-    )
+
+    const response: AxiosResponse<DashboardApiResponse<OverviewSummary>> =
+      await dashboardApiClient.get(`/overview/${companyId}`, { params })
     return response.data.data!
   },
 
@@ -96,15 +95,13 @@ export const dashboardApiService = {
       startDate: filter?.startDate,
       endDate: filter?.endDate,
       timeRange: filter?.timeRange,
-      userRole: filter?.userRole
+      userRole: filter?.userRole,
     }
-    
-    const response: AxiosResponse<DashboardApiResponse<DashboardData>> = await dashboardApiClient.get(
-      `/data/${companyId}`,
-      { params }
-    )
+
+    const response: AxiosResponse<DashboardApiResponse<DashboardData>> =
+      await dashboardApiClient.get(`/data/${companyId}`, { params })
     return response.data.data!
-  }
+  },
 }
 
 // ================================
@@ -122,13 +119,11 @@ export const chartApi = {
     const params = {
       startDate: filter?.startDate,
       endDate: filter?.endDate,
-      timeRange: filter?.timeRange
+      timeRange: filter?.timeRange,
     }
-    
-    const response: AxiosResponse<DashboardApiResponse<RevenueChart>> = await dashboardApiClient.get(
-      `/charts/revenue/${companyId}`,
-      { params }
-    )
+
+    const response: AxiosResponse<DashboardApiResponse<RevenueChart>> =
+      await dashboardApiClient.get(`/charts/revenue/${companyId}`, { params })
     return response.data.data!
   },
 
@@ -142,13 +137,11 @@ export const chartApi = {
     const params = {
       startDate: filter?.startDate,
       endDate: filter?.endDate,
-      timeRange: filter?.timeRange
+      timeRange: filter?.timeRange,
     }
-    
-    const response: AxiosResponse<DashboardApiResponse<OrderChart>> = await dashboardApiClient.get(
-      `/charts/orders/${companyId}`,
-      { params }
-    )
+
+    const response: AxiosResponse<DashboardApiResponse<OrderChart>> =
+      await dashboardApiClient.get(`/charts/orders/${companyId}`, { params })
     return response.data.data!
   },
 
@@ -161,13 +154,11 @@ export const chartApi = {
   ): Promise<InventoryChart> => {
     const params = {
       startDate: filter?.startDate,
-      endDate: filter?.endDate
+      endDate: filter?.endDate,
     }
-    
-    const response: AxiosResponse<DashboardApiResponse<InventoryChart>> = await dashboardApiClient.get(
-      `/charts/inventory/${companyId}`,
-      { params }
-    )
+
+    const response: AxiosResponse<DashboardApiResponse<InventoryChart>> =
+      await dashboardApiClient.get(`/charts/inventory/${companyId}`, { params })
     return response.data.data!
   },
 
@@ -181,15 +172,13 @@ export const chartApi = {
     const params = {
       startDate: filter?.startDate,
       endDate: filter?.endDate,
-      timeRange: filter?.timeRange
+      timeRange: filter?.timeRange,
     }
-    
-    const response: AxiosResponse<DashboardApiResponse<HrChart>> = await dashboardApiClient.get(
-      `/charts/hr/${companyId}`,
-      { params }
-    )
+
+    const response: AxiosResponse<DashboardApiResponse<HrChart>> =
+      await dashboardApiClient.get(`/charts/hr/${companyId}`, { params })
     return response.data.data!
-  }
+  },
 }
 
 // ================================
@@ -205,12 +194,12 @@ export const activityApi = {
     userId: number,
     limit: number = 10
   ): Promise<ActivityLog[]> => {
-    const response: AxiosResponse<DashboardApiResponse<ActivityLog[]>> = await dashboardApiClient.get(
-      `/activities/${companyId}`,
-      { params: { userId, limit } }
-    )
+    const response: AxiosResponse<DashboardApiResponse<ActivityLog[]>> =
+      await dashboardApiClient.get(`/activities/${companyId}`, {
+        params: { userId, limit },
+      })
     return response.data.data!
-  }
+  },
 }
 
 // ================================
@@ -226,10 +215,10 @@ export const notificationApi = {
     unreadOnly: boolean = false,
     limit: number = 10
   ): Promise<Notification[]> => {
-    const response: AxiosResponse<DashboardApiResponse<Notification[]>> = await dashboardApiClient.get(
-      `/notifications/${userId}`,
-      { params: { unreadOnly, limit } }
-    )
+    const response: AxiosResponse<DashboardApiResponse<Notification[]>> =
+      await dashboardApiClient.get(`/notifications/${userId}`, {
+        params: { unreadOnly, limit },
+      })
     return response.data.data!
   },
 
@@ -237,9 +226,8 @@ export const notificationApi = {
    * 알림 통계 조회
    */
   getNotificationStats: async (userId: number): Promise<NotificationStats> => {
-    const response: AxiosResponse<DashboardApiResponse<NotificationStats>> = await dashboardApiClient.get(
-      `/notifications/stats/${userId}`
-    )
+    const response: AxiosResponse<DashboardApiResponse<NotificationStats>> =
+      await dashboardApiClient.get(`/notifications/stats/${userId}`)
     return response.data.data!
   },
 
@@ -247,9 +235,13 @@ export const notificationApi = {
    * 알림 읽음 처리
    */
   markAsRead: async (notificationId: number, userId: number): Promise<void> => {
-    await dashboardApiClient.put(`/notifications/${notificationId}/read`, null, {
-      params: { userId }
-    })
+    await dashboardApiClient.put(
+      `/notifications/${notificationId}/read`,
+      null,
+      {
+        params: { userId },
+      },
+    )
   },
 
   /**
@@ -257,7 +249,7 @@ export const notificationApi = {
    */
   markAllAsRead: async (userId: number): Promise<void> => {
     await dashboardApiClient.put(`/notifications/read-all/${userId}`)
-  }
+  },
 }
 
 // ================================
@@ -273,10 +265,10 @@ export const todoApi = {
     status?: string,
     limit: number = 10
   ): Promise<TodoItem[]> => {
-    const response: AxiosResponse<DashboardApiResponse<TodoItem[]>> = await dashboardApiClient.get(
-      `/todos/${userId}`,
-      { params: { status, limit } }
-    )
+    const response: AxiosResponse<DashboardApiResponse<TodoItem[]>> =
+      await dashboardApiClient.get(`/todos/${userId}`, {
+        params: { status, limit },
+      })
     return response.data.data!
   },
 
@@ -287,11 +279,8 @@ export const todoApi = {
     todoData: TodoCreateRequest,
     userId: number
   ): Promise<TodoItem> => {
-    const response: AxiosResponse<DashboardApiResponse<TodoItem>> = await dashboardApiClient.post(
-      '/todos',
-      todoData,
-      { params: { userId } }
-    )
+    const response: AxiosResponse<DashboardApiResponse<TodoItem>> =
+      await dashboardApiClient.post('/todos', todoData, { params: { userId } })
     return response.data.data!
   },
 
@@ -303,13 +292,12 @@ export const todoApi = {
     status: string,
     userId: number
   ): Promise<TodoItem> => {
-    const response: AxiosResponse<DashboardApiResponse<TodoItem>> = await dashboardApiClient.put(
-      `/todos/${todoId}/status`,
-      null,
-      { params: { status, userId } }
-    )
+    const response: AxiosResponse<DashboardApiResponse<TodoItem>> =
+      await dashboardApiClient.put(`/todos/${todoId}/status`, null, {
+        params: { status, userId },
+      })
     return response.data.data!
-  }
+  },
 }
 
 // ================================
@@ -321,12 +309,10 @@ export const quickActionApi = {
    * 사용자 역할별 빠른 액션 조회
    */
   getQuickActions: async (userRole: string): Promise<QuickAction[]> => {
-    const response: AxiosResponse<DashboardApiResponse<QuickAction[]>> = await dashboardApiClient.get(
-      '/quick-actions',
-      { params: { userRole } }
-    )
+    const response: AxiosResponse<DashboardApiResponse<QuickAction[]>> =
+      await dashboardApiClient.get('/quick-actions', { params: { userRole } })
     return response.data.data!
-  }
+  },
 }
 
 // ================================
@@ -345,15 +331,13 @@ export const kpiApi = {
     const params = {
       category,
       startDate: filter?.startDate,
-      endDate: filter?.endDate
+      endDate: filter?.endDate,
     }
-    
-    const response: AxiosResponse<DashboardApiResponse<KpiMetric[]>> = await dashboardApiClient.get(
-      `/kpi/${companyId}`,
-      { params }
-    )
+
+    const response: AxiosResponse<DashboardApiResponse<KpiMetric[]>> =
+      await dashboardApiClient.get(`/kpi/${companyId}`, { params })
     return response.data.data!
-  }
+  },
 }
 
 // ================================
@@ -365,9 +349,8 @@ export const configApi = {
    * 사용자 대시보드 설정 조회
    */
   getUserConfig: async (userId: number): Promise<UserDashboardConfig> => {
-    const response: AxiosResponse<DashboardApiResponse<UserDashboardConfig>> = await dashboardApiClient.get(
-      `/config/${userId}`
-    )
+    const response: AxiosResponse<DashboardApiResponse<UserDashboardConfig>> =
+      await dashboardApiClient.get(`/config/${userId}`)
     return response.data.data!
   },
 
@@ -378,10 +361,8 @@ export const configApi = {
     userId: number,
     config: UserDashboardConfig
   ): Promise<UserDashboardConfig> => {
-    const response: AxiosResponse<DashboardApiResponse<UserDashboardConfig>> = await dashboardApiClient.put(
-      `/config/${userId}`,
-      config
-    )
+    const response: AxiosResponse<DashboardApiResponse<UserDashboardConfig>> =
+      await dashboardApiClient.put(`/config/${userId}`, config)
     return response.data.data!
   },
 
@@ -398,13 +379,13 @@ export const configApi = {
     const updatedWidgets = currentConfig.widgets.map(widget =>
       widget.id === widgetId ? { ...widget, ...config } : widget
     )
-    
+
     const updatedConfig = {
       ...currentConfig,
       widgets: updatedWidgets,
-      lastUpdated: new Date().toISOString()
+      lastUpdated: new Date().toISOString(),
     }
-    
+
     return configApi.saveUserConfig(userId, updatedConfig)
   },
 
@@ -417,17 +398,19 @@ export const configApi = {
   ): Promise<UserDashboardConfig> => {
     const currentConfig = await configApi.getUserConfig(userId)
     const updatedWidgets = currentConfig.widgets.map(widget =>
-      widget.id === widgetId ? { ...widget, isVisible: !widget.isVisible } : widget
+      widget.id === widgetId
+        ? { ...widget, isVisible: !widget.isVisible }
+        : widget
     )
-    
+
     const updatedConfig = {
       ...currentConfig,
       widgets: updatedWidgets,
-      lastUpdated: new Date().toISOString()
+      lastUpdated: new Date().toISOString(),
     }
-    
+
     return configApi.saveUserConfig(userId, updatedConfig)
-  }
+  },
 }
 
 // ================================
@@ -444,12 +427,12 @@ export const widgetApi = {
     userId: number,
     parameters?: any
   ): Promise<any> => {
-    const response: AxiosResponse<DashboardApiResponse<any>> = await dashboardApiClient.get(
-      `/widget/${widgetId}/refresh`,
-      { params: { companyId, userId, parameters } }
-    )
+    const response: AxiosResponse<DashboardApiResponse<any>> =
+      await dashboardApiClient.get(`/widget/${widgetId}/refresh`, {
+        params: { companyId, userId, parameters },
+      })
     return response.data.data!
-  }
+  },
 }
 
 // ================================
@@ -461,9 +444,8 @@ export const systemApi = {
    * 시스템 상태 조회
    */
   getSystemStatus: async (): Promise<SystemStatus> => {
-    const response: AxiosResponse<DashboardApiResponse<SystemStatus>> = await dashboardApiClient.get(
-      '/system/status'
-    )
+    const response: AxiosResponse<DashboardApiResponse<SystemStatus>> =
+      await dashboardApiClient.get('/system/status')
     return response.data.data!
   },
 
@@ -477,10 +459,10 @@ export const systemApi = {
     // 실제 API가 구현되면 사용
     // const response = await dashboardApiClient.get(`/performance/departments/${companyId}`, { params: filter })
     // return response.data.data!
-    
+
     // 현재는 빈 배열 반환
     return []
-  }
+  },
 }
 
 // ================================
@@ -498,12 +480,12 @@ export const realtimeApi = {
   ): Promise<any> => {
     // WebSocket 또는 Server-Sent Events를 사용할 수 있음
     // 현재는 HTTP 폴링으로 구현
-    const response: AxiosResponse<DashboardApiResponse<any>> = await dashboardApiClient.get(
-      `/realtime/${dataType}`,
-      { params: { companyId, userId } }
-    )
+    const response: AxiosResponse<DashboardApiResponse<any>> =
+      await dashboardApiClient.get(`/realtime/${dataType}`, {
+        params: { companyId, userId },
+      })
     return response.data.data!
-  }
+  },
 }
 
 // ================================
@@ -513,11 +495,13 @@ export const realtimeApi = {
 /**
  * 시간 범위를 날짜로 변환
  */
-export const getDateRangeFromTimeRange = (timeRange: string): { startDate: string; endDate: string } => {
+export const getDateRangeFromTimeRange = (
+  timeRange: string,
+): { startDate: string; endDate: string } => {
   const now = new Date()
   const endDate = now.toISOString().split('T')[0]
   let startDate: string
-  
+
   switch (timeRange) {
     case 'today':
       startDate = endDate
@@ -540,7 +524,9 @@ export const getDateRangeFromTimeRange = (timeRange: string): { startDate: strin
       startDate = lastWeekStart.toISOString().split('T')[0]
       break
     case 'this_month':
-      startDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1)
+        .toISOString()
+        .split('T')[0]
       break
     case 'last_month':
       const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
@@ -560,7 +546,9 @@ export const getDateRangeFromTimeRange = (timeRange: string): { startDate: strin
       startDate = new Date(now.getFullYear(), 0, 1).toISOString().split('T')[0]
       break
     case 'last_year':
-      startDate = new Date(now.getFullYear() - 1, 0, 1).toISOString().split('T')[0]
+      startDate = new Date(now.getFullYear() - 1, 0, 1)
+        .toISOString()
+        .split('T')[0]
       break
     default:
       // 기본적으로 최근 30일
@@ -568,7 +556,7 @@ export const getDateRangeFromTimeRange = (timeRange: string): { startDate: strin
       defaultStart.setDate(defaultStart.getDate() - 30)
       startDate = defaultStart.toISOString().split('T')[0]
   }
-  
+
   return { startDate, endDate }
 }
 
@@ -585,6 +573,5 @@ export default {
   widgetApi,
   systemApi,
   realtimeApi,
-  getDateRangeFromTimeRange
+  getDateRangeFromTimeRange,
 }
-

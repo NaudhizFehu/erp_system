@@ -1,6 +1,7 @@
 import { ReactNode } from 'react'
-import { Sidebar } from './Sidebar'
+
 import { Header } from './Header'
+import { Sidebar } from './Sidebar'
 
 interface LayoutProps {
   children: ReactNode
@@ -15,24 +16,17 @@ function Layout({ children }: LayoutProps) {
     <div className="min-h-screen bg-background">
       {/* 사이드바 */}
       <Sidebar />
-      
+
       {/* 메인 콘텐츠 영역 */}
       <div className="pl-64">
         {/* 헤더 */}
         <Header />
-        
+
         {/* 페이지 콘텐츠 */}
-        <main className="p-6">
-          {children}
-        </main>
+        <main className="p-6">{children}</main>
       </div>
     </div>
   )
 }
 
 export { Layout }
-
-
-
-
-

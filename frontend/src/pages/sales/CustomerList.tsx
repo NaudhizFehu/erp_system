@@ -1,9 +1,24 @@
+import {
+  Search,
+  Plus,
+  Users,
+  TrendingUp,
+  Filter,
+  MoreHorizontal,
+} from 'lucide-react'
 import { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+
 import { Badge } from '@/components/ui/badge'
-import { 
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import {
   Table,
   TableBody,
   TableCell,
@@ -11,14 +26,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { 
-  Search, 
-  Plus, 
-  Users, 
-  TrendingUp,
-  Filter,
-  MoreHorizontal
-} from 'lucide-react'
 
 /**
  * 고객 목록 페이지
@@ -37,7 +44,7 @@ function CustomerList() {
       status: 'active',
       totalOrders: 15,
       totalAmount: 2500000,
-      lastOrder: '2024-01-15'
+      lastOrder: '2024-01-15',
     },
     {
       id: 2,
@@ -48,7 +55,7 @@ function CustomerList() {
       status: 'active',
       totalOrders: 8,
       totalAmount: 1800000,
-      lastOrder: '2024-01-10'
+      lastOrder: '2024-01-10',
     },
     {
       id: 3,
@@ -59,8 +66,8 @@ function CustomerList() {
       status: 'inactive',
       totalOrders: 3,
       totalAmount: 750000,
-      lastOrder: '2023-12-20'
-    }
+      lastOrder: '2023-12-20',
+    },
   ]
 
   const stats = [
@@ -69,28 +76,32 @@ function CustomerList() {
       value: '850',
       change: '+12.5%',
       trend: 'up',
-      icon: Users
+      icon: Users,
     },
     {
       title: '활성 고객',
       value: '720',
       change: '+8.2%',
       trend: 'up',
-      icon: TrendingUp
+      icon: TrendingUp,
     },
     {
       title: '신규 고객',
       value: '45',
       change: '+15.3%',
       trend: 'up',
-      icon: Plus
-    }
+      icon: Plus,
+    },
   ]
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
-        return <Badge variant="default" className="bg-green-100 text-green-800">활성</Badge>
+        return (
+          <Badge variant="default" className="bg-green-100 text-green-800">
+            활성
+          </Badge>
+        )
       case 'inactive':
         return <Badge variant="secondary">비활성</Badge>
       default:
@@ -101,40 +112,44 @@ function CustomerList() {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('ko-KR', {
       style: 'currency',
-      currency: 'KRW'
+      currency: 'KRW',
     }).format(amount)
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6 p-6">
       {/* 헤더 */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">고객 관리</h1>
-          <p className="text-gray-600 mt-1">고객 정보를 조회하고 관리하세요</p>
+          <p className="mt-1 text-gray-600">고객 정보를 조회하고 관리하세요</p>
         </div>
         <div className="flex space-x-2">
           <Button variant="outline">
-            <Filter className="h-4 w-4 mr-2" />
+            <Filter className="mr-2 h-4 w-4" />
             필터
           </Button>
           <Button>
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="mr-2 h-4 w-4" />
             고객 추가
           </Button>
         </div>
       </div>
 
       {/* 통계 카드 */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {stats.map((stat, index) => (
           <Card key={index}>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                  <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                  <div className="flex items-center mt-1">
+                  <p className="text-sm font-medium text-gray-600">
+                    {stat.title}
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {stat.value}
+                  </p>
+                  <div className="mt-1 flex items-center">
                     <Badge variant="default" className="text-xs">
                       {stat.change}
                     </Badge>
@@ -156,13 +171,13 @@ function CustomerList() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center space-x-4 mb-6">
+          <div className="mb-6 flex items-center space-x-4">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
               <Input
                 placeholder="고객명, 회사명, 이메일로 검색..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={e => setSearchTerm(e.target.value)}
                 className="pl-10"
               />
             </div>
@@ -180,23 +195,29 @@ function CustomerList() {
                   <TableHead>총 주문</TableHead>
                   <TableHead>총 금액</TableHead>
                   <TableHead>최근 주문</TableHead>
-                  <TableHead className="w-[50px]"></TableHead>
+                  <TableHead className="w-[50px]" />
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {customers.map((customer) => (
+                {customers.map(customer => (
                   <TableRow key={customer.id}>
-                    <TableCell className="font-medium">{customer.name}</TableCell>
+                    <TableCell className="font-medium">
+                      {customer.name}
+                    </TableCell>
                     <TableCell>{customer.company}</TableCell>
                     <TableCell>
                       <div>
                         <div className="text-sm">{customer.email}</div>
-                        <div className="text-xs text-gray-500">{customer.phone}</div>
+                        <div className="text-xs text-gray-500">
+                          {customer.phone}
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>{getStatusBadge(customer.status)}</TableCell>
                     <TableCell>{customer.totalOrders}건</TableCell>
-                    <TableCell>{formatCurrency(customer.totalAmount)}</TableCell>
+                    <TableCell>
+                      {formatCurrency(customer.totalAmount)}
+                    </TableCell>
                     <TableCell>{customer.lastOrder}</TableCell>
                     <TableCell>
                       <Button variant="ghost" size="sm">

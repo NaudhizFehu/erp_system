@@ -87,7 +87,9 @@ class EmployeeService {
   /**
    * 직원 목록 조회
    */
-  async getEmployees(params: EmployeeListParams = {}): Promise<EmployeeListResponse> {
+  async getEmployees(
+    params: EmployeeListParams = {},
+  ): Promise<EmployeeListResponse> {
     try {
       const response = await api.get(this.baseUrl, { params })
       return response.data.data
@@ -107,7 +109,7 @@ class EmployeeService {
       console.log('직원 조회 API 응답:', response)
       console.log('직원 조회 API 응답 데이터:', response.data)
       console.log('직원 조회 API 응답 데이터.data:', response.data.data)
-      
+
       // 백엔드 응답 구조: {success: true, message: '...', data: {직원데이터}, ...}
       // response.data.data가 실제 직원 데이터이므로 이를 반환
       return response.data.data
@@ -120,7 +122,9 @@ class EmployeeService {
   /**
    * 직원 생성
    */
-  async createEmployee(employee: Omit<Employee, 'id' | 'createdAt' | 'updatedAt'>): Promise<Employee> {
+  async createEmployee(
+    employee: Omit<Employee, 'id' | 'createdAt' | 'updatedAt'>,
+  ): Promise<Employee> {
     try {
       const response = await api.post(this.baseUrl, employee)
       return response.data.data
@@ -133,7 +137,10 @@ class EmployeeService {
   /**
    * 직원 수정
    */
-  async updateEmployee(id: number, employee: Partial<Employee>): Promise<Employee> {
+  async updateEmployee(
+    id: number,
+    employee: Partial<Employee>,
+  ): Promise<Employee> {
     try {
       const response = await api.put(`${this.baseUrl}/${id}`, employee)
       return response.data.data
@@ -161,7 +168,7 @@ class EmployeeService {
   async searchEmployees(searchTerm: string): Promise<Employee[]> {
     try {
       const response = await api.get(`${this.baseUrl}/search`, {
-        params: { q: searchTerm }
+        params: { q: searchTerm },
       })
       return response.data.data
     } catch (error) {
@@ -172,6 +179,3 @@ class EmployeeService {
 }
 
 export const employeeService = new EmployeeService()
-
-
-

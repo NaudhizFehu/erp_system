@@ -3,10 +3,31 @@
  * 상품 정보를 입력하고 관리하는 폼입니다
  */
 
+import { zodResolver } from '@hookform/resolvers/zod'
+import {
+  Package,
+  Barcode,
+  DollarSign,
+  Warehouse,
+  AlertTriangle,
+  Info,
+  ImageIcon,
+  Tag,
+} from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -24,6 +45,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
@@ -31,153 +53,111 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Button } from '@/components/ui/button'
-import { Switch } from '@/components/ui/switch'
-import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { 
-  Package, 
-  Barcode, 
-  DollarSign, 
-  Warehouse, 
-  AlertTriangle,
-  Info,
-  ImageIcon,
-  Tag
-} from 'lucide-react'
-import { 
-  Product, 
-  ProductCreateRequest, 
-  ProductType, 
-  ProductStatus, 
-  StockManagementType,
-  KOREAN_LABELS
-} from '../../types/inventory'
+import { Textarea } from '@/components/ui/textarea'
+
 import { useCategories } from '../../hooks/useInventory'
+import {
+  Product,
+  ProductCreateRequest,
+  ProductType,
+  ProductStatus,
+  StockManagementType,
+  KOREAN_LABELS,
+} from '../../types/inventory'
 import { formatCurrency } from '../../utils/format'
 
 // 폼 스키마 정의
 const productFormSchema = z.object({
-  productCode: z.string()
+  productCode: z
+    .string()
     .min(1, '상품코드는 필수입니다')
     .max(50, '상품코드는 50자 이내여야 합니다')
-    .regex(/^[A-Z0-9-_]+$/, '상품코드는 영문 대문자, 숫자, 하이픈(-), 언더스코어(_)만 사용 가능합니다'),
-  productName: z.string()
+    .regex(
+      /^[A-Z0-9-_]+$/,
+      '상품코드는 영문 대문자, 숫자, 하이픈(-), 언더스코어(_)만 사용 가능합니다',
+    ),
+  productName: z
+    .string()
     .min(1, '상품명은 필수입니다')
     .max(200, '상품명은 200자 이내여야 합니다'),
-  productNameEn: z.string()
+  productNameEn: z
+    .string()
     .max(200, '영문 상품명은 200자 이내여야 합니다')
     .optional(),
-  description: z.string()
-    .max(1000, '설명은 1000자 이내여야 합니다')
-    .optional(),
-  detailedDescription: z.string()
+  description: z.string().max(1000, '설명은 1000자 이내여야 합니다').optional(),
+  detailedDescription: z
+    .string()
     .max(5000, '상세설명은 5000자 이내여야 합니다')
     .optional(),
   companyId: z.number().min(1, '회사는 필수입니다'),
   categoryId: z.number().min(1, '분류는 필수입니다'),
   productType: z.nativeEnum(ProductType),
   productStatus: z.nativeEnum(ProductStatus).default(ProductStatus.ACTIVE),
-  stockManagementType: z.nativeEnum(StockManagementType).default(StockManagementType.AVERAGE),
+  stockManagementType: z
+    .nativeEnum(StockManagementType)
+    .default(StockManagementType.AVERAGE),
   isActive: z.boolean().default(true),
   trackInventory: z.boolean().default(true),
-  barcode: z.string()
-    .max(50, '바코드는 50자 이내여야 합니다')
-    .optional(),
-  qrCode: z.string()
-    .max(500, 'QR코드는 500자 이내여야 합니다')
-    .optional(),
-  sku: z.string()
-    .max(100, 'SKU는 100자 이내여야 합니다')
-    .optional(),
-  baseUnit: z.string()
+  barcode: z.string().max(50, '바코드는 50자 이내여야 합니다').optional(),
+  qrCode: z.string().max(500, 'QR코드는 500자 이내여야 합니다').optional(),
+  sku: z.string().max(100, 'SKU는 100자 이내여야 합니다').optional(),
+  baseUnit: z
+    .string()
     .min(1, '기본단위는 필수입니다')
     .max(20, '기본단위는 20자 이내여야 합니다'),
-  subUnit: z.string()
-    .max(20, '보조단위는 20자 이내여야 합니다')
-    .optional(),
-  unitConversionRate: z.number()
+  subUnit: z.string().max(20, '보조단위는 20자 이내여야 합니다').optional(),
+  unitConversionRate: z
+    .number()
     .min(0, '단위변환비율은 0 이상이어야 합니다')
     .default(1),
-  standardCost: z.number()
-    .min(0, '표준원가는 0 이상이어야 합니다')
-    .default(0),
-  sellingPrice: z.number()
-    .min(0, '판매가격은 0 이상이어야 합니다')
-    .default(0),
-  minSellingPrice: z.number()
+  standardCost: z.number().min(0, '표준원가는 0 이상이어야 합니다').default(0),
+  sellingPrice: z.number().min(0, '판매가격은 0 이상이어야 합니다').default(0),
+  minSellingPrice: z
+    .number()
     .min(0, '최소판매가격은 0 이상이어야 합니다')
     .default(0),
-  safetyStock: z.number()
-    .min(0, '안전재고는 0 이상이어야 합니다')
-    .default(0),
-  minStock: z.number()
-    .min(0, '최소재고는 0 이상이어야 합니다')
-    .default(0),
-  maxStock: z.number()
-    .min(0, '최대재고는 0 이상이어야 합니다')
-    .default(0),
-  reorderPoint: z.number()
+  safetyStock: z.number().min(0, '안전재고는 0 이상이어야 합니다').default(0),
+  minStock: z.number().min(0, '최소재고는 0 이상이어야 합니다').default(0),
+  maxStock: z.number().min(0, '최대재고는 0 이상이어야 합니다').default(0),
+  reorderPoint: z
+    .number()
     .min(0, '재주문포인트는 0 이상이어야 합니다')
     .default(0),
-  reorderQuantity: z.number()
+  reorderQuantity: z
+    .number()
     .min(0, '재주문수량은 0 이상이어야 합니다')
     .default(0),
-  leadTimeDays: z.number()
-    .min(0, '리드타임은 0 이상이어야 합니다')
-    .default(0),
-  shelfLifeDays: z.number()
-    .min(0, '유효기간은 0 이상이어야 합니다')
-    .optional(),
-  width: z.number()
-    .min(0, '너비는 0 이상이어야 합니다')
-    .optional(),
-  height: z.number()
-    .min(0, '높이는 0 이상이어야 합니다')
-    .optional(),
-  depth: z.number()
-    .min(0, '깊이는 0 이상이어야 합니다')
-    .optional(),
-  weight: z.number()
-    .min(0, '무게는 0 이상이어야 합니다')
-    .optional(),
-  color: z.string()
-    .max(50, '색상은 50자 이내여야 합니다')
-    .optional(),
-  size: z.string()
-    .max(50, '크기는 50자 이내여야 합니다')
-    .optional(),
-  brand: z.string()
-    .max(100, '브랜드는 100자 이내여야 합니다')
-    .optional(),
-  manufacturer: z.string()
+  leadTimeDays: z.number().min(0, '리드타임은 0 이상이어야 합니다').default(0),
+  shelfLifeDays: z.number().min(0, '유효기간은 0 이상이어야 합니다').optional(),
+  width: z.number().min(0, '너비는 0 이상이어야 합니다').optional(),
+  height: z.number().min(0, '높이는 0 이상이어야 합니다').optional(),
+  depth: z.number().min(0, '깊이는 0 이상이어야 합니다').optional(),
+  weight: z.number().min(0, '무게는 0 이상이어야 합니다').optional(),
+  color: z.string().max(50, '색상은 50자 이내여야 합니다').optional(),
+  size: z.string().max(50, '크기는 50자 이내여야 합니다').optional(),
+  brand: z.string().max(100, '브랜드는 100자 이내여야 합니다').optional(),
+  manufacturer: z
+    .string()
     .max(200, '제조업체는 200자 이내여야 합니다')
     .optional(),
-  supplier: z.string()
-    .max(200, '공급업체는 200자 이내여야 합니다')
-    .optional(),
-  originCountry: z.string()
+  supplier: z.string().max(200, '공급업체는 200자 이내여야 합니다').optional(),
+  originCountry: z
+    .string()
     .max(100, '원산지는 100자 이내여야 합니다')
     .optional(),
-  hsCode: z.string()
-    .max(20, 'HS코드는 20자 이내여야 합니다')
-    .optional(),
-  taxRate: z.number()
+  hsCode: z.string().max(20, 'HS코드는 20자 이내여야 합니다').optional(),
+  taxRate: z
+    .number()
     .min(0, '세율은 0 이상이어야 합니다')
     .max(100, '세율은 100 이하여야 합니다')
     .default(10),
-  tags: z.string()
-    .max(500, '태그는 500자 이내여야 합니다')
-    .optional(),
-  sortOrder: z.number()
-    .min(0, '정렬순서는 0 이상이어야 합니다')
-    .default(0),
-  metadata: z.string()
+  tags: z.string().max(500, '태그는 500자 이내여야 합니다').optional(),
+  sortOrder: z.number().min(0, '정렬순서는 0 이상이어야 합니다').default(0),
+  metadata: z
+    .string()
     .max(2000, '메타데이터는 2000자 이내여야 합니다')
     .optional(),
 })
@@ -199,10 +179,10 @@ function ProductForm({
   onSubmit,
   product,
   companyId,
-  isLoading = false
+  isLoading = false,
 }: ProductFormProps) {
   const [activeTab, setActiveTab] = useState('basic')
-  
+
   // 분류 목록 조회
   const { data: categoriesResponse } = useCategories(companyId)
   const categories = categoriesResponse?.data || []
@@ -230,7 +210,7 @@ function ProductForm({
       leadTimeDays: 0,
       taxRate: 10,
       sortOrder: 0,
-    }
+    },
   })
 
   // 상품 데이터로 폼 초기화
@@ -314,11 +294,12 @@ function ProductForm({
   // 이익률 계산
   const sellingPrice = form.watch('sellingPrice')
   const standardCost = form.watch('standardCost')
-  const profitRate = standardCost > 0 ? ((sellingPrice - standardCost) / standardCost * 100) : 0
+  const profitRate =
+    standardCost > 0 ? ((sellingPrice - standardCost) / standardCost) * 100 : 0
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             <Package className="h-5 w-5" />
@@ -330,7 +311,10 @@ function ProductForm({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="space-y-6"
+          >
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="basic">기본정보</TabsTrigger>
@@ -361,21 +345,24 @@ function ProductForm({
                               <Input placeholder="PROD-001" {...field} />
                             </FormControl>
                             <FormDescription>
-                              영문 대문자, 숫자, 하이픈(-), 언더스코어(_) 사용 가능
+                              영문 대문자, 숫자, 하이픈(-), 언더스코어(_) 사용
+                              가능
                             </FormDescription>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                      
+
                       <FormField
                         control={form.control}
                         name="categoryId"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>상품분류 *</FormLabel>
-                            <Select 
-                              onValueChange={(value) => field.onChange(Number(value))}
+                            <Select
+                              onValueChange={value =>
+                                field.onChange(Number(value))
+                              }
                               value={field.value?.toString()}
                             >
                               <FormControl>
@@ -384,9 +371,9 @@ function ProductForm({
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                {categories.map((category) => (
-                                  <SelectItem 
-                                    key={category.id} 
+                                {categories.map(category => (
+                                  <SelectItem
+                                    key={category.id}
                                     value={category.id.toString()}
                                   >
                                     {category.fullPath}
@@ -407,7 +394,10 @@ function ProductForm({
                         <FormItem>
                           <FormLabel>상품명 *</FormLabel>
                           <FormControl>
-                            <Input placeholder="상품명을 입력하세요" {...field} />
+                            <Input
+                              placeholder="상품명을 입력하세요"
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -421,7 +411,10 @@ function ProductForm({
                         <FormItem>
                           <FormLabel>영문 상품명</FormLabel>
                           <FormControl>
-                            <Input placeholder="Product Name (English)" {...field} />
+                            <Input
+                              placeholder="Product Name (English)"
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -435,7 +428,7 @@ function ProductForm({
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>상품유형 *</FormLabel>
-                            <Select 
+                            <Select
                               onValueChange={field.onChange}
                               value={field.value}
                             >
@@ -445,7 +438,7 @@ function ProductForm({
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                {Object.values(ProductType).map((type) => (
+                                {Object.values(ProductType).map(type => (
                                   <SelectItem key={type} value={type}>
                                     {KOREAN_LABELS[type]}
                                   </SelectItem>
@@ -463,7 +456,7 @@ function ProductForm({
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>상품상태</FormLabel>
-                            <Select 
+                            <Select
                               onValueChange={field.onChange}
                               value={field.value}
                             >
@@ -473,7 +466,7 @@ function ProductForm({
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                {Object.values(ProductStatus).map((status) => (
+                                {Object.values(ProductStatus).map(status => (
                                   <SelectItem key={status} value={status}>
                                     {KOREAN_LABELS[status]}
                                   </SelectItem>
@@ -491,7 +484,7 @@ function ProductForm({
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>재고관리방식</FormLabel>
-                            <Select 
+                            <Select
                               onValueChange={field.onChange}
                               value={field.value}
                             >
@@ -501,11 +494,13 @@ function ProductForm({
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                {Object.values(StockManagementType).map((type) => (
-                                  <SelectItem key={type} value={type}>
-                                    {KOREAN_LABELS[type]}
-                                  </SelectItem>
-                                ))}
+                                {Object.values(StockManagementType).map(
+                                  type => (
+                                    <SelectItem key={type} value={type}>
+                                      {KOREAN_LABELS[type]}
+                                    </SelectItem>
+                                  ),
+                                )}
                               </SelectContent>
                             </Select>
                             <FormMessage />
@@ -521,10 +516,10 @@ function ProductForm({
                         <FormItem>
                           <FormLabel>간단 설명</FormLabel>
                           <FormControl>
-                            <Textarea 
+                            <Textarea
                               placeholder="상품에 대한 간단한 설명을 입력하세요"
                               className="min-h-[80px]"
-                              {...field} 
+                              {...field}
                             />
                           </FormControl>
                           <FormMessage />
@@ -539,10 +534,10 @@ function ProductForm({
                         <FormItem>
                           <FormLabel>상세 설명</FormLabel>
                           <FormControl>
-                            <Textarea 
+                            <Textarea
                               placeholder="상품에 대한 상세한 설명을 입력하세요"
                               className="min-h-[120px]"
-                              {...field} 
+                              {...field}
                             />
                           </FormControl>
                           <FormMessage />
@@ -601,7 +596,7 @@ function ProductForm({
               <TabsContent value="pricing" className="space-y-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg flex items-center space-x-2">
+                    <CardTitle className="flex items-center space-x-2 text-lg">
                       <DollarSign className="h-5 w-5" />
                       <span>가격 정보</span>
                     </CardTitle>
@@ -618,12 +613,14 @@ function ProductForm({
                           <FormItem>
                             <FormLabel>표준원가</FormLabel>
                             <FormControl>
-                              <Input 
-                                type="number" 
+                              <Input
+                                type="number"
                                 step="0.01"
                                 placeholder="0"
                                 {...field}
-                                onChange={(e) => field.onChange(Number(e.target.value))}
+                                onChange={e =>
+                                  field.onChange(Number(e.target.value))
+                                }
                               />
                             </FormControl>
                             <FormDescription>
@@ -641,12 +638,14 @@ function ProductForm({
                           <FormItem>
                             <FormLabel>판매가격</FormLabel>
                             <FormControl>
-                              <Input 
-                                type="number" 
+                              <Input
+                                type="number"
                                 step="0.01"
                                 placeholder="0"
                                 {...field}
-                                onChange={(e) => field.onChange(Number(e.target.value))}
+                                onChange={e =>
+                                  field.onChange(Number(e.target.value))
+                                }
                               />
                             </FormControl>
                             <FormDescription>
@@ -666,12 +665,14 @@ function ProductForm({
                           <FormItem>
                             <FormLabel>최소판매가격</FormLabel>
                             <FormControl>
-                              <Input 
-                                type="number" 
+                              <Input
+                                type="number"
                                 step="0.01"
                                 placeholder="0"
                                 {...field}
-                                onChange={(e) => field.onChange(Number(e.target.value))}
+                                onChange={e =>
+                                  field.onChange(Number(e.target.value))
+                                }
                               />
                             </FormControl>
                             <FormDescription>
@@ -689,14 +690,16 @@ function ProductForm({
                           <FormItem>
                             <FormLabel>세율 (%)</FormLabel>
                             <FormControl>
-                              <Input 
-                                type="number" 
+                              <Input
+                                type="number"
                                 step="0.1"
                                 min="0"
                                 max="100"
                                 placeholder="10"
                                 {...field}
-                                onChange={(e) => field.onChange(Number(e.target.value))}
+                                onChange={e =>
+                                  field.onChange(Number(e.target.value))
+                                }
                               />
                             </FormControl>
                             <FormDescription>
@@ -715,11 +718,15 @@ function ProductForm({
                         <AlertDescription>
                           <div className="flex items-center justify-between">
                             <span>예상 이익률</span>
-                            <Badge variant={profitRate > 0 ? 'default' : 'destructive'}>
+                            <Badge
+                              variant={
+                                profitRate > 0 ? 'default' : 'destructive'
+                              }
+                            >
                               {profitRate.toFixed(1)}%
                             </Badge>
                           </div>
-                          <div className="text-sm text-muted-foreground mt-1">
+                          <div className="mt-1 text-sm text-muted-foreground">
                             이익: {formatCurrency(sellingPrice - standardCost)}
                           </div>
                         </AlertDescription>
@@ -733,7 +740,7 @@ function ProductForm({
               <TabsContent value="inventory" className="space-y-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg flex items-center space-x-2">
+                    <CardTitle className="flex items-center space-x-2 text-lg">
                       <Warehouse className="h-5 w-5" />
                       <span>재고 관리 정보</span>
                     </CardTitle>
@@ -778,13 +785,15 @@ function ProductForm({
                           <FormItem>
                             <FormLabel>단위변환비율</FormLabel>
                             <FormControl>
-                              <Input 
-                                type="number" 
+                              <Input
+                                type="number"
                                 step="0.01"
                                 min="0"
                                 placeholder="1"
                                 {...field}
-                                onChange={(e) => field.onChange(Number(e.target.value))}
+                                onChange={e =>
+                                  field.onChange(Number(e.target.value))
+                                }
                               />
                             </FormControl>
                             <FormDescription>
@@ -806,12 +815,14 @@ function ProductForm({
                           <FormItem>
                             <FormLabel>안전재고</FormLabel>
                             <FormControl>
-                              <Input 
-                                type="number" 
+                              <Input
+                                type="number"
                                 min="0"
                                 placeholder="0"
                                 {...field}
-                                onChange={(e) => field.onChange(Number(e.target.value))}
+                                onChange={e =>
+                                  field.onChange(Number(e.target.value))
+                                }
                               />
                             </FormControl>
                             <FormDescription>
@@ -829,12 +840,14 @@ function ProductForm({
                           <FormItem>
                             <FormLabel>재주문포인트</FormLabel>
                             <FormControl>
-                              <Input 
-                                type="number" 
+                              <Input
+                                type="number"
                                 min="0"
                                 placeholder="0"
                                 {...field}
-                                onChange={(e) => field.onChange(Number(e.target.value))}
+                                onChange={e =>
+                                  field.onChange(Number(e.target.value))
+                                }
                               />
                             </FormControl>
                             <FormDescription>
@@ -854,12 +867,14 @@ function ProductForm({
                           <FormItem>
                             <FormLabel>최소재고</FormLabel>
                             <FormControl>
-                              <Input 
-                                type="number" 
+                              <Input
+                                type="number"
                                 min="0"
                                 placeholder="0"
                                 {...field}
-                                onChange={(e) => field.onChange(Number(e.target.value))}
+                                onChange={e =>
+                                  field.onChange(Number(e.target.value))
+                                }
                               />
                             </FormControl>
                             <FormMessage />
@@ -874,12 +889,14 @@ function ProductForm({
                           <FormItem>
                             <FormLabel>최대재고</FormLabel>
                             <FormControl>
-                              <Input 
-                                type="number" 
+                              <Input
+                                type="number"
                                 min="0"
                                 placeholder="0"
                                 {...field}
-                                onChange={(e) => field.onChange(Number(e.target.value))}
+                                onChange={e =>
+                                  field.onChange(Number(e.target.value))
+                                }
                               />
                             </FormControl>
                             <FormMessage />
@@ -894,12 +911,14 @@ function ProductForm({
                           <FormItem>
                             <FormLabel>재주문수량</FormLabel>
                             <FormControl>
-                              <Input 
-                                type="number" 
+                              <Input
+                                type="number"
                                 min="0"
                                 placeholder="0"
                                 {...field}
-                                onChange={(e) => field.onChange(Number(e.target.value))}
+                                onChange={e =>
+                                  field.onChange(Number(e.target.value))
+                                }
                               />
                             </FormControl>
                             <FormMessage />
@@ -916,12 +935,14 @@ function ProductForm({
                           <FormItem>
                             <FormLabel>리드타임 (일)</FormLabel>
                             <FormControl>
-                              <Input 
-                                type="number" 
+                              <Input
+                                type="number"
                                 min="0"
                                 placeholder="0"
                                 {...field}
-                                onChange={(e) => field.onChange(Number(e.target.value))}
+                                onChange={e =>
+                                  field.onChange(Number(e.target.value))
+                                }
                               />
                             </FormControl>
                             <FormDescription>
@@ -939,12 +960,18 @@ function ProductForm({
                           <FormItem>
                             <FormLabel>유효기간 (일)</FormLabel>
                             <FormControl>
-                              <Input 
-                                type="number" 
+                              <Input
+                                type="number"
                                 min="0"
                                 placeholder=""
                                 {...field}
-                                onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                                onChange={e =>
+                                  field.onChange(
+                                    e.target.value
+                                      ? Number(e.target.value)
+                                      : undefined,
+                                  )
+                                }
                               />
                             </FormControl>
                             <FormDescription>
@@ -977,13 +1004,19 @@ function ProductForm({
                           <FormItem>
                             <FormLabel>너비 (cm)</FormLabel>
                             <FormControl>
-                              <Input 
-                                type="number" 
+                              <Input
+                                type="number"
                                 step="0.1"
                                 min="0"
                                 placeholder=""
                                 {...field}
-                                onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                                onChange={e =>
+                                  field.onChange(
+                                    e.target.value
+                                      ? Number(e.target.value)
+                                      : undefined,
+                                  )
+                                }
                               />
                             </FormControl>
                             <FormMessage />
@@ -998,13 +1031,19 @@ function ProductForm({
                           <FormItem>
                             <FormLabel>높이 (cm)</FormLabel>
                             <FormControl>
-                              <Input 
-                                type="number" 
+                              <Input
+                                type="number"
                                 step="0.1"
                                 min="0"
                                 placeholder=""
                                 {...field}
-                                onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                                onChange={e =>
+                                  field.onChange(
+                                    e.target.value
+                                      ? Number(e.target.value)
+                                      : undefined,
+                                  )
+                                }
                               />
                             </FormControl>
                             <FormMessage />
@@ -1019,13 +1058,19 @@ function ProductForm({
                           <FormItem>
                             <FormLabel>깊이 (cm)</FormLabel>
                             <FormControl>
-                              <Input 
-                                type="number" 
+                              <Input
+                                type="number"
                                 step="0.1"
                                 min="0"
                                 placeholder=""
                                 {...field}
-                                onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                                onChange={e =>
+                                  field.onChange(
+                                    e.target.value
+                                      ? Number(e.target.value)
+                                      : undefined,
+                                  )
+                                }
                               />
                             </FormControl>
                             <FormMessage />
@@ -1040,13 +1085,19 @@ function ProductForm({
                           <FormItem>
                             <FormLabel>무게 (kg)</FormLabel>
                             <FormControl>
-                              <Input 
-                                type="number" 
+                              <Input
+                                type="number"
                                 step="0.01"
                                 min="0"
                                 placeholder=""
                                 {...field}
-                                onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                                onChange={e =>
+                                  field.onChange(
+                                    e.target.value
+                                      ? Number(e.target.value)
+                                      : undefined,
+                                  )
+                                }
                               />
                             </FormControl>
                             <FormMessage />
@@ -1063,7 +1114,10 @@ function ProductForm({
                           <FormItem>
                             <FormLabel>색상</FormLabel>
                             <FormControl>
-                              <Input placeholder="빨강, 파랑, 검정 등" {...field} />
+                              <Input
+                                placeholder="빨강, 파랑, 검정 등"
+                                {...field}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -1110,7 +1164,10 @@ function ProductForm({
                           <FormItem>
                             <FormLabel>SKU</FormLabel>
                             <FormControl>
-                              <Input placeholder="Stock Keeping Unit" {...field} />
+                              <Input
+                                placeholder="Stock Keeping Unit"
+                                {...field}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -1216,12 +1273,14 @@ function ProductForm({
                           <FormItem>
                             <FormLabel>정렬순서</FormLabel>
                             <FormControl>
-                              <Input 
-                                type="number" 
+                              <Input
+                                type="number"
                                 min="0"
                                 placeholder="0"
                                 {...field}
-                                onChange={(e) => field.onChange(Number(e.target.value))}
+                                onChange={e =>
+                                  field.onChange(Number(e.target.value))
+                                }
                               />
                             </FormControl>
                             <FormDescription>
@@ -1243,7 +1302,10 @@ function ProductForm({
                             <span>태그</span>
                           </FormLabel>
                           <FormControl>
-                            <Input placeholder="태그1, 태그2, 태그3" {...field} />
+                            <Input
+                              placeholder="태그1, 태그2, 태그3"
+                              {...field}
+                            />
                           </FormControl>
                           <FormDescription>
                             쉼표(,)로 구분하여 입력하세요
@@ -1260,14 +1322,15 @@ function ProductForm({
                         <FormItem>
                           <FormLabel>메타데이터</FormLabel>
                           <FormControl>
-                            <Textarea 
+                            <Textarea
                               placeholder="추가적인 정보를 JSON 형태로 입력하세요"
                               className="min-h-[100px]"
-                              {...field} 
+                              {...field}
                             />
                           </FormControl>
                           <FormDescription>
-                            JSON 형태의 추가 정보 (예: 색상 옵션, 사이즈 정보 등)
+                            JSON 형태의 추가 정보 (예: 색상 옵션, 사이즈 정보
+                            등)
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
@@ -1283,7 +1346,7 @@ function ProductForm({
                 취소
               </Button>
               <Button type="submit" disabled={isLoading}>
-                {isLoading ? '처리중...' : (product ? '수정' : '등록')}
+                {isLoading ? '처리중...' : product ? '수정' : '등록'}
               </Button>
             </DialogFooter>
           </form>
@@ -1294,7 +1357,3 @@ function ProductForm({
 }
 
 export { ProductForm }
-
-
-
-

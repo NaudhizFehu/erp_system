@@ -1,6 +1,7 @@
-import { defineConfig } from 'vitest/config'
-import react from '@vitejs/plugin-react'
 import path from 'path'
+
+import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vitest/config'
 
 /**
  * Vitest 테스트 환경 설정
@@ -16,29 +17,22 @@ export default defineConfig({
   test: {
     // 테스트 환경 설정
     environment: 'jsdom',
-    
+
     // 전역 설정
     globals: true,
-    
+
     // 테스트 셋업 파일
     setupFiles: ['./src/test/setup.ts'],
-    
+
     // 테스트 파일 패턴
     include: [
       'src/**/*.{test,spec}.{js,ts,jsx,tsx}',
       'src/**/__tests__/**/*.{js,ts,jsx,tsx}',
     ],
-    
+
     // 제외할 파일 패턴
-    exclude: [
-      'node_modules',
-      'dist',
-      '.idea',
-      '.git',
-      '.cache',
-      'build',
-    ],
-    
+    exclude: ['node_modules', 'dist', '.idea', '.git', '.cache', 'build'],
+
     // 커버리지 설정
     coverage: {
       provider: 'v8',
@@ -61,16 +55,16 @@ export default defineConfig({
         },
       },
     },
-    
+
     // 테스트 실행 설정
     testTimeout: 10000,
     hookTimeout: 10000,
-    
+
     // 모의(Mock) 설정
     clearMocks: true,
     mockReset: true,
     restoreMocks: true,
-    
+
     // 병렬 실행 설정
     pool: 'threads',
     poolOptions: {
@@ -78,7 +72,7 @@ export default defineConfig({
         singleThread: false,
       },
     },
-    
+
     // 리포터 설정
     reporters: ['verbose', 'html'],
     outputFile: {
@@ -86,8 +80,3 @@ export default defineConfig({
     },
   },
 })
-
-
-
-
-

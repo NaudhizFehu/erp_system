@@ -1,7 +1,8 @@
 import { User, LogOut, Settings } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
-import { useNotifications } from '@/contexts/NotificationContext'
 import { useNavigate } from 'react-router-dom'
+
+import { NotificationDropdown } from '@/components/notification/NotificationDropdown'
+import { GlobalSearch } from '@/components/search/GlobalSearch'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -11,8 +12,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { NotificationDropdown } from '@/components/notification/NotificationDropdown'
-import { GlobalSearch } from '@/components/search/GlobalSearch'
+import { useAuth } from '@/contexts/AuthContext'
+import { useNotifications } from '@/contexts/NotificationContext'
 
 /**
  * 헤더 컴포넌트
@@ -31,7 +32,7 @@ function Header() {
         </div>
 
         {/* 우측 액션 영역 */}
-        <div className="flex items-center space-x-4 flex-shrink-0">
+        <div className="flex flex-shrink-0 items-center space-x-4">
           {/* 알림 (로그인된 경우에만 표시) */}
           {user && <NotificationDropdown />}
 
@@ -40,13 +41,17 @@ function Header() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="flex items-center space-x-2">
                 <User className="h-5 w-5" />
-                <span className="text-sm font-medium">{user?.fullName || '사용자'}</span>
+                <span className="text-sm font-medium">
+                  {user?.fullName || '사용자'}
+                </span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{user?.fullName}</p>
+                  <p className="text-sm font-medium leading-none">
+                    {user?.fullName}
+                  </p>
                   <p className="text-xs leading-none text-muted-foreground">
                     {user?.email}
                   </p>
@@ -71,5 +76,3 @@ function Header() {
 }
 
 export { Header }
-
-

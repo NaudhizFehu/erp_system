@@ -1,15 +1,16 @@
-import { Link, useLocation } from 'react-router-dom'
-import { 
-  LayoutDashboard, 
-  Users, 
-  Package, 
-  ShoppingCart, 
+import {
+  LayoutDashboard,
+  Users,
+  Package,
+  ShoppingCart,
   Calculator,
   Building2,
-  User
+  User,
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { Link, useLocation } from 'react-router-dom'
+
 import { useAuth } from '@/contexts/AuthContext'
+import { cn } from '@/lib/utils'
 
 /**
  * 사이드바 컴포넌트
@@ -18,9 +19,10 @@ import { useAuth } from '@/contexts/AuthContext'
 function Sidebar() {
   const location = useLocation()
   const { user } = useAuth()
-  
+
   // 권한 체크
-  const canManageHR = user?.role && ['SUPER_ADMIN', 'ADMIN', 'MANAGER'].includes(user.role)
+  const canManageHR =
+    user?.role && ['SUPER_ADMIN', 'ADMIN', 'MANAGER'].includes(user.role)
 
   const menuItems = [
     {
@@ -35,15 +37,19 @@ function Sidebar() {
       icon: User,
     },
     // SUPER_ADMIN, ADMIN, MANAGER만: 인사관리 메뉴
-    ...(canManageHR ? [{
-      title: '인사관리',
-      icon: Users,
-      subItems: [
-        { title: '직원 관리', href: '/hr/employees' },
-        { title: '부서 관리', href: '/hr/departments' },
-        { title: '직급 관리', href: '/hr/positions' },
-      ],
-    }] : []),
+    ...(canManageHR
+      ? [
+          {
+            title: '인사관리',
+            icon: Users,
+            subItems: [
+              { title: '직원 관리', href: '/hr/employees' },
+              { title: '부서 관리', href: '/hr/departments' },
+              { title: '직급 관리', href: '/hr/positions' },
+            ],
+          },
+        ]
+      : []),
     {
       title: '재고관리',
       icon: Package,
@@ -74,30 +80,28 @@ function Sidebar() {
     {
       title: '회사관리',
       icon: Building2,
-      subItems: [
-        { title: '회사 목록', href: '/companies' },
-      ],
+      subItems: [{ title: '회사 목록', href: '/companies' }],
     },
   ]
 
   return (
-    <div className="fixed inset-y-0 left-0 z-50 w-64 bg-card border-r">
+    <div className="fixed inset-y-0 left-0 z-50 w-64 border-r bg-card">
       {/* 로고 영역 */}
-      <div className="flex h-16 items-center px-6 border-b">
+      <div className="flex h-16 items-center border-b px-6">
         <Building2 className="h-8 w-8 text-primary" />
         <h1 className="ml-3 text-xl font-bold text-foreground">ERP 시스템</h1>
       </div>
 
       {/* 네비게이션 메뉴 */}
       <nav className="flex-1 space-y-1 p-4">
-        {menuItems.map((item) => (
+        {menuItems.map(item => (
           <div key={item.title}>
             {item.href ? (
               // 단일 메뉴 아이템
               <Link
                 to={item.href}
                 className={cn(
-                  'flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors',
+                  'flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors',
                   location.pathname === item.href
                     ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
@@ -114,12 +118,12 @@ function Sidebar() {
                   {item.title}
                 </div>
                 <div className="ml-6 space-y-1">
-                  {item.subItems?.map((subItem) => (
+                  {item.subItems?.map(subItem => (
                     <Link
                       key={subItem.href}
                       to={subItem.href}
                       className={cn(
-                        'block px-3 py-2 text-sm rounded-md transition-colors',
+                        'block rounded-md px-3 py-2 text-sm transition-colors',
                         location.pathname === subItem.href
                           ? 'bg-primary text-primary-foreground'
                           : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
@@ -139,5 +143,3 @@ function Sidebar() {
 }
 
 export { Sidebar }
-
-

@@ -1,10 +1,11 @@
+import { Plus, Search, Filter, Edit, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Plus, Search, Filter, Edit, Trash2 } from 'lucide-react'
-import { Employee, EmploymentStatus } from '@/types/hr'
-import { formatDate, formatCurrency } from '@/lib/utils'
-import { useEmployees } from '@/hooks/useEmployees'
+
 import { useAuth } from '@/contexts/AuthContext'
+import { useEmployees } from '@/hooks/useEmployees'
+import { formatDate, formatCurrency } from '@/lib/utils'
+import { Employee, EmploymentStatus } from '@/types/hr'
 
 /**
  * 직원 목록 페이지
@@ -33,21 +34,25 @@ function EmployeeList() {
   }
 
   const filteredEmployees = employees.filter(employee => {
-    const matchesSearch = employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         employee.employeeNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         employee.email.toLowerCase().includes(searchTerm.toLowerCase())
-    
-    const matchesStatus = !statusFilter || employee.employmentStatus === statusFilter
-    
+    const matchesSearch =
+      employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      employee.employeeNumber
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      employee.email.toLowerCase().includes(searchTerm.toLowerCase())
+
+    const matchesStatus =
+      !statusFilter || employee.employmentStatus === statusFilter
+
     return matchesSearch && matchesStatus
   })
 
   // 로딩 상태 처리
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex h-64 items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-primary" />
           <p className="text-muted-foreground">직원 목록을 불러오는 중...</p>
         </div>
       </div>
@@ -57,11 +62,13 @@ function EmployeeList() {
   // 에러 상태 처리
   if (error) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex h-64 items-center justify-center">
         <div className="text-center">
-          <p className="text-destructive mb-4">직원 목록을 불러올 수 없습니다.</p>
-          <button 
-            onClick={() => window.location.reload()} 
+          <p className="mb-4 text-destructive">
+            직원 목록을 불러올 수 없습니다.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
             className="btn btn-primary"
           >
             다시 시도
@@ -81,7 +88,9 @@ function EmployeeList() {
             직원 정보를 조회하고 관리할 수 있습니다
           </p>
         </div>
-        {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'MANAGER') && (
+        {(user?.role === 'SUPER_ADMIN' ||
+          user?.role === 'ADMIN' ||
+          user?.role === 'MANAGER') && (
           <Link to="/hr/employees/new" className="btn btn-primary">
             <Plus className="mr-2 h-4 w-4" />
             직원 등록
@@ -91,22 +100,24 @@ function EmployeeList() {
 
       {/* 검색 및 필터 */}
       <div className="flex items-center space-x-4">
-        <div className="relative flex-1 max-w-sm">
+        <div className="relative max-w-sm flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
             type="text"
             placeholder="이름, 직원번호, 이메일로 검색..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="form-input pl-10 w-full"
+            onChange={e => setSearchTerm(e.target.value)}
+            className="form-input w-full pl-10"
           />
         </div>
-        
+
         <div className="flex items-center space-x-2">
           <Filter className="h-4 w-4 text-muted-foreground" />
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as EmploymentStatus | '')}
+            onChange={e =>
+              setStatusFilter(e.target.value as EmploymentStatus | '')
+            }
             className="form-input"
           >
             <option value="">전체 상태</option>
@@ -135,11 +146,11 @@ function EmployeeList() {
             </tr>
           </thead>
           <tbody>
-            {filteredEmployees.map((employee) => (
-              <tr 
+            {filteredEmployees.map(employee => (
+              <tr
                 key={employee.id}
-                onClick={(e) => handleRowClick(employee.id, e)}
-                className="cursor-pointer hover:bg-muted/50 transition-colors"
+                onClick={e => handleRowClick(employee.id, e)}
+                className="cursor-pointer transition-colors hover:bg-muted/50"
               >
                 <td className="font-medium">{employee.employeeNumber}</td>
                 <td className="font-medium">{employee.name}</td>
@@ -150,16 +161,20 @@ function EmployeeList() {
                 <td>-</td>
                 <td>
                   <span
-                    className={`inline-flex items-center justify-center rounded-full px-2 py-1 text-xs font-medium w-16 ${
+                    className={`inline-flex w-16 items-center justify-center rounded-full px-2 py-1 text-xs font-medium ${
                       employee.employmentStatus === EmploymentStatus.ACTIVE
                         ? 'bg-green-100 text-green-800'
-                        : employee.employmentStatus === EmploymentStatus.INACTIVE
-                        ? 'bg-yellow-100 text-yellow-800'
-                        : 'bg-red-100 text-red-800'
+                        : employee.employmentStatus ===
+                            EmploymentStatus.INACTIVE
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-red-100 text-red-800'
                     }`}
                   >
-                    {employee.employmentStatus === EmploymentStatus.ACTIVE ? '재직' :
-                     employee.employmentStatus === EmploymentStatus.INACTIVE ? '휴직' : '퇴사'}
+                    {employee.employmentStatus === EmploymentStatus.ACTIVE
+                      ? '재직'
+                      : employee.employmentStatus === EmploymentStatus.INACTIVE
+                        ? '휴직'
+                        : '퇴사'}
                   </span>
                 </td>
                 <td>{formatDate(employee.hireDate)}</td>
@@ -184,8 +199,10 @@ function EmployeeList() {
 
       {/* 결과 없음 */}
       {filteredEmployees.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">검색 조건에 맞는 직원이 없습니다.</p>
+        <div className="py-12 text-center">
+          <p className="text-muted-foreground">
+            검색 조건에 맞는 직원이 없습니다.
+          </p>
         </div>
       )}
     </div>
@@ -193,8 +210,3 @@ function EmployeeList() {
 }
 
 export { EmployeeList }
-
-
-
-
-

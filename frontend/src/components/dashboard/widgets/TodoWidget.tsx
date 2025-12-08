@@ -3,21 +3,29 @@
  * 사용자의 할일과 빠른 액션을 관리합니다
  */
 
+import { formatDistanceToNow, format } from 'date-fns'
+import { ko } from 'date-fns/locale'
+import {
+  CheckSquare,
+  Plus,
+  MoreHorizontal,
+  Clock,
+  AlertTriangle,
+  CheckCircle,
+  Circle,
+  Calendar,
+  User,
+  ExternalLink,
+  RefreshCw,
+  Zap,
+  ArrowRight,
+} from 'lucide-react'
 import React, { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { ScrollArea } from '@/components/ui/scroll-area'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import {
   Dialog,
   DialogContent,
@@ -34,25 +42,24 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Input } from '@/components/ui/input'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import {
-  CheckSquare,
-  Plus,
-  MoreHorizontal,
-  Clock,
-  AlertTriangle,
-  CheckCircle,
-  Circle,
-  Calendar,
-  User,
-  ExternalLink,
-  RefreshCw,
-  Zap,
-  ArrowRight
-} from 'lucide-react'
-import { formatDistanceToNow, format } from 'date-fns'
-import { ko } from 'date-fns/locale'
-import type { TodoItem, TodoCreateRequest, QuickAction, Priority, TodoStatus } from '@/types/dashboard'
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Textarea } from '@/components/ui/textarea'
+import type {
+  TodoItem,
+  TodoCreateRequest,
+  QuickAction,
+  Priority,
+  TodoStatus,
+} from '@/types/dashboard'
 
 interface TodoWidgetProps {
   todos: TodoItem[]
@@ -102,18 +109,21 @@ const getStatusIcon = (status: TodoStatus) => {
 /**
  * 할일 아이템 컴포넌트
  */
-const TodoItemComponent = ({ 
-  todo, 
-  onUpdateStatus 
-}: { 
+const TodoItemComponent = ({
+  todo,
+  onUpdateStatus,
+}: {
   todo: TodoItem
   onUpdateStatus?: (todoId: number, status: TodoStatus) => void
 }) => {
   const priorityConfig = getPriorityConfig(todo.priority)
   const PriorityIcon = priorityConfig.icon
-  
-  const isOverdue = todo.dueDate && new Date(todo.dueDate) < new Date() && todo.status !== 'completed'
-  
+
+  const isOverdue =
+    todo.dueDate &&
+    new Date(todo.dueDate) < new Date() &&
+    todo.status !== 'completed'
+
   const handleStatusChange = (checked: boolean) => {
     if (onUpdateStatus) {
       onUpdateStatus(todo.id, checked ? 'completed' : 'pending')
@@ -121,9 +131,11 @@ const TodoItemComponent = ({
   }
 
   return (
-    <div className={`flex items-start space-x-3 p-3 rounded-lg transition-colors hover:bg-gray-50 ${
-      isOverdue ? 'bg-red-50 border-l-4 border-red-500' : ''
-    }`}>
+    <div
+      className={`flex items-start space-x-3 rounded-lg p-3 transition-colors hover:bg-gray-50 ${
+        isOverdue ? 'border-l-4 border-red-500 bg-red-50' : ''
+      }`}
+    >
       <div className="flex-shrink-0 pt-1">
         <Checkbox
           checked={todo.status === 'completed'}
@@ -131,30 +143,34 @@ const TodoItemComponent = ({
           disabled={todo.status === 'cancelled'}
         />
       </div>
-      <div className="flex-1 min-w-0">
+      <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <p className={`text-sm font-medium ${
-              todo.status === 'completed' ? 'line-through text-gray-500' : 'text-gray-900'
-            }`}>
+            <p
+              className={`text-sm font-medium ${
+                todo.status === 'completed'
+                  ? 'text-gray-500 line-through'
+                  : 'text-gray-900'
+              }`}
+            >
               {todo.title}
             </p>
             {todo.description && (
-              <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+              <p className="mt-1 line-clamp-2 text-xs text-gray-500">
                 {todo.description}
               </p>
             )}
           </div>
-          <div className="flex items-center space-x-2 ml-2">
+          <div className="ml-2 flex items-center space-x-2">
             <Badge variant={priorityConfig.color as any} className="text-xs">
-              <PriorityIcon className="h-3 w-3 mr-1" />
+              <PriorityIcon className="mr-1 h-3 w-3" />
               {priorityConfig.text}
             </Badge>
             {getStatusIcon(todo.status)}
           </div>
         </div>
-        
-        <div className="flex items-center justify-between mt-2">
+
+        <div className="mt-2 flex items-center justify-between">
           <div className="flex items-center space-x-2 text-xs text-gray-500">
             <Badge variant="outline" className="text-xs">
               {todo.module}
@@ -166,7 +182,9 @@ const TodoItemComponent = ({
               </div>
             )}
             {todo.dueDate && (
-              <div className={`flex items-center space-x-1 ${isOverdue ? 'text-red-600 font-medium' : ''}`}>
+              <div
+                className={`flex items-center space-x-1 ${isOverdue ? 'font-medium text-red-600' : ''}`}
+              >
                 <Calendar className="h-3 w-3" />
                 <span>
                   {format(new Date(todo.dueDate), 'MM/dd', { locale: ko })}
@@ -176,7 +194,10 @@ const TodoItemComponent = ({
             )}
           </div>
           <span className="text-xs text-gray-400">
-            {formatDistanceToNow(new Date(todo.createdAt), { addSuffix: true, locale: ko })}
+            {formatDistanceToNow(new Date(todo.createdAt), {
+              addSuffix: true,
+              locale: ko,
+            })}
           </span>
         </div>
       </div>
@@ -187,22 +208,22 @@ const TodoItemComponent = ({
 /**
  * 빠른 액션 아이템 컴포넌트
  */
-const QuickActionItem = ({ 
-  action, 
-  onClick 
-}: { 
+const QuickActionItem = ({
+  action,
+  onClick,
+}: {
   action: QuickAction
   onClick?: (action: QuickAction) => void
 }) => {
   return (
     <Button
       variant="ghost"
-      className="w-full justify-start h-auto p-3 hover:bg-gray-50"
+      className="h-auto w-full justify-start p-3 hover:bg-gray-50"
       onClick={() => onClick?.(action)}
     >
-      <div className="flex items-center space-x-3 w-full">
+      <div className="flex w-full items-center space-x-3">
         <div className="flex-shrink-0">
-          <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
             <Zap className="h-4 w-4 text-primary" />
           </div>
         </div>
@@ -219,9 +240,9 @@ const QuickActionItem = ({
 /**
  * 새 할일 생성 다이얼로그
  */
-const CreateTodoDialog = ({ 
-  onCreateTodo 
-}: { 
+const CreateTodoDialog = ({
+  onCreateTodo,
+}: {
   onCreateTodo?: (todo: TodoCreateRequest) => void
 }) => {
   const [open, setOpen] = useState(false)
@@ -230,7 +251,7 @@ const CreateTodoDialog = ({
     description: '',
     priority: 'medium',
     dueDate: '',
-    module: 'system'
+    module: 'system',
   })
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -242,7 +263,7 @@ const CreateTodoDialog = ({
         description: '',
         priority: 'medium',
         dueDate: '',
-        module: 'system'
+        module: 'system',
       })
       setOpen(false)
     }
@@ -259,16 +280,16 @@ const CreateTodoDialog = ({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>새 할일 추가</DialogTitle>
-          <DialogDescription>
-            새로운 할일을 추가합니다.
-          </DialogDescription>
+          <DialogDescription>새로운 할일을 추가합니다.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Input
               placeholder="할일 제목"
               value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              onChange={e =>
+                setFormData({ ...formData, title: e.target.value })
+              }
               required
             />
           </div>
@@ -276,15 +297,19 @@ const CreateTodoDialog = ({
             <Textarea
               placeholder="상세 설명 (선택사항)"
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={e =>
+                setFormData({ ...formData, description: e.target.value })
+              }
               rows={3}
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Select 
-                value={formData.priority} 
-                onValueChange={(value: Priority) => setFormData({ ...formData, priority: value })}
+              <Select
+                value={formData.priority}
+                onValueChange={(value: Priority) =>
+                  setFormData({ ...formData, priority: value })
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="우선순위" />
@@ -301,14 +326,18 @@ const CreateTodoDialog = ({
               <Input
                 type="date"
                 value={formData.dueDate}
-                onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                onChange={e =>
+                  setFormData({ ...formData, dueDate: e.target.value })
+                }
               />
             </div>
           </div>
           <div>
-            <Select 
-              value={formData.module} 
-              onValueChange={(value) => setFormData({ ...formData, module: value })}
+            <Select
+              value={formData.module}
+              onValueChange={value =>
+                setFormData({ ...formData, module: value })
+              }
             >
               <SelectTrigger>
                 <SelectValue placeholder="모듈" />
@@ -323,12 +352,14 @@ const CreateTodoDialog = ({
             </Select>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+            >
               취소
             </Button>
-            <Button type="submit">
-              추가
-            </Button>
+            <Button type="submit">추가</Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -346,16 +377,19 @@ function TodoWidget({
   onCreateTodo,
   onUpdateTodoStatus,
   onQuickActionClick,
-  onViewAll
+  onViewAll,
 }: TodoWidgetProps) {
   const [activeTab, setActiveTab] = useState('todos')
 
-  const pendingTodos = todos.filter(todo => todo.status === 'pending' || todo.status === 'in_progress')
+  const pendingTodos = todos.filter(
+    todo => todo.status === 'pending' || todo.status === 'in_progress',
+  )
   const completedTodos = todos.filter(todo => todo.status === 'completed')
-  const overdueTodos = todos.filter(todo => 
-    todo.dueDate && 
-    new Date(todo.dueDate) < new Date() && 
-    todo.status !== 'completed'
+  const overdueTodos = todos.filter(
+    todo =>
+      todo.dueDate &&
+      new Date(todo.dueDate) < new Date() &&
+      todo.status !== 'completed'
   )
 
   if (loading) {
@@ -367,17 +401,17 @@ function TodoWidget({
               <CheckSquare className="h-5 w-5" />
               <span>할일 & 빠른 액션</span>
             </CardTitle>
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+            <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-primary" />
           </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             {[...Array(4)].map((_, index) => (
               <div key={index} className="flex items-center space-x-3">
-                <div className="w-4 h-4 bg-gray-200 rounded animate-pulse" />
+                <div className="h-4 w-4 animate-pulse rounded bg-gray-200" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-gray-200 rounded animate-pulse" />
-                  <div className="h-3 bg-gray-200 rounded w-2/3 animate-pulse" />
+                  <div className="h-4 animate-pulse rounded bg-gray-200" />
+                  <div className="h-3 w-2/3 animate-pulse rounded bg-gray-200" />
                 </div>
               </div>
             ))}
@@ -402,10 +436,12 @@ function TodoWidget({
           </div>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8">
-            <p className="text-red-500 mb-4">데이터 로딩 중 오류가 발생했습니다</p>
+          <div className="py-8 text-center">
+            <p className="mb-4 text-red-500">
+              데이터 로딩 중 오류가 발생했습니다
+            </p>
             <Button variant="outline" onClick={onRefresh}>
-              <RefreshCw className="h-4 w-4 mr-2" />
+              <RefreshCw className="mr-2 h-4 w-4" />
               다시 시도
             </Button>
           </div>
@@ -428,9 +464,7 @@ function TodoWidget({
             )}
           </CardTitle>
           <div className="flex items-center space-x-2">
-            {onCreateTodo && (
-              <CreateTodoDialog onCreateTodo={onCreateTodo} />
-            )}
+            {onCreateTodo && <CreateTodoDialog onCreateTodo={onCreateTodo} />}
             {onRefresh && (
               <Button variant="ghost" size="sm" onClick={onRefresh}>
                 <RefreshCw className="h-4 w-4" />
@@ -447,30 +481,33 @@ function TodoWidget({
                   모든 할일 보기
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  완료된 할일 숨기기
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  우선순위 정렬
-                </DropdownMenuItem>
+                <DropdownMenuItem>완료된 할일 숨기기</DropdownMenuItem>
+                <DropdownMenuItem>우선순위 정렬</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="space-y-4"
+        >
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="todos" className="flex items-center space-x-2">
               <CheckSquare className="h-4 w-4" />
               <span>할일</span>
               {pendingTodos.length > 0 && (
-                <Badge variant="secondary" className="text-xs ml-1">
+                <Badge variant="secondary" className="ml-1 text-xs">
                   {pendingTodos.length}
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="actions" className="flex items-center space-x-2">
+            <TabsTrigger
+              value="actions"
+              className="flex items-center space-x-2"
+            >
               <Zap className="h-4 w-4" />
               <span>빠른 액션</span>
             </TabsTrigger>
@@ -478,17 +515,23 @@ function TodoWidget({
 
           <TabsContent value="todos" className="space-y-2">
             {/* 진행 상황 요약 */}
-            <div className="grid grid-cols-3 gap-4 p-3 bg-gray-50 rounded-lg">
+            <div className="grid grid-cols-3 gap-4 rounded-lg bg-gray-50 p-3">
               <div className="text-center">
-                <p className="text-lg font-semibold text-gray-900">{pendingTodos.length}</p>
+                <p className="text-lg font-semibold text-gray-900">
+                  {pendingTodos.length}
+                </p>
                 <p className="text-xs text-gray-500">진행중</p>
               </div>
               <div className="text-center">
-                <p className="text-lg font-semibold text-green-600">{completedTodos.length}</p>
+                <p className="text-lg font-semibold text-green-600">
+                  {completedTodos.length}
+                </p>
                 <p className="text-xs text-gray-500">완료</p>
               </div>
               <div className="text-center">
-                <p className="text-lg font-semibold text-red-600">{overdueTodos.length}</p>
+                <p className="text-lg font-semibold text-red-600">
+                  {overdueTodos.length}
+                </p>
                 <p className="text-xs text-gray-500">지연</p>
               </div>
             </div>
@@ -497,10 +540,10 @@ function TodoWidget({
               {todos.length > 0 ? (
                 <div className="space-y-2">
                   {/* 지연된 할일 먼저 표시 */}
-                  {overdueTodos.map((todo) => (
-                    <TodoItemComponent 
-                      key={`overdue-${todo.id}`} 
-                      todo={todo} 
+                  {overdueTodos.map(todo => (
+                    <TodoItemComponent
+                      key={`overdue-${todo.id}`}
+                      todo={todo}
                       onUpdateStatus={onUpdateTodoStatus}
                     />
                   ))}
@@ -508,21 +551,28 @@ function TodoWidget({
                   {todos
                     .filter(todo => !overdueTodos.includes(todo))
                     .sort((a, b) => {
-                      const priorityOrder = { critical: 4, high: 3, medium: 2, low: 1 }
-                      return priorityOrder[b.priority] - priorityOrder[a.priority]
+                      const priorityOrder = {
+                        critical: 4,
+                        high: 3,
+                        medium: 2,
+                        low: 1,
+                      }
+                      return (
+                        priorityOrder[b.priority] - priorityOrder[a.priority]
+                      )
                     })
-                    .map((todo) => (
-                      <TodoItemComponent 
-                        key={todo.id} 
-                        todo={todo} 
+                    .map(todo => (
+                      <TodoItemComponent
+                        key={todo.id}
+                        todo={todo}
                         onUpdateStatus={onUpdateTodoStatus}
                       />
                     ))}
                 </div>
               ) : (
-                <div className="flex items-center justify-center h-32 text-gray-500">
+                <div className="flex h-32 items-center justify-center text-gray-500">
                   <div className="text-center">
-                    <CheckSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <CheckSquare className="mx-auto mb-2 h-8 w-8 opacity-50" />
                     <p>할일이 없습니다</p>
                   </div>
                 </div>
@@ -537,18 +587,18 @@ function TodoWidget({
                   {quickActions
                     .filter(action => action.isEnabled)
                     .sort((a, b) => a.sortOrder - b.sortOrder)
-                    .map((action) => (
-                      <QuickActionItem 
-                        key={action.id} 
-                        action={action} 
+                    .map(action => (
+                      <QuickActionItem
+                        key={action.id}
+                        action={action}
                         onClick={onQuickActionClick}
                       />
                     ))}
                 </div>
               ) : (
-                <div className="flex items-center justify-center h-32 text-gray-500">
+                <div className="flex h-32 items-center justify-center text-gray-500">
                   <div className="text-center">
-                    <Zap className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <Zap className="mx-auto mb-2 h-8 w-8 opacity-50" />
                     <p>사용 가능한 빠른 액션이 없습니다</p>
                   </div>
                 </div>
@@ -562,7 +612,3 @@ function TodoWidget({
 }
 
 export { TodoWidget }
-
-
-
-

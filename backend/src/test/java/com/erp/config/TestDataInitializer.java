@@ -9,6 +9,7 @@ import com.erp.hr.repository.DepartmentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,9 +20,11 @@ import java.time.LocalDateTime;
 /**
  * 테스트용 데이터 초기화
  * 테스트 환경에서 admin/admin123과 user/user123 계정을 생성합니다
+ * 주의: 이 Initializer는 비활성화되어 있습니다. 실제 DB를 사용하므로 데이터는 수동으로 관리됩니다.
  */
 @Slf4j
 @Component
+@Profile("!test")  // test 프로파일에서는 실행하지 않음 (실제 DB 사용)
 @RequiredArgsConstructor
 public class TestDataInitializer implements CommandLineRunner {
 

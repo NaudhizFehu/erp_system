@@ -119,10 +119,10 @@ export interface Position {
  */
 export enum PositionCategory {
   EXECUTIVE = 'EXECUTIVE',
-  MANAGEMENT = 'MANAGEMENT', 
+  MANAGEMENT = 'MANAGEMENT',
   SENIOR = 'SENIOR',
   JUNIOR = 'JUNIOR',
-  INTERN = 'INTERN'
+  INTERN = 'INTERN',
 }
 
 /**
@@ -132,7 +132,7 @@ export enum PositionType {
   PERMANENT = 'PERMANENT',
   CONTRACT = 'CONTRACT',
   TEMPORARY = 'TEMPORARY',
-  CONSULTANT = 'CONSULTANT'
+  CONSULTANT = 'CONSULTANT',
 }
 
 /**
@@ -182,7 +182,7 @@ export interface Employee {
  */
 export enum Gender {
   MALE = 'MALE',
-  FEMALE = 'FEMALE'
+  FEMALE = 'FEMALE',
 }
 
 /**
@@ -190,10 +190,10 @@ export enum Gender {
  */
 export enum EmploymentStatus {
   ACTIVE = 'ACTIVE',
-  ON_LEAVE = 'ON_LEAVE',      // 추가
+  ON_LEAVE = 'ON_LEAVE', // 추가
   INACTIVE = 'INACTIVE',
   SUSPENDED = 'SUSPENDED',
-  TERMINATED = 'TERMINATED'
+  TERMINATED = 'TERMINATED',
 }
 
 /**
@@ -204,7 +204,7 @@ export enum EmploymentType {
   PART_TIME = 'PART_TIME',
   TEMPORARY = 'TEMPORARY',
   INTERN = 'INTERN',
-  FREELANCER = 'FREELANCER'
+  FREELANCER = 'FREELANCER',
 }
 
 /**
@@ -253,7 +253,7 @@ export enum AttendanceStatus {
   PERSONAL_LEAVE = 'PERSONAL_LEAVE',
   BUSINESS_TRIP = 'BUSINESS_TRIP',
   EDUCATION = 'EDUCATION',
-  HOLIDAY = 'HOLIDAY'
+  HOLIDAY = 'HOLIDAY',
 }
 
 /**
@@ -264,7 +264,7 @@ export enum WorkType {
   REMOTE = 'REMOTE',
   HYBRID = 'HYBRID',
   FIELD = 'FIELD',
-  BUSINESS_TRIP = 'BUSINESS_TRIP'
+  BUSINESS_TRIP = 'BUSINESS_TRIP',
 }
 
 /**
@@ -273,7 +273,7 @@ export enum WorkType {
 export enum ApprovalStatus {
   PENDING = 'PENDING',
   APPROVED = 'APPROVED',
-  REJECTED = 'REJECTED'
+  REJECTED = 'REJECTED',
 }
 
 /**
@@ -332,7 +332,7 @@ export enum PaymentStatus {
   CALCULATED = 'CALCULATED',
   APPROVED = 'APPROVED',
   PAID = 'PAID',
-  CANCELLED = 'CANCELLED'
+  CANCELLED = 'CANCELLED',
 }
 
 /**
@@ -343,7 +343,7 @@ export enum SalaryType {
   HOURLY = 'HOURLY',
   DAILY = 'DAILY',
   BONUS = 'BONUS',
-  SEVERANCE = 'SEVERANCE'
+  SEVERANCE = 'SEVERANCE',
 }
 
 /**
@@ -532,32 +532,32 @@ export const KOREAN_LABELS = {
   // 성별
   [Gender.MALE]: '남성',
   [Gender.FEMALE]: '여성',
-  
+
   // 근무 상태
   [EmploymentStatus.ACTIVE]: '재직',
-  [EmploymentStatus.ON_LEAVE]: '휴가',       // 추가
+  [EmploymentStatus.ON_LEAVE]: '휴가', // 추가
   [EmploymentStatus.INACTIVE]: '휴직',
   [EmploymentStatus.SUSPENDED]: '정직',
   [EmploymentStatus.TERMINATED]: '퇴직',
-  
+
   // 고용 형태
   [EmploymentType.FULL_TIME]: '정규직',
   [EmploymentType.PART_TIME]: '계약직',
   [EmploymentType.TEMPORARY]: '임시직',
   [EmploymentType.INTERN]: '인턴',
   [EmploymentType.FREELANCER]: '프리랜서',
-  
+
   // 직급 분류
   [PositionCategory.EXECUTIVE]: '임원',
   [PositionCategory.MANAGEMENT]: '관리직',
   [PositionCategory.SENIOR]: '선임',
   [PositionCategory.JUNIOR]: '주니어',
-  
+
   // 직급 유형
   [PositionType.PERMANENT]: '정규직',
   [PositionType.CONTRACT]: '계약직',
   [PositionType.CONSULTANT]: '컨설턴트',
-  
+
   // 근태 상태
   [AttendanceStatus.PRESENT]: '출근',
   [AttendanceStatus.ABSENT]: '결근',
@@ -570,25 +570,25 @@ export const KOREAN_LABELS = {
   [AttendanceStatus.BUSINESS_TRIP]: '출장',
   [AttendanceStatus.EDUCATION]: '교육',
   [AttendanceStatus.HOLIDAY]: '휴일',
-  
+
   // 근무 유형
   [WorkType.OFFICE]: '사무실 근무',
   [WorkType.REMOTE]: '재택근무',
-  
+
   // 승인 상태
-  
+
   // 지급 상태
   [PaymentStatus.PENDING]: '지급대기',
   [PaymentStatus.CALCULATED]: '계산완료',
   [PaymentStatus.PAID]: '지급완료',
   [PaymentStatus.CANCELLED]: '취소',
-  
+
   // 급여 유형
   [SalaryType.MONTHLY]: '월급',
   [SalaryType.HOURLY]: '시급',
   [SalaryType.DAILY]: '일급',
   [SalaryType.BONUS]: '상여금',
-  [SalaryType.SEVERANCE]: '퇴직금'
+  [SalaryType.SEVERANCE]: '퇴직금',
 } as const
 
 // EmployeeStatus 별칭 추가
