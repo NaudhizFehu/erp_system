@@ -3,23 +3,24 @@
  * 모든 권한(SUPER_ADMIN, ADMIN, MANAGER, USER)이 본인의 직원 정보를 조회할 수 있습니다
  */
 
+import { Loader2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
+
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuth } from '@/contexts/AuthContext'
 import { useEmployee } from '@/hooks/useEmployees'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Loader2 } from 'lucide-react'
-import toast from 'react-hot-toast'
 
 export function MyEmployeeProfile() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const [employeeId, setEmployeeId] = useState<number | null>(null)
-  
+
   // TODO: User 엔티티에 employeeId 필드가 추가되면 이것을 사용
   // 현재는 user?.employeeId가 null이므로 임시로 처리
-  
+
   const { data: employee, isLoading, error } = useEmployee(employeeId || 0)
 
   useEffect(() => {
@@ -37,7 +38,7 @@ export function MyEmployeeProfile() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex min-h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     )
@@ -51,12 +52,10 @@ export function MyEmployeeProfile() {
             <CardTitle>직원 정보를 찾을 수 없습니다</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground mb-4">
+            <p className="mb-4 text-muted-foreground">
               등록된 직원 정보가 없습니다. 관리자에게 문의하세요.
             </p>
-            <Button onClick={() => navigate('/')}>
-              홈으로 돌아가기
-            </Button>
+            <Button onClick={() => navigate('/')}>홈으로 돌아가기</Button>
           </CardContent>
         </Card>
       </div>
@@ -66,7 +65,7 @@ export function MyEmployeeProfile() {
   return (
     <div className="space-y-6">
       {/* 헤더 */}
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">내 정보</h1>
           <p className="text-muted-foreground">
@@ -84,7 +83,7 @@ export function MyEmployeeProfile() {
           <CardTitle>기본 정보</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
               <p className="text-sm text-muted-foreground">사번</p>
               <p className="text-lg font-medium">{employee.employeeNumber}</p>
@@ -104,13 +103,17 @@ export function MyEmployeeProfile() {
             {employee.birthDate && (
               <div>
                 <p className="text-sm text-muted-foreground">생년월일</p>
-                <p className="text-lg">{new Date(employee.birthDate).toLocaleDateString('ko-KR')}</p>
+                <p className="text-lg">
+                  {new Date(employee.birthDate).toLocaleDateString('ko-KR')}
+                </p>
               </div>
             )}
             {employee.gender && (
               <div>
                 <p className="text-sm text-muted-foreground">성별</p>
-                <p className="text-lg">{employee.gender === 'MALE' ? '남성' : '여성'}</p>
+                <p className="text-lg">
+                  {employee.gender === 'MALE' ? '남성' : '여성'}
+                </p>
               </div>
             )}
           </div>
@@ -123,7 +126,7 @@ export function MyEmployeeProfile() {
           <CardTitle>소속 정보</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
               <p className="text-sm text-muted-foreground">회사</p>
               <p className="text-lg font-medium">{employee.company.name}</p>
@@ -138,11 +141,15 @@ export function MyEmployeeProfile() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">입사일</p>
-              <p className="text-lg">{new Date(employee.hireDate).toLocaleDateString('ko-KR')}</p>
+              <p className="text-lg">
+                {new Date(employee.hireDate).toLocaleDateString('ko-KR')}
+              </p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">재직 상태</p>
-              <p className="text-lg">{employee.employmentStatus === 'ACTIVE' ? '재직' : '퇴직'}</p>
+              <p className="text-lg">
+                {employee.employmentStatus === 'ACTIVE' ? '재직' : '퇴직'}
+              </p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">근속년수</p>
@@ -159,7 +166,7 @@ export function MyEmployeeProfile() {
             <CardTitle>계좌 정보</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
                 <p className="text-sm text-muted-foreground">은행</p>
                 <p className="text-lg">{employee.bankName || '-'}</p>
@@ -184,7 +191,7 @@ export function MyEmployeeProfile() {
             <CardTitle>비고</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm whitespace-pre-wrap">{employee.memo}</p>
+            <p className="whitespace-pre-wrap text-sm">{employee.memo}</p>
           </CardContent>
         </Card>
       )}

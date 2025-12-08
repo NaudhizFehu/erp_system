@@ -1,11 +1,12 @@
-import { useNavigate, useParams } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
 import { Save, ArrowLeft } from 'lucide-react'
-import { EmployeeCreateDto } from '@/types/hr'
-import { departmentApi, positionApi } from '@/services/hrApi'
 import { useState, useEffect } from 'react'
+import { useForm } from 'react-hook-form'
+import { useNavigate, useParams } from 'react-router-dom'
+import { z } from 'zod'
+
+import { departmentApi, positionApi } from '@/services/hrApi'
+import { EmployeeCreateDto } from '@/types/hr'
 
 /**
  * 직원 등록/수정 폼 검증 스키마
@@ -31,9 +32,11 @@ function EmployeeForm() {
   const navigate = useNavigate()
   const { id } = useParams()
   const isEdit = Boolean(id)
-  
+
   // 부서/직급 데이터 상태
-  const [departments, setDepartments] = useState<{ id: number; name: string }[]>([])
+  const [departments, setDepartments] = useState<
+    { id: number; name: string }[]
+  >([])
   const [positions, setPositions] = useState<{ id: number; name: string }[]>([])
   const [loadingDepartments, setLoadingDepartments] = useState(true)
   const [loadingPositions, setLoadingPositions] = useState(true)
@@ -98,7 +101,7 @@ function EmployeeForm() {
       // } else {
       //   await createEmployee(data)
       // }
-      
+
       navigate('/hr/employees')
     } catch (error) {
       console.error('직원 저장 실패:', error)
@@ -130,7 +133,7 @@ function EmployeeForm() {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* 기본 정보 */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">기본 정보</h3>
+            <h3 className="mb-4 text-lg font-semibold">기본 정보</h3>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="form-group">
                 <label className="form-label">직원번호 *</label>
@@ -212,7 +215,7 @@ function EmployeeForm() {
 
           {/* 조직 정보 */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">조직 정보</h3>
+            <h3 className="mb-4 text-lg font-semibold">조직 정보</h3>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="form-group">
                 <label className="form-label">부서</label>
@@ -222,14 +225,16 @@ function EmployeeForm() {
                   disabled={loadingDepartments}
                 >
                   <option value="">부서 선택</option>
-                  {departments.map((dept) => (
+                  {departments.map(dept => (
                     <option key={dept.id} value={dept.id}>
                       {dept.name}
                     </option>
                   ))}
                 </select>
                 {loadingDepartments && (
-                  <p className="text-sm text-muted-foreground mt-1">부서 목록을 불러오는 중...</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    부서 목록을 불러오는 중...
+                  </p>
                 )}
               </div>
 
@@ -241,23 +246,24 @@ function EmployeeForm() {
                   disabled={loadingPositions}
                 >
                   <option value="">직급 선택</option>
-                  {positions.map((pos) => (
+                  {positions.map(pos => (
                     <option key={pos.id} value={pos.id}>
                       {pos.name}
                     </option>
                   ))}
                 </select>
                 {loadingPositions && (
-                  <p className="text-sm text-muted-foreground mt-1">직급 목록을 불러오는 중...</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    직급 목록을 불러오는 중...
+                  </p>
                 )}
               </div>
-
             </div>
           </div>
 
           {/* 추가 정보 */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">추가 정보</h3>
+            <h3 className="mb-4 text-lg font-semibold">추가 정보</h3>
             <div className="form-group">
               <label className="form-label">주소</label>
               <textarea
@@ -269,7 +275,7 @@ function EmployeeForm() {
           </div>
 
           {/* 액션 버튼 */}
-          <div className="flex justify-end space-x-4 pt-6 border-t">
+          <div className="flex justify-end space-x-4 border-t pt-6">
             <button
               type="button"
               onClick={() => navigate('/hr/employees')}
@@ -293,8 +299,3 @@ function EmployeeForm() {
 }
 
 export { EmployeeForm }
-
-
-
-
-

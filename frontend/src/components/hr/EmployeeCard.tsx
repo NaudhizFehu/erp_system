@@ -3,30 +3,31 @@
  * 직원 정보를 카드 형태로 표시합니다
  */
 
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
-import { 
-  Phone, 
-  Mail, 
-  MapPin, 
+import {
+  Phone,
+  Mail,
+  MapPin,
   Calendar,
   User,
   Building,
   Users,
   Award,
-  MoreHorizontal
+  MoreHorizontal,
 } from 'lucide-react'
+
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { hrUtils } from '@/services/hrApi'
 import type { Employee } from '@/types/hr'
 import { KOREAN_LABELS } from '@/types/hr'
-import { hrUtils } from '@/services/hrApi'
 
 interface EmployeeCardProps {
   employee: Employee
@@ -48,21 +49,21 @@ export function EmployeeCard({
   onDelete,
   onTerminate,
   showActions = true,
-  className = ''
+  className = '',
 }: EmployeeCardProps) {
   // 상태에 따른 뱃지 색상 결정
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
       case 'ACTIVE':
-        return 'default'          // 재직 - 파랑
+        return 'default' // 재직 - 파랑
       case 'ON_LEAVE':
-        return 'secondary'        // 휴가 - 회색
+        return 'secondary' // 휴가 - 회색
       case 'INACTIVE':
-        return 'purple'           // 휴직 - 연보라색
+        return 'purple' // 휴직 - 연보라색
       case 'SUSPENDED':
-        return 'black'            // 정직 - 검은색
+        return 'black' // 정직 - 검은색
       case 'TERMINATED':
-        return 'destructive'      // 퇴직 - 빨강
+        return 'destructive' // 퇴직 - 빨강
       default:
         return 'secondary'
     }
@@ -74,23 +75,20 @@ export function EmployeeCard({
   }
 
   return (
-    <Card className={`hover:shadow-md transition-shadow ${className}`}>
+    <Card className={`transition-shadow hover:shadow-md ${className}`}>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             {/* 프로필 이미지 또는 아바타 */}
             <Avatar className="h-12 w-12">
-              <AvatarImage 
-                src={employee.profileImageUrl} 
-                alt={employee.name}
-              />
+              <AvatarImage src={employee.profileImageUrl} alt={employee.name} />
               <AvatarFallback className="bg-primary text-primary-foreground">
                 {getInitials(employee.name)}
               </AvatarFallback>
             </Avatar>
-            
+
             <div>
-              <h3 className="font-semibold text-lg">{employee.name}</h3>
+              <h3 className="text-lg font-semibold">{employee.name}</h3>
               <p className="text-sm text-muted-foreground">
                 {employee.employeeNumber}
               </p>
@@ -119,7 +117,7 @@ export function EmployeeCard({
                   </DropdownMenuItem>
                 )}
                 {onTerminate && employee.employmentStatus === 'ACTIVE' && (
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     onClick={() => onTerminate(employee)}
                     className="text-orange-600"
                   >
@@ -128,7 +126,7 @@ export function EmployeeCard({
                   </DropdownMenuItem>
                 )}
                 {onDelete && (
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     onClick={() => onDelete(employee)}
                     className="text-destructive"
                   >
@@ -143,16 +141,16 @@ export function EmployeeCard({
 
         {/* 상태 뱃지 */}
         <div className="flex flex-col gap-1">
-          <Badge 
+          <Badge
             variant={getStatusBadgeVariant(employee.employmentStatus)}
-            className="w-16 text-xs px-2 py-1 flex items-center justify-center"
+            className="flex w-16 items-center justify-center px-2 py-1 text-xs"
           >
             {KOREAN_LABELS[employee.employmentStatus]}
           </Badge>
           {employee.employmentType && (
-            <Badge 
-              variant="outline" 
-              className="w-16 text-xs px-2 py-1 flex items-center justify-center"
+            <Badge
+              variant="outline"
+              className="flex w-16 items-center justify-center px-2 py-1 text-xs"
             >
               {KOREAN_LABELS[employee.employmentType]}
             </Badge>
@@ -200,8 +198,8 @@ export function EmployeeCard({
           <div className="flex items-center space-x-2">
             <Calendar className="h-4 w-4 text-muted-foreground" />
             <span>
-              {hrUtils.formatDate(employee.hireDate)} 
-              <span className="text-muted-foreground ml-1">
+              {hrUtils.formatDate(employee.hireDate)}
+              <span className="ml-1 text-muted-foreground">
                 (근속 {employee.yearsOfService}년)
               </span>
             </span>
@@ -210,8 +208,8 @@ export function EmployeeCard({
           {/* 주소 */}
           {employee.address && (
             <div className="flex items-start space-x-2">
-              <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
-              <span className="text-xs text-muted-foreground leading-relaxed">
+              <MapPin className="mt-0.5 h-4 w-4 text-muted-foreground" />
+              <span className="text-xs leading-relaxed text-muted-foreground">
                 {employee.address}
                 {employee.addressDetail && ` ${employee.addressDetail}`}
               </span>
@@ -221,14 +219,19 @@ export function EmployeeCard({
 
         {/* 기술 스택 */}
         {employee.skills && (
-          <div className="pt-2 border-t">
-            <p className="text-xs font-medium text-muted-foreground mb-2">기술 스택</p>
+          <div className="border-t pt-2">
+            <p className="mb-2 text-xs font-medium text-muted-foreground">
+              기술 스택
+            </p>
             <div className="flex flex-wrap gap-1">
-              {employee.skills.split(',').slice(0, 3).map((skill, index) => (
-                <Badge key={index} variant="secondary" className="text-xs">
-                  {skill.trim()}
-                </Badge>
-              ))}
+              {employee.skills
+                .split(',')
+                .slice(0, 3)
+                .map((skill, index) => (
+                  <Badge key={index} variant="secondary" className="text-xs">
+                    {skill.trim()}
+                  </Badge>
+                ))}
               {employee.skills.split(',').length > 3 && (
                 <Badge variant="outline" className="text-xs">
                   +{employee.skills.split(',').length - 3}
@@ -240,8 +243,10 @@ export function EmployeeCard({
 
         {/* 급여 정보 (관리자만 표시) */}
         {employee.baseSalary && (
-          <div className="pt-2 border-t">
-            <p className="text-xs font-medium text-muted-foreground mb-1">기본급</p>
+          <div className="border-t pt-2">
+            <p className="mb-1 text-xs font-medium text-muted-foreground">
+              기본급
+            </p>
             <p className="text-sm font-semibold">
               {hrUtils.formatCurrency(employee.baseSalary)}
             </p>
@@ -251,4 +256,3 @@ export function EmployeeCard({
     </Card>
   )
 }
-

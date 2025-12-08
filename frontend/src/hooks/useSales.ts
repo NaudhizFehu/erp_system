@@ -5,6 +5,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
+
 import { customerApi, orderApi } from '@/services/salesApi'
 import type {
   Customer,
@@ -19,7 +20,7 @@ import type {
   OrderSearchParams,
   OrderStats,
   PaginationParams,
-  PageResponse
+  PageResponse,
 } from '@/types/sales'
 
 // ================================
@@ -33,7 +34,7 @@ export const useCustomer = (customerId: number) => {
   return useQuery({
     queryKey: ['customer', customerId],
     queryFn: () => customerApi.getById(customerId),
-    enabled: !!customerId
+    enabled: !!customerId,
   })
 }
 
@@ -44,7 +45,7 @@ export const useCustomers = (companyId: number, params?: PaginationParams) => {
   return useQuery({
     queryKey: ['customers', companyId, params],
     queryFn: () => customerApi.getByCompany(companyId, params),
-    enabled: !!companyId
+    enabled: !!companyId,
   })
 }
 
@@ -59,7 +60,7 @@ export const useCustomerSearch = (
   return useQuery({
     queryKey: ['customers', 'search', companyId, searchTerm, params],
     queryFn: () => customerApi.search(companyId, searchTerm, params),
-    enabled: !!companyId && !!searchTerm
+    enabled: !!companyId && !!searchTerm,
   })
 }
 
@@ -74,7 +75,7 @@ export const useCustomerAdvancedSearch = (
   return useQuery({
     queryKey: ['customers', 'advancedSearch', companyId, searchParams, params],
     queryFn: () => customerApi.searchAdvanced(companyId, searchParams, params),
-    enabled: !!companyId
+    enabled: !!companyId,
   })
 }
 
@@ -85,7 +86,7 @@ export const useVipCustomers = (companyId: number) => {
   return useQuery({
     queryKey: ['customers', 'vip', companyId],
     queryFn: () => customerApi.getVipCustomers(companyId),
-    enabled: !!companyId
+    enabled: !!companyId,
   })
 }
 
@@ -96,7 +97,7 @@ export const useCustomerStats = (companyId: number) => {
   return useQuery({
     queryKey: ['customers', 'stats', companyId],
     queryFn: () => customerApi.getStatistics(companyId),
-    enabled: !!companyId
+    enabled: !!companyId,
   })
 }
 
@@ -108,13 +109,15 @@ export const useCreateCustomer = () => {
 
   return useMutation({
     mutationFn: (data: CustomerCreateRequest) => customerApi.create(data),
-    onSuccess: (data) => {
+    onSuccess: data => {
       queryClient.invalidateQueries({ queryKey: ['customers'] })
       toast.success('고객이 성공적으로 생성되었습니다')
     },
     onError: (error: any) => {
-      toast.error(`고객 생성 실패: ${error.response?.data?.message || error.message}`)
-    }
+      toast.error(
+        `고객 생성 실패: ${error.response?.data?.message || error.message}`,
+      )
+    },
   })
 }
 
@@ -125,16 +128,23 @@ export const useUpdateCustomer = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ customerId, data }: { customerId: number; data: CustomerUpdateRequest }) =>
-      customerApi.update(customerId, data),
-    onSuccess: (data) => {
+    mutationFn: ({
+      customerId,
+      data,
+    }: {
+      customerId: number
+      data: CustomerUpdateRequest
+    }) => customerApi.update(customerId, data),
+    onSuccess: data => {
       queryClient.invalidateQueries({ queryKey: ['customers'] })
       queryClient.invalidateQueries({ queryKey: ['customer', data.id] })
       toast.success('고객 정보가 성공적으로 수정되었습니다')
     },
     onError: (error: any) => {
-      toast.error(`고객 수정 실패: ${error.response?.data?.message || error.message}`)
-    }
+      toast.error(
+        `고객 수정 실패: ${error.response?.data?.message || error.message}`,
+      )
+    },
   })
 }
 
@@ -151,8 +161,10 @@ export const useDeleteCustomer = () => {
       toast.success('고객이 성공적으로 삭제되었습니다')
     },
     onError: (error: any) => {
-      toast.error(`고객 삭제 실패: ${error.response?.data?.message || error.message}`)
-    }
+      toast.error(
+        `고객 삭제 실패: ${error.response?.data?.message || error.message}`,
+      )
+    },
   })
 }
 
@@ -163,18 +175,23 @@ export const useChangeCustomerStatus = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ customerId, data }: {
+    mutationFn: ({
+      customerId,
+      data,
+    }: {
       customerId: number
       data: { customerStatus: string; reason?: string }
     }) => customerApi.changeStatus(customerId, data),
-    onSuccess: (data) => {
+    onSuccess: data => {
       queryClient.invalidateQueries({ queryKey: ['customers'] })
       queryClient.invalidateQueries({ queryKey: ['customer', data.id] })
       toast.success('고객 상태가 성공적으로 변경되었습니다')
     },
     onError: (error: any) => {
-      toast.error(`고객 상태 변경 실패: ${error.response?.data?.message || error.message}`)
-    }
+      toast.error(
+        `고객 상태 변경 실패: ${error.response?.data?.message || error.message}`,
+      )
+    },
   })
 }
 
@@ -185,18 +202,23 @@ export const useChangeCustomerGrade = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ customerId, data }: {
+    mutationFn: ({
+      customerId,
+      data,
+    }: {
       customerId: number
       data: { customerGrade: string; reason?: string }
     }) => customerApi.changeGrade(customerId, data),
-    onSuccess: (data) => {
+    onSuccess: data => {
       queryClient.invalidateQueries({ queryKey: ['customers'] })
       queryClient.invalidateQueries({ queryKey: ['customer', data.id] })
       toast.success('고객 등급이 성공적으로 변경되었습니다')
     },
     onError: (error: any) => {
-      toast.error(`고객 등급 변경 실패: ${error.response?.data?.message || error.message}`)
-    }
+      toast.error(
+        `고객 등급 변경 실패: ${error.response?.data?.message || error.message}`,
+      )
+    },
   })
 }
 
@@ -208,14 +230,16 @@ export const useToggleCustomerActive = () => {
 
   return useMutation({
     mutationFn: (customerId: number) => customerApi.toggleActive(customerId),
-    onSuccess: (data) => {
+    onSuccess: data => {
       queryClient.invalidateQueries({ queryKey: ['customers'] })
       queryClient.invalidateQueries({ queryKey: ['customer', data.id] })
       toast.success('고객 활성화 상태가 성공적으로 변경되었습니다')
     },
     onError: (error: any) => {
-      toast.error(`고객 활성화 상태 변경 실패: ${error.response?.data?.message || error.message}`)
-    }
+      toast.error(
+        `고객 활성화 상태 변경 실패: ${error.response?.data?.message || error.message}`,
+      )
+    },
   })
 }
 
@@ -230,7 +254,7 @@ export const useOrder = (orderId: number) => {
   return useQuery({
     queryKey: ['order', orderId],
     queryFn: () => orderApi.getById(orderId),
-    enabled: !!orderId
+    enabled: !!orderId,
   })
 }
 
@@ -241,18 +265,21 @@ export const useOrders = (companyId: number, params?: PaginationParams) => {
   return useQuery({
     queryKey: ['orders', companyId, params],
     queryFn: () => orderApi.getByCompany(companyId, params),
-    enabled: !!companyId
+    enabled: !!companyId,
   })
 }
 
 /**
  * 고객별 주문 조회
  */
-export const useCustomerOrders = (customerId: number, params?: PaginationParams) => {
+export const useCustomerOrders = (
+  customerId: number,
+  params?: PaginationParams,
+) => {
   return useQuery({
     queryKey: ['orders', 'customer', customerId, params],
     queryFn: () => orderApi.getByCustomer(customerId, params),
-    enabled: !!customerId
+    enabled: !!customerId,
   })
 }
 
@@ -267,7 +294,7 @@ export const useOrderSearch = (
   return useQuery({
     queryKey: ['orders', 'search', companyId, searchTerm, params],
     queryFn: () => orderApi.search(companyId, searchTerm, params),
-    enabled: !!companyId && !!searchTerm
+    enabled: !!companyId && !!searchTerm,
   })
 }
 
@@ -282,7 +309,7 @@ export const useOrderAdvancedSearch = (
   return useQuery({
     queryKey: ['orders', 'advancedSearch', companyId, searchParams, params],
     queryFn: () => orderApi.searchAdvanced(companyId, searchParams, params),
-    enabled: !!companyId
+    enabled: !!companyId,
   })
 }
 
@@ -293,7 +320,7 @@ export const useTodayOrders = (companyId: number) => {
   return useQuery({
     queryKey: ['orders', 'today', companyId],
     queryFn: () => orderApi.getTodayOrders(companyId),
-    enabled: !!companyId
+    enabled: !!companyId,
   })
 }
 
@@ -304,7 +331,7 @@ export const useUrgentOrders = (companyId: number) => {
   return useQuery({
     queryKey: ['orders', 'urgent', companyId],
     queryFn: () => orderApi.getUrgentOrders(companyId),
-    enabled: !!companyId
+    enabled: !!companyId,
   })
 }
 
@@ -315,7 +342,7 @@ export const useOrderStats = (companyId: number) => {
   return useQuery({
     queryKey: ['orders', 'stats', companyId],
     queryFn: () => orderApi.getStatistics(companyId),
-    enabled: !!companyId
+    enabled: !!companyId,
   })
 }
 
@@ -327,14 +354,16 @@ export const useCreateOrder = () => {
 
   return useMutation({
     mutationFn: (data: OrderCreateRequest) => orderApi.create(data),
-    onSuccess: (data) => {
+    onSuccess: data => {
       queryClient.invalidateQueries({ queryKey: ['orders'] })
       queryClient.invalidateQueries({ queryKey: ['customers'] }) // 고객 통계 업데이트를 위해
       toast.success('주문이 성공적으로 생성되었습니다')
     },
     onError: (error: any) => {
-      toast.error(`주문 생성 실패: ${error.response?.data?.message || error.message}`)
-    }
+      toast.error(
+        `주문 생성 실패: ${error.response?.data?.message || error.message}`,
+      )
+    },
   })
 }
 
@@ -355,15 +384,17 @@ export const useCreateOrderFromQuote = () => {
       specialInstructions?: string
       remarks?: string
     }) => orderApi.createFromQuote(data),
-    onSuccess: (data) => {
+    onSuccess: data => {
       queryClient.invalidateQueries({ queryKey: ['orders'] })
       queryClient.invalidateQueries({ queryKey: ['quotes'] })
       queryClient.invalidateQueries({ queryKey: ['customers'] })
       toast.success('견적서에서 주문이 성공적으로 생성되었습니다')
     },
     onError: (error: any) => {
-      toast.error(`주문 생성 실패: ${error.response?.data?.message || error.message}`)
-    }
+      toast.error(
+        `주문 생성 실패: ${error.response?.data?.message || error.message}`,
+      )
+    },
   })
 }
 
@@ -374,16 +405,23 @@ export const useUpdateOrder = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ orderId, data }: { orderId: number; data: Partial<OrderCreateRequest> }) =>
-      orderApi.update(orderId, data),
-    onSuccess: (data) => {
+    mutationFn: ({
+      orderId,
+      data,
+    }: {
+      orderId: number
+      data: Partial<OrderCreateRequest>
+    }) => orderApi.update(orderId, data),
+    onSuccess: data => {
       queryClient.invalidateQueries({ queryKey: ['orders'] })
       queryClient.invalidateQueries({ queryKey: ['order', data.id] })
       toast.success('주문 정보가 성공적으로 수정되었습니다')
     },
     onError: (error: any) => {
-      toast.error(`주문 수정 실패: ${error.response?.data?.message || error.message}`)
-    }
+      toast.error(
+        `주문 수정 실패: ${error.response?.data?.message || error.message}`,
+      )
+    },
   })
 }
 
@@ -401,8 +439,10 @@ export const useDeleteOrder = () => {
       toast.success('주문이 성공적으로 삭제되었습니다')
     },
     onError: (error: any) => {
-      toast.error(`주문 삭제 실패: ${error.response?.data?.message || error.message}`)
-    }
+      toast.error(
+        `주문 삭제 실패: ${error.response?.data?.message || error.message}`,
+      )
+    },
   })
 }
 
@@ -413,18 +453,23 @@ export const useChangeOrderStatus = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ orderId, data }: {
+    mutationFn: ({
+      orderId,
+      data,
+    }: {
       orderId: number
       data: { orderStatus: string; reason?: string }
     }) => orderApi.changeStatus(orderId, data),
-    onSuccess: (data) => {
+    onSuccess: data => {
       queryClient.invalidateQueries({ queryKey: ['orders'] })
       queryClient.invalidateQueries({ queryKey: ['order', data.id] })
       toast.success('주문 상태가 성공적으로 변경되었습니다')
     },
     onError: (error: any) => {
-      toast.error(`주문 상태 변경 실패: ${error.response?.data?.message || error.message}`)
-    }
+      toast.error(
+        `주문 상태 변경 실패: ${error.response?.data?.message || error.message}`,
+      )
+    },
   })
 }
 
@@ -436,14 +481,16 @@ export const useConfirmOrder = () => {
 
   return useMutation({
     mutationFn: (orderId: number) => orderApi.confirm(orderId),
-    onSuccess: (data) => {
+    onSuccess: data => {
       queryClient.invalidateQueries({ queryKey: ['orders'] })
       queryClient.invalidateQueries({ queryKey: ['order', data.id] })
       toast.success('주문이 성공적으로 확정되었습니다')
     },
     onError: (error: any) => {
-      toast.error(`주문 확정 실패: ${error.response?.data?.message || error.message}`)
-    }
+      toast.error(
+        `주문 확정 실패: ${error.response?.data?.message || error.message}`,
+      )
+    },
   })
 }
 
@@ -454,7 +501,10 @@ export const useShipOrder = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ orderId, data }: {
+    mutationFn: ({
+      orderId,
+      data,
+    }: {
       orderId: number
       data: {
         courierCompany: string
@@ -463,14 +513,16 @@ export const useShipOrder = () => {
         remarks?: string
       }
     }) => orderApi.ship(orderId, data),
-    onSuccess: (data) => {
+    onSuccess: data => {
       queryClient.invalidateQueries({ queryKey: ['orders'] })
       queryClient.invalidateQueries({ queryKey: ['order', data.id] })
       toast.success('주문 배송이 성공적으로 처리되었습니다')
     },
     onError: (error: any) => {
-      toast.error(`주문 배송 처리 실패: ${error.response?.data?.message || error.message}`)
-    }
+      toast.error(
+        `주문 배송 처리 실패: ${error.response?.data?.message || error.message}`,
+      )
+    },
   })
 }
 
@@ -481,19 +533,24 @@ export const useCancelOrder = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ orderId, data }: {
+    mutationFn: ({
+      orderId,
+      data,
+    }: {
       orderId: number
       data: { cancellationReason: string }
     }) => orderApi.cancel(orderId, data),
-    onSuccess: (data) => {
+    onSuccess: data => {
       queryClient.invalidateQueries({ queryKey: ['orders'] })
       queryClient.invalidateQueries({ queryKey: ['order', data.id] })
       queryClient.invalidateQueries({ queryKey: ['customers'] })
       toast.success('주문이 성공적으로 취소되었습니다')
     },
     onError: (error: any) => {
-      toast.error(`주문 취소 실패: ${error.response?.data?.message || error.message}`)
-    }
+      toast.error(
+        `주문 취소 실패: ${error.response?.data?.message || error.message}`,
+      )
+    },
   })
 }
 
@@ -504,7 +561,10 @@ export const useProcessOrderPayment = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ orderId, data }: {
+    mutationFn: ({
+      orderId,
+      data,
+    }: {
       orderId: number
       data: {
         paymentAmount: number
@@ -514,15 +574,16 @@ export const useProcessOrderPayment = () => {
         remarks?: string
       }
     }) => orderApi.processPayment(orderId, data),
-    onSuccess: (data) => {
+    onSuccess: data => {
       queryClient.invalidateQueries({ queryKey: ['orders'] })
       queryClient.invalidateQueries({ queryKey: ['order', data.id] })
       queryClient.invalidateQueries({ queryKey: ['customers'] })
       toast.success('주문 결제가 성공적으로 처리되었습니다')
     },
     onError: (error: any) => {
-      toast.error(`주문 결제 처리 실패: ${error.response?.data?.message || error.message}`)
-    }
+      toast.error(
+        `주문 결제 처리 실패: ${error.response?.data?.message || error.message}`,
+      )
+    },
   })
 }
-

@@ -11,11 +11,10 @@ module.exports = {
   },
   extends: [
     'eslint:recommended',
-    '@typescript-eslint/recommended',
+    'plugin:@typescript-eslint/recommended',
     'plugin:react-hooks/recommended',
     'plugin:react/recommended',
     'plugin:react/jsx-runtime',
-    'plugin:@typescript-eslint/recommended',
     'plugin:import/recommended',
     'plugin:import/typescript',
     'prettier', // Prettier와 충돌하는 규칙 비활성화
@@ -67,7 +66,6 @@ module.exports = {
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-non-null-assertion': 'warn',
-    '@typescript-eslint/prefer-const': 'error',
     '@typescript-eslint/no-var-requires': 'off',
 
     // Import 관련 규칙
@@ -102,7 +100,7 @@ module.exports = {
     'no-duplicate-imports': 'error',
     'no-multiple-empty-lines': ['error', { max: 1 }],
     'eol-last': 'error',
-    'comma-dangle': ['error', 'es5'],
+    'comma-dangle': ['error', 'only-multiline'],
     'semi': ['error', 'never'],
     'quotes': ['error', 'single', { avoidEscape: true }],
 

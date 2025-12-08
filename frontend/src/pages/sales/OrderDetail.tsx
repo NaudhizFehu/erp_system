@@ -1,11 +1,22 @@
+import {
+  ArrowLeft,
+  ShoppingCart,
+  Edit,
+  Trash2,
+  Calendar,
+  User,
+  Building2,
+} from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, ShoppingCart, Edit, Trash2, Calendar, User, Building2 } from 'lucide-react'
+
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { orderService, OrderDetail as OrderDetailType } from '@/services/orderService'
-
+import {
+  orderService,
+  OrderDetail as OrderDetailType,
+} from '@/services/orderService'
 
 /**
  * 주문 상세 페이지 컴포넌트
@@ -31,7 +42,7 @@ function OrderDetail() {
     try {
       setLoading(true)
       setError(null)
-      
+
       // API 호출
       const orderData = await orderService.getOrderById(orderId)
       setOrder(orderData)
@@ -125,9 +136,9 @@ function OrderDetail() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex h-64 items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-primary" />
           <p className="text-muted-foreground">주문 정보를 불러오는 중...</p>
         </div>
       </div>
@@ -136,11 +147,13 @@ function OrderDetail() {
 
   if (error || !order) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex h-64 items-center justify-center">
         <div className="text-center">
-          <p className="text-destructive mb-4">{error || '주문 정보를 찾을 수 없습니다.'}</p>
+          <p className="mb-4 text-destructive">
+            {error || '주문 정보를 찾을 수 없습니다.'}
+          </p>
           <Button onClick={() => navigate('/sales/orders')}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
+            <ArrowLeft className="mr-2 h-4 w-4" />
             주문 목록으로 돌아가기
           </Button>
         </div>
@@ -158,21 +171,23 @@ function OrderDetail() {
             size="sm"
             onClick={() => navigate('/sales/orders')}
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
+            <ArrowLeft className="mr-2 h-4 w-4" />
             뒤로가기
           </Button>
           <div>
             <h1 className="text-2xl font-bold">{order.orderNumber}</h1>
-            <p className="text-muted-foreground">주문일: {new Date(order.orderDate).toLocaleDateString('ko-KR')}</p>
+            <p className="text-muted-foreground">
+              주문일: {new Date(order.orderDate).toLocaleDateString('ko-KR')}
+            </p>
           </div>
         </div>
         <div className="flex items-center space-x-2">
           <Button variant="outline" size="sm">
-            <Edit className="h-4 w-4 mr-2" />
+            <Edit className="mr-2 h-4 w-4" />
             수정
           </Button>
           <Button variant="outline" size="sm" className="text-destructive">
-            <Trash2 className="h-4 w-4 mr-2" />
+            <Trash2 className="mr-2 h-4 w-4" />
             삭제
           </Button>
         </div>
@@ -195,34 +210,50 @@ function OrderDetail() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
-            <ShoppingCart className="h-5 w-5 mr-2" />
+            <ShoppingCart className="mr-2 h-5 w-5" />
             주문 정보
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
-              <label className="text-sm font-medium text-muted-foreground">주문번호</label>
+              <label className="text-sm font-medium text-muted-foreground">
+                주문번호
+              </label>
               <p className="text-sm">{order.orderNumber}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-muted-foreground">주문일</label>
-              <p className="text-sm">{new Date(order.orderDate).toLocaleDateString('ko-KR')}</p>
+              <label className="text-sm font-medium text-muted-foreground">
+                주문일
+              </label>
+              <p className="text-sm">
+                {new Date(order.orderDate).toLocaleDateString('ko-KR')}
+              </p>
             </div>
             {order.deliveryDate && (
               <div>
-                <label className="text-sm font-medium text-muted-foreground">배송예정일</label>
-                <p className="text-sm">{new Date(order.deliveryDate).toLocaleDateString('ko-KR')}</p>
+                <label className="text-sm font-medium text-muted-foreground">
+                  배송예정일
+                </label>
+                <p className="text-sm">
+                  {new Date(order.deliveryDate).toLocaleDateString('ko-KR')}
+                </p>
               </div>
             )}
             <div>
-              <label className="text-sm font-medium text-muted-foreground">총 금액</label>
-              <p className="text-lg font-semibold">{order.totalAmount.toLocaleString()}원</p>
+              <label className="text-sm font-medium text-muted-foreground">
+                총 금액
+              </label>
+              <p className="text-lg font-semibold">
+                {order.totalAmount.toLocaleString()}원
+              </p>
             </div>
           </div>
           {order.notes && (
             <div>
-              <label className="text-sm font-medium text-muted-foreground">비고</label>
+              <label className="text-sm font-medium text-muted-foreground">
+                비고
+              </label>
               <p className="text-sm">{order.notes}</p>
             </div>
           )}
@@ -233,19 +264,25 @@ function OrderDetail() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
-            <User className="h-5 w-5 mr-2" />
+            <User className="mr-2 h-5 w-5" />
             고객 정보
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
-              <label className="text-sm font-medium text-muted-foreground">고객명</label>
+              <label className="text-sm font-medium text-muted-foreground">
+                고객명
+              </label>
               <p className="text-sm">{order.customerName}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-muted-foreground">고객 유형</label>
-              <p className="text-sm">{order.customerType === 'CORPORATION' ? '법인' : '개인'}</p>
+              <label className="text-sm font-medium text-muted-foreground">
+                고객 유형
+              </label>
+              <p className="text-sm">
+                {order.customerType === 'CORPORATION' ? '법인' : '개인'}
+              </p>
             </div>
           </div>
         </CardContent>
@@ -256,13 +293,15 @@ function OrderDetail() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
-              <Building2 className="h-5 w-5 mr-2" />
+              <Building2 className="mr-2 h-5 w-5" />
               영업 정보
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div>
-              <label className="text-sm font-medium text-muted-foreground">담당 영업사원</label>
+              <label className="text-sm font-medium text-muted-foreground">
+                담당 영업사원
+              </label>
               <p className="text-sm">{order.salesManagerName}</p>
             </div>
           </CardContent>
@@ -276,21 +315,21 @@ function OrderDetail() {
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            <div className="flex justify-between items-center p-3 border rounded">
+            <div className="flex items-center justify-between rounded border p-3">
               <div>
                 <p className="font-medium">노트북</p>
                 <p className="text-sm text-muted-foreground">수량: 1개</p>
               </div>
               <p className="font-semibold">1,500,000원</p>
             </div>
-            <div className="flex justify-between items-center p-3 border rounded">
+            <div className="flex items-center justify-between rounded border p-3">
               <div>
                 <p className="font-medium">모니터</p>
                 <p className="text-sm text-muted-foreground">수량: 1개</p>
               </div>
               <p className="font-semibold">500,000원</p>
             </div>
-            <div className="flex justify-between items-center p-3 border rounded">
+            <div className="flex items-center justify-between rounded border p-3">
               <div>
                 <p className="font-medium">기타 부품</p>
                 <p className="text-sm text-muted-foreground">수량: 2개</p>
@@ -298,10 +337,12 @@ function OrderDetail() {
               <p className="font-semibold">500,000원</p>
             </div>
           </div>
-          <div className="mt-4 pt-4 border-t">
-            <div className="flex justify-between items-center">
+          <div className="mt-4 border-t pt-4">
+            <div className="flex items-center justify-between">
               <span className="text-lg font-semibold">총 금액</span>
-              <span className="text-lg font-bold">{order.totalAmount.toLocaleString()}원</span>
+              <span className="text-lg font-bold">
+                {order.totalAmount.toLocaleString()}원
+              </span>
             </div>
           </div>
         </CardContent>
@@ -311,19 +352,27 @@ function OrderDetail() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
-            <Calendar className="h-5 w-5 mr-2" />
+            <Calendar className="mr-2 h-5 w-5" />
             등록 정보
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
           <div>
-            <label className="text-sm font-medium text-muted-foreground">등록일</label>
-            <p className="text-sm">{new Date(order.createdAt).toLocaleDateString('ko-KR')}</p>
+            <label className="text-sm font-medium text-muted-foreground">
+              등록일
+            </label>
+            <p className="text-sm">
+              {new Date(order.createdAt).toLocaleDateString('ko-KR')}
+            </p>
           </div>
           {order.updatedAt && (
             <div>
-              <label className="text-sm font-medium text-muted-foreground">수정일</label>
-              <p className="text-sm">{new Date(order.updatedAt).toLocaleDateString('ko-KR')}</p>
+              <label className="text-sm font-medium text-muted-foreground">
+                수정일
+              </label>
+              <p className="text-sm">
+                {new Date(order.updatedAt).toLocaleDateString('ko-KR')}
+              </p>
             </div>
           )}
         </CardContent>

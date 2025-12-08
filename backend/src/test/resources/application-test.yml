@@ -1,9 +1,9 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-    driver-class-name: org.h2.Driver
-    username: sa
-    password: 
+    url: jdbc:postgresql://fehu.kr:5432/cursor_erp_system
+    driver-class-name: org.postgresql.Driver
+    username: cursor_erp_system
+    password: cursor_erp_system
     hikari:
       maximum-pool-size: 5
       minimum-idle: 2
@@ -13,16 +13,12 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: none  # 실제 DB 사용하므로 스키마 자동 생성 비활성화
     show-sql: true
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.H2Dialect
-
-  h2:
-    console:
-      enabled: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 
 # JWT 설정
 jwt:

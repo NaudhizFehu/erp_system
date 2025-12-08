@@ -3,39 +3,11 @@
  * 사용자가 대시보드 레이아웃과 위젯을 커스터마이징할 수 있습니다
  */
 
-import React, { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Switch } from '@/components/ui/switch'
-import { Slider } from '@/components/ui/slider'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   DragDropContext,
   Droppable,
   Draggable,
-  DropResult
+  DropResult,
 } from '@hello-pangea/dnd'
 import {
   Settings,
@@ -51,16 +23,40 @@ import {
   Save,
   X,
   Plus,
-  Trash2
+  Trash2,
 } from 'lucide-react'
+import React, { useState } from 'react'
 import toast from 'react-hot-toast'
-import type { 
-  UserDashboardConfig, 
-  WidgetConfig, 
-  Theme, 
+
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Slider } from '@/components/ui/slider'
+import { Switch } from '@/components/ui/switch'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import type {
+  UserDashboardConfig,
+  WidgetConfig,
+  Theme,
   Layout as LayoutType,
   ChartType,
-  WidgetType
+  WidgetType,
 } from '@/types/dashboard'
 
 interface DashboardCustomizerProps {
@@ -79,7 +75,7 @@ const WidgetConfigCard = ({
   widget,
   onUpdate,
   onRemove,
-  userRole
+  userRole,
 }: {
   widget: WidgetConfig
   onUpdate: (id: string, updates: Partial<WidgetConfig>) => void
@@ -88,12 +84,18 @@ const WidgetConfigCard = ({
 }) => {
   const getWidgetIcon = (type: WidgetType) => {
     switch (type) {
-      case 'chart': return '📊'
-      case 'summary': return '📋'
-      case 'list': return '📝'
-      case 'table': return '🗂️'
-      case 'metric': return '🔢'
-      default: return '⚙️'
+      case 'chart':
+        return '📊'
+      case 'summary':
+        return '📋'
+      case 'list':
+        return '📝'
+      case 'table':
+        return '🗂️'
+      case 'metric':
+        return '🔢'
+      default:
+        return '⚙️'
     }
   }
 
@@ -103,7 +105,7 @@ const WidgetConfigCard = ({
     { value: 'pie', label: '원형 차트' },
     { value: 'doughnut', label: '도넛 차트' },
     { value: 'area', label: '영역 차트' },
-    { value: 'scatter', label: '산점도' }
+    { value: 'scatter', label: '산점도' },
   ]
 
   return (
@@ -126,7 +128,9 @@ const WidgetConfigCard = ({
               <div className="flex items-center space-x-2">
                 <Switch
                   checked={widget.isVisible}
-                  onCheckedChange={(checked) => onUpdate(widget.id, { isVisible: checked })}
+                  onCheckedChange={checked =>
+                    onUpdate(widget.id, { isVisible: checked })
+                  }
                 />
                 <Button
                   variant="ghost"
@@ -146,7 +150,9 @@ const WidgetConfigCard = ({
                 <label className="text-sm font-medium">너비</label>
                 <Slider
                   value={[widget.width]}
-                  onValueChange={([value]) => onUpdate(widget.id, { width: value })}
+                  onValueChange={([value]) =>
+                    onUpdate(widget.id, { width: value })
+                  }
                   max={12}
                   min={1}
                   step={1}
@@ -158,13 +164,17 @@ const WidgetConfigCard = ({
                 <label className="text-sm font-medium">높이</label>
                 <Slider
                   value={[widget.height]}
-                  onValueChange={([value]) => onUpdate(widget.id, { height: value })}
+                  onValueChange={([value]) =>
+                    onUpdate(widget.id, { height: value })
+                  }
                   max={12}
                   min={2}
                   step={1}
                   className="mt-2"
                 />
-                <span className="text-xs text-gray-500">{widget.height} 단위</span>
+                <span className="text-xs text-gray-500">
+                  {widget.height} 단위
+                </span>
               </div>
             </div>
 
@@ -174,13 +184,15 @@ const WidgetConfigCard = ({
                 <label className="text-sm font-medium">차트 타입</label>
                 <Select
                   value={widget.chartType || 'line'}
-                  onValueChange={(value: ChartType) => onUpdate(widget.id, { chartType: value })}
+                  onValueChange={(value: ChartType) =>
+                    onUpdate(widget.id, { chartType: value })
+                  }
                 >
                   <SelectTrigger className="mt-2">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {availableChartTypes.map((type) => (
+                    {availableChartTypes.map(type => (
                       <SelectItem key={type.value} value={type.value}>
                         {type.label}
                       </SelectItem>
@@ -195,7 +207,9 @@ const WidgetConfigCard = ({
               <label className="text-sm font-medium">시간 범위</label>
               <Select
                 value={widget.timeRange || 'monthly'}
-                onValueChange={(value) => onUpdate(widget.id, { timeRange: value })}
+                onValueChange={value =>
+                  onUpdate(widget.id, { timeRange: value })
+                }
               >
                 <SelectTrigger className="mt-2">
                   <SelectValue />
@@ -210,7 +224,7 @@ const WidgetConfigCard = ({
             </div>
 
             {/* 위젯 정보 */}
-            <div className="pt-2 border-t">
+            <div className="border-t pt-2">
               <div className="flex items-center justify-between text-xs text-gray-500">
                 <span>데이터 소스: {widget.dataSource}</span>
                 <Badge variant="outline">{widget.type}</Badge>
@@ -234,7 +248,7 @@ const getAvailableWidgets = (userRole: string): Partial<WidgetConfig>[] => {
       type: 'summary' as WidgetType,
       dataSource: 'overview',
       width: 12,
-      height: 4
+      height: 4,
     },
     {
       id: 'revenue-chart',
@@ -243,7 +257,7 @@ const getAvailableWidgets = (userRole: string): Partial<WidgetConfig>[] => {
       dataSource: 'revenue',
       chartType: 'line' as ChartType,
       width: 8,
-      height: 6
+      height: 6,
     },
     {
       id: 'activities',
@@ -251,7 +265,7 @@ const getAvailableWidgets = (userRole: string): Partial<WidgetConfig>[] => {
       type: 'list' as WidgetType,
       dataSource: 'activities',
       width: 4,
-      height: 6
+      height: 6,
     },
     {
       id: 'todos',
@@ -259,8 +273,8 @@ const getAvailableWidgets = (userRole: string): Partial<WidgetConfig>[] => {
       type: 'list' as WidgetType,
       dataSource: 'todos',
       width: 4,
-      height: 6
-    }
+      height: 6,
+    },
   ]
 
   // 관리자/매니저 전용 위젯
@@ -273,7 +287,7 @@ const getAvailableWidgets = (userRole: string): Partial<WidgetConfig>[] => {
         dataSource: 'hr',
         chartType: 'bar' as ChartType,
         width: 6,
-        height: 6
+        height: 6,
       },
       {
         id: 'inventory-chart',
@@ -282,23 +296,21 @@ const getAvailableWidgets = (userRole: string): Partial<WidgetConfig>[] => {
         dataSource: 'inventory',
         chartType: 'pie' as ChartType,
         width: 6,
-        height: 6
-      }
+        height: 6,
+      },
     )
   }
 
   // 관리자 전용 위젯
   if (userRole === 'ADMIN') {
-    baseWidgets.push(
-      {
-        id: 'system-status',
-        title: '시스템 상태',
-        type: 'metric' as WidgetType,
-        dataSource: 'system',
-        width: 12,
-        height: 3
-      }
-    )
+    baseWidgets.push({
+      id: 'system-status',
+      title: '시스템 상태',
+      type: 'metric' as WidgetType,
+      dataSource: 'system',
+      width: 12,
+      height: 3,
+    })
   }
 
   return baseWidgets
@@ -310,7 +322,7 @@ function DashboardCustomizer({
   onOpenChange,
   onSave,
   onReset,
-  userRole
+  userRole,
 }: DashboardCustomizerProps) {
   const [localConfig, setLocalConfig] = useState<UserDashboardConfig>(config)
   const [activeTab, setActiveTab] = useState('widgets')
@@ -319,9 +331,9 @@ function DashboardCustomizer({
   const updateWidget = (widgetId: string, updates: Partial<WidgetConfig>) => {
     setLocalConfig(prev => ({
       ...prev,
-      widgets: prev.widgets.map(w => 
+      widgets: prev.widgets.map(w =>
         w.id === widgetId ? { ...w, ...updates } : w
-      )
+      ),
     }))
   }
 
@@ -329,7 +341,7 @@ function DashboardCustomizer({
   const removeWidget = (widgetId: string) => {
     setLocalConfig(prev => ({
       ...prev,
-      widgets: prev.widgets.filter(w => w.id !== widgetId)
+      widgets: prev.widgets.filter(w => w.id !== widgetId),
     }))
   }
 
@@ -347,12 +359,12 @@ function DashboardCustomizer({
       dataSource: widget.dataSource || 'custom',
       chartType: widget.chartType,
       timeRange: widget.timeRange || 'monthly',
-      settings: widget.settings || {}
+      settings: widget.settings || {},
     }
 
     setLocalConfig(prev => ({
       ...prev,
-      widgets: [...prev.widgets, newWidget]
+      widgets: [...prev.widgets, newWidget],
     }))
   }
 
@@ -366,7 +378,7 @@ function DashboardCustomizer({
 
     setLocalConfig(prev => ({
       ...prev,
-      widgets
+      widgets,
     }))
   }
 
@@ -384,7 +396,7 @@ function DashboardCustomizer({
   const handleSave = () => {
     onSave({
       ...localConfig,
-      lastUpdated: new Date().toISOString()
+      lastUpdated: new Date().toISOString(),
     })
     onOpenChange(false)
     toast.success('대시보드 설정이 저장되었습니다')
@@ -401,11 +413,13 @@ function DashboardCustomizer({
 
   const availableWidgets = getAvailableWidgets(userRole)
   const currentWidgetIds = localConfig.widgets.map(w => w.id)
-  const availableToAdd = availableWidgets.filter(w => !currentWidgetIds.includes(w.id!))
+  const availableToAdd = availableWidgets.filter(
+    w => !currentWidgetIds.includes(w.id!),
+  )
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
+      <DialogContent className="max-h-[80vh] max-w-4xl overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             <Settings className="h-5 w-5" />
@@ -428,7 +442,8 @@ function DashboardCustomizer({
               <h3 className="text-lg font-medium">위젯 설정</h3>
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-gray-500">
-                  {localConfig.widgets.filter(w => w.isVisible).length}개 위젯 표시 중
+                  {localConfig.widgets.filter(w => w.isVisible).length}개 위젯
+                  표시 중
                 </span>
               </div>
             </div>
@@ -440,12 +455,12 @@ function DashboardCustomizer({
                   <CardTitle className="text-base">위젯 추가</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {availableToAdd.map((widget) => (
+                  <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+                    {availableToAdd.map(widget => (
                       <Button
                         key={widget.id}
                         variant="outline"
-                        className="h-auto p-3 flex flex-col items-center space-y-2"
+                        className="flex h-auto flex-col items-center space-y-2 p-3"
                         onClick={() => addWidget(widget)}
                       >
                         <Plus className="h-4 w-4" />
@@ -461,14 +476,18 @@ function DashboardCustomizer({
             <ScrollArea className="h-96">
               <DragDropContext onDragEnd={handleDragEnd}>
                 <Droppable droppableId="widgets">
-                  {(provided) => (
+                  {provided => (
                     <div
                       {...provided.droppableProps}
                       ref={provided.innerRef}
                       className="space-y-4"
                     >
                       {localConfig.widgets.map((widget, index) => (
-                        <Draggable key={widget.id} draggableId={widget.id} index={index}>
+                        <Draggable
+                          key={widget.id}
+                          draggableId={widget.id}
+                          index={index}
+                        >
                           {(provided, snapshot) => (
                             <div
                               ref={provided.innerRef}
@@ -494,21 +513,23 @@ function DashboardCustomizer({
 
           <TabsContent value="layout" className="space-y-4">
             <div>
-              <h3 className="text-lg font-medium mb-4">레이아웃 설정</h3>
-              
+              <h3 className="mb-4 text-lg font-medium">레이아웃 설정</h3>
+
               <div className="space-y-4">
                 <div>
                   <label className="text-sm font-medium">레이아웃 타입</label>
-                  <div className="grid grid-cols-3 gap-3 mt-2">
+                  <div className="mt-2 grid grid-cols-3 gap-3">
                     {[
                       { value: 'grid', label: '그리드', icon: Grid3X3 },
                       { value: 'masonry', label: '벽돌식', icon: Layout },
-                      { value: 'custom', label: '사용자정의', icon: Maximize2 }
+                      { value: 'custom', label: '사용자정의', icon: Maximize2 },
                     ].map(({ value, label, icon: Icon }) => (
                       <Button
                         key={value}
-                        variant={localConfig.layout === value ? 'default' : 'outline'}
-                        className="h-20 flex flex-col items-center space-y-2"
+                        variant={
+                          localConfig.layout === value ? 'default' : 'outline'
+                        }
+                        className="flex h-20 flex-col items-center space-y-2"
                         onClick={() => updateLayout(value as LayoutType)}
                       >
                         <Icon className="h-6 w-6" />
@@ -518,20 +539,20 @@ function DashboardCustomizer({
                   </div>
                 </div>
 
-                <div className="pt-4 border-t">
-                  <h4 className="font-medium mb-2">레이아웃 미리보기</h4>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="grid grid-cols-12 gap-2 h-32">
+                <div className="border-t pt-4">
+                  <h4 className="mb-2 font-medium">레이아웃 미리보기</h4>
+                  <div className="rounded-lg bg-gray-50 p-4">
+                    <div className="grid h-32 grid-cols-12 gap-2">
                       {localConfig.widgets
                         .filter(w => w.isVisible)
                         .slice(0, 6)
                         .map((widget, index) => (
                           <div
                             key={widget.id}
-                            className="bg-white rounded border flex items-center justify-center text-xs font-medium"
+                            className="flex items-center justify-center rounded border bg-white text-xs font-medium"
                             style={{
                               gridColumn: `span ${Math.min(widget.width, 12)}`,
-                              gridRow: `span 1`
+                              gridRow: 'span 1',
                             }}
                           >
                             {widget.title}
@@ -546,36 +567,50 @@ function DashboardCustomizer({
 
           <TabsContent value="theme" className="space-y-4">
             <div>
-              <h3 className="text-lg font-medium mb-4">테마 설정</h3>
-              
+              <h3 className="mb-4 text-lg font-medium">테마 설정</h3>
+
               <div className="space-y-4">
                 <div>
                   <label className="text-sm font-medium">색상 테마</label>
-                  <div className="grid grid-cols-3 gap-3 mt-2">
+                  <div className="mt-2 grid grid-cols-3 gap-3">
                     {[
-                      { value: 'light', label: '라이트', color: 'bg-white border' },
+                      {
+                        value: 'light',
+                        label: '라이트',
+                        color: 'bg-white border',
+                      },
                       { value: 'dark', label: '다크', color: 'bg-gray-900' },
-                      { value: 'auto', label: '자동', color: 'bg-gradient-to-r from-white to-gray-900' }
+                      {
+                        value: 'auto',
+                        label: '자동',
+                        color: 'bg-gradient-to-r from-white to-gray-900',
+                      },
                     ].map(({ value, label, color }) => (
                       <Button
                         key={value}
-                        variant={localConfig.theme === value ? 'default' : 'outline'}
-                        className="h-20 flex flex-col items-center space-y-2"
+                        variant={
+                          localConfig.theme === value ? 'default' : 'outline'
+                        }
+                        className="flex h-20 flex-col items-center space-y-2"
                         onClick={() => updateTheme(value as Theme)}
                       >
-                        <div className={`w-8 h-8 rounded ${color}`} />
+                        <div className={`h-8 w-8 rounded ${color}`} />
                         <span className="text-sm">{label}</span>
                       </Button>
                     ))}
                   </div>
                 </div>
 
-                <div className="pt-4 border-t">
-                  <h4 className="font-medium mb-2">테마 미리보기</h4>
-                  <div className={`p-4 rounded-lg border ${
-                    localConfig.theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-white'
-                  }`}>
-                    <div className="flex items-center justify-between mb-2">
+                <div className="border-t pt-4">
+                  <h4 className="mb-2 font-medium">테마 미리보기</h4>
+                  <div
+                    className={`rounded-lg border p-4 ${
+                      localConfig.theme === 'dark'
+                        ? 'bg-gray-900 text-white'
+                        : 'bg-white'
+                    }`}
+                  >
+                    <div className="mb-2 flex items-center justify-between">
                       <h5 className="font-medium">샘플 위젯</h5>
                       <Badge>테스트</Badge>
                     </div>
@@ -593,18 +628,18 @@ function DashboardCustomizer({
           <div className="flex space-x-2">
             {onReset && (
               <Button variant="outline" onClick={handleReset}>
-                <RotateCcw className="h-4 w-4 mr-2" />
+                <RotateCcw className="mr-2 h-4 w-4" />
                 초기화
               </Button>
             )}
           </div>
           <div className="flex space-x-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
-              <X className="h-4 w-4 mr-2" />
+              <X className="mr-2 h-4 w-4" />
               취소
             </Button>
             <Button onClick={handleSave}>
-              <Save className="h-4 w-4 mr-2" />
+              <Save className="mr-2 h-4 w-4" />
               저장
             </Button>
           </div>
@@ -615,4 +650,3 @@ function DashboardCustomizer({
 }
 
 export { DashboardCustomizer }
-

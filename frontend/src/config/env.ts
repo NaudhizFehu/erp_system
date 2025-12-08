@@ -26,7 +26,10 @@ interface AppConfig {
 /**
  * 환경 변수에서 불린 값을 파싱하는 함수
  */
-function parseBoolean(value: string | undefined, defaultValue: boolean = false): boolean {
+function parseBoolean(
+  value: string | undefined,
+  defaultValue: boolean = false,
+): boolean {
   if (!value) return defaultValue
   return value.toLowerCase() === 'true'
 }
@@ -43,9 +46,15 @@ function parseNumber(value: string | undefined, defaultValue: number): number {
 /**
  * 환경 변수에서 배열 값을 파싱하는 함수
  */
-function parseArray(value: string | undefined, defaultValue: string[] = []): string[] {
+function parseArray(
+  value: string | undefined,
+  defaultValue: string[] = [],
+): string[] {
   if (!value) return defaultValue
-  return value.split(',').map(item => item.trim()).filter(Boolean)
+  return value
+    .split(',')
+    .map(item => item.trim())
+    .filter(Boolean)
 }
 
 /**
@@ -57,20 +66,29 @@ export const config: AppConfig = {
   apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:9961/api',
   debug: parseBoolean(import.meta.env.VITE_DEBUG, false),
   logLevel: (import.meta.env.VITE_LOG_LEVEL as AppConfig['logLevel']) || 'info',
-  
+
   features: {
     analytics: parseBoolean(import.meta.env.VITE_FEATURE_ANALYTICS, false),
-    notifications: parseBoolean(import.meta.env.VITE_FEATURE_NOTIFICATIONS, true),
-  },
-  
-  upload: {
-    maxFileSize: parseNumber(import.meta.env.VITE_MAX_FILE_SIZE, 10485760), // 10MB
-    allowedTypes: parseArray(
-      import.meta.env.VITE_ALLOWED_FILE_TYPES,
-      ['.jpg', '.jpeg', '.png', '.pdf', '.doc', '.docx', '.xls', '.xlsx']
+    notifications: parseBoolean(
+      import.meta.env.VITE_FEATURE_NOTIFICATIONS,
+      true,
     ),
   },
-  
+
+  upload: {
+    maxFileSize: parseNumber(import.meta.env.VITE_MAX_FILE_SIZE, 10485760), // 10MB
+    allowedTypes: parseArray(import.meta.env.VITE_ALLOWED_FILE_TYPES, [
+      '.jpg',
+      '.jpeg',
+      '.png',
+      '.pdf',
+      '.doc',
+      '.docx',
+      '.xls',
+      '.xlsx',
+    ]),
+  },
+
   pagination: {
     defaultPageSize: parseNumber(import.meta.env.VITE_DEFAULT_PAGE_SIZE, 20),
     maxPageSize: parseNumber(import.meta.env.VITE_MAX_PAGE_SIZE, 100),
@@ -106,15 +124,15 @@ export function debugLog(message: string, ...args: any[]) {
  */
 export function validateConfig(): void {
   const errors: string[] = []
-  
+
   if (!config.apiBaseUrl) {
     errors.push('API_BASE_URL이 설정되지 않았습니다')
   }
-  
+
   if (config.pagination.defaultPageSize > config.pagination.maxPageSize) {
     errors.push('기본 페이지 크기가 최대 페이지 크기보다 클 수 없습니다')
   }
-  
+
   if (errors.length > 0) {
     throw new Error(`설정 오류: ${errors.join(', ')}`)
   }
@@ -122,8 +140,3 @@ export function validateConfig(): void {
 
 // 애플리케이션 시작 시 설정 검증
 validateConfig()
-
-
-
-
-

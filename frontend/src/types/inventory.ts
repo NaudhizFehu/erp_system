@@ -16,7 +16,7 @@ export enum ProductType {
   SERVICE = 'SERVICE',
   VIRTUAL = 'VIRTUAL',
   BUNDLE = 'BUNDLE',
-  DIGITAL = 'DIGITAL'
+  DIGITAL = 'DIGITAL',
 }
 
 /**
@@ -27,7 +27,7 @@ export enum ProductStatus {
   INACTIVE = 'INACTIVE',
   DISCONTINUED = 'DISCONTINUED',
   PENDING = 'PENDING',
-  DRAFT = 'DRAFT'
+  DRAFT = 'DRAFT',
 }
 
 /**
@@ -37,7 +37,7 @@ export enum StockManagementType {
   FIFO = 'FIFO',
   LIFO = 'LIFO',
   AVERAGE = 'AVERAGE',
-  SPECIFIC = 'SPECIFIC'
+  SPECIFIC = 'SPECIFIC',
 }
 
 /**
@@ -51,7 +51,7 @@ export enum StockStatus {
   RESERVED = 'RESERVED',
   QUARANTINE = 'QUARANTINE',
   DAMAGED = 'DAMAGED',
-  EXPIRED = 'EXPIRED'
+  EXPIRED = 'EXPIRED',
 }
 
 /**
@@ -62,7 +62,7 @@ export enum StockGrade {
   B = 'B',
   C = 'C',
   D = 'D',
-  DEFECTIVE = 'DEFECTIVE'
+  DEFECTIVE = 'DEFECTIVE',
 }
 
 /**
@@ -76,7 +76,7 @@ export enum MovementType {
   RETURN_RECEIPT = 'RETURN_RECEIPT',
   TRANSFER_IN = 'TRANSFER_IN',
   ADJUSTMENT_IN = 'ADJUSTMENT_IN',
-  
+
   // 출고 관련
   ISSUE = 'ISSUE',
   SALES_ISSUE = 'SALES_ISSUE',
@@ -85,22 +85,22 @@ export enum MovementType {
   TRANSFER_OUT = 'TRANSFER_OUT',
   ADJUSTMENT_OUT = 'ADJUSTMENT_OUT',
   DISPOSAL = 'DISPOSAL',
-  
+
   // 이동 관련
   WAREHOUSE_TRANSFER = 'WAREHOUSE_TRANSFER',
   LOCATION_TRANSFER = 'LOCATION_TRANSFER',
-  
+
   // 실사 관련
   STOCKTAKING_INCREASE = 'STOCKTAKING_INCREASE',
   STOCKTAKING_DECREASE = 'STOCKTAKING_DECREASE',
-  
+
   // 상태 변경
   RESERVE = 'RESERVE',
   UNRESERVE = 'UNRESERVE',
   QUARANTINE = 'QUARANTINE',
   UNQUARANTINE = 'UNQUARANTINE',
   DEFECTIVE = 'DEFECTIVE',
-  REPAIR = 'REPAIR'
+  REPAIR = 'REPAIR',
 }
 
 /**
@@ -112,7 +112,7 @@ export enum MovementStatus {
   APPROVED = 'APPROVED',
   PROCESSED = 'PROCESSED',
   CANCELLED = 'CANCELLED',
-  REJECTED = 'REJECTED'
+  REJECTED = 'REJECTED',
 }
 
 /**
@@ -126,7 +126,7 @@ export enum WarehouseType {
   CONSIGNMENT = 'CONSIGNMENT',
   QUARANTINE = 'QUARANTINE',
   RETURNED = 'RETURNED',
-  DAMAGED = 'DAMAGED'
+  DAMAGED = 'DAMAGED',
 }
 
 /**
@@ -136,7 +136,7 @@ export enum WarehouseStatus {
   ACTIVE = 'ACTIVE',
   INACTIVE = 'INACTIVE',
   MAINTENANCE = 'MAINTENANCE',
-  CLOSED = 'CLOSED'
+  CLOSED = 'CLOSED',
 }
 
 /**
@@ -232,7 +232,7 @@ export interface Product {
   metadata?: string
   createdAt: string
   updatedAt: string
-  
+
   // 재고 관련 정보
   quantity: number
   totalStock: number
@@ -291,7 +291,7 @@ export interface Warehouse {
   metadata?: string
   createdAt: string
   updatedAt: string
-  
+
   // 통계 정보
   totalProductCount: number
   totalStockQuantity: number
@@ -357,7 +357,7 @@ export interface Inventory {
   metadata?: string
   createdAt: string
   updatedAt: string
-  
+
   // 계산 필드들
   usageRate?: number
   daysInStock?: number
@@ -421,7 +421,7 @@ export interface StockMovement {
   metadata?: string
   createdAt: string
   updatedAt: string
-  
+
   // 계산 필드들
   isInbound: boolean
   isOutbound: boolean
@@ -662,7 +662,12 @@ export interface ChartData {
  */
 export interface InventoryAlert {
   id: number
-  type: 'LOW_STOCK' | 'OUT_OF_STOCK' | 'OVER_STOCK' | 'EXPIRING_SOON' | 'EXPIRED'
+  type:
+    | 'LOW_STOCK'
+    | 'OUT_OF_STOCK'
+    | 'OVER_STOCK'
+    | 'EXPIRING_SOON'
+    | 'EXPIRED'
   title: string
   message: string
   productId: number
@@ -764,7 +769,3 @@ export const KOREAN_LABELS = {
 
   // 창고 상태
 } as const
-
-
-
-

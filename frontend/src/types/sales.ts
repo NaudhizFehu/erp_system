@@ -8,42 +8,42 @@
 // ================================
 
 export enum CustomerType {
-  INDIVIDUAL = 'INDIVIDUAL',     // 개인
-  CORPORATE = 'CORPORATE',       // 법인
-  GOVERNMENT = 'GOVERNMENT',     // 공공기관
-  NONPROFIT = 'NONPROFIT',       // 비영리단체
-  PARTNER = 'PARTNER',           // 파트너사
-  DISTRIBUTOR = 'DISTRIBUTOR',   // 유통업체
-  RETAILER = 'RETAILER',         // 소매업체
-  WHOLESALER = 'WHOLESALER'      // 도매업체
+  INDIVIDUAL = 'INDIVIDUAL', // 개인
+  CORPORATE = 'CORPORATE', // 법인
+  GOVERNMENT = 'GOVERNMENT', // 공공기관
+  NONPROFIT = 'NONPROFIT', // 비영리단체
+  PARTNER = 'PARTNER', // 파트너사
+  DISTRIBUTOR = 'DISTRIBUTOR', // 유통업체
+  RETAILER = 'RETAILER', // 소매업체
+  WHOLESALER = 'WHOLESALER', // 도매업체
 }
 
 export enum CustomerStatus {
-  PROSPECT = 'PROSPECT',         // 잠재고객
-  ACTIVE = 'ACTIVE',             // 활성고객
-  INACTIVE = 'INACTIVE',         // 비활성고객
-  VIP = 'VIP',                   // VIP고객
-  DORMANT = 'DORMANT',           // 휴면고객
-  BLACKLIST = 'BLACKLIST'        // 블랙리스트
+  PROSPECT = 'PROSPECT', // 잠재고객
+  ACTIVE = 'ACTIVE', // 활성고객
+  INACTIVE = 'INACTIVE', // 비활성고객
+  VIP = 'VIP', // VIP고객
+  DORMANT = 'DORMANT', // 휴면고객
+  BLACKLIST = 'BLACKLIST', // 블랙리스트
 }
 
 export enum CustomerGrade {
-  PLATINUM = 'PLATINUM',         // 플래티넘
-  GOLD = 'GOLD',                 // 골드
-  SILVER = 'SILVER',             // 실버
-  BRONZE = 'BRONZE',             // 브론즈
-  GENERAL = 'GENERAL'            // 일반
+  PLATINUM = 'PLATINUM', // 플래티넘
+  GOLD = 'GOLD', // 골드
+  SILVER = 'SILVER', // 실버
+  BRONZE = 'BRONZE', // 브론즈
+  GENERAL = 'GENERAL', // 일반
 }
 
 export enum PaymentTerm {
-  CASH = 'CASH',                 // 현금
-  NET_7 = 'NET_7',               // 7일
-  NET_15 = 'NET_15',             // 15일
-  NET_30 = 'NET_30',             // 30일
-  NET_45 = 'NET_45',             // 45일
-  NET_60 = 'NET_60',             // 60일
-  NET_90 = 'NET_90',             // 90일
-  CUSTOM = 'CUSTOM'              // 사용자정의
+  CASH = 'CASH', // 현금
+  NET_7 = 'NET_7', // 7일
+  NET_15 = 'NET_15', // 15일
+  NET_30 = 'NET_30', // 30일
+  NET_45 = 'NET_45', // 45일
+  NET_60 = 'NET_60', // 60일
+  NET_90 = 'NET_90', // 90일
+  CUSTOM = 'CUSTOM', // 사용자정의
 }
 
 export interface Customer {
@@ -277,44 +277,44 @@ export interface CustomerStats {
 // ================================
 
 export enum OrderStatus {
-  DRAFT = 'DRAFT',               // 임시저장
-  PENDING = 'PENDING',           // 대기중
-  CONFIRMED = 'CONFIRMED',       // 확정됨
-  PROCESSING = 'PROCESSING',     // 처리중
-  SHIPPED = 'SHIPPED',           // 배송중
-  DELIVERED = 'DELIVERED',       // 배송완료
-  COMPLETED = 'COMPLETED',       // 완료
-  CANCELLED = 'CANCELLED',       // 취소됨
-  REFUNDED = 'REFUNDED',         // 환불됨
-  RETURNED = 'RETURNED'          // 반품됨
+  DRAFT = 'DRAFT', // 임시저장
+  PENDING = 'PENDING', // 대기중
+  CONFIRMED = 'CONFIRMED', // 확정됨
+  PROCESSING = 'PROCESSING', // 처리중
+  SHIPPED = 'SHIPPED', // 배송중
+  DELIVERED = 'DELIVERED', // 배송완료
+  COMPLETED = 'COMPLETED', // 완료
+  CANCELLED = 'CANCELLED', // 취소됨
+  REFUNDED = 'REFUNDED', // 환불됨
+  RETURNED = 'RETURNED', // 반품됨
 }
 
 export enum OrderType {
-  NORMAL = 'NORMAL',             // 일반주문
-  RUSH = 'RUSH',                 // 긴급주문
-  BACKORDER = 'BACKORDER',       // 백오더
-  PREORDER = 'PREORDER',         // 선주문
+  NORMAL = 'NORMAL', // 일반주문
+  RUSH = 'RUSH', // 긴급주문
+  BACKORDER = 'BACKORDER', // 백오더
+  PREORDER = 'PREORDER', // 선주문
   SUBSCRIPTION = 'SUBSCRIPTION', // 정기주문
-  SAMPLE = 'SAMPLE',             // 샘플주문
-  RETURN = 'RETURN',             // 반품주문
-  EXCHANGE = 'EXCHANGE'          // 교환주문
+  SAMPLE = 'SAMPLE', // 샘플주문
+  RETURN = 'RETURN', // 반품주문
+  EXCHANGE = 'EXCHANGE', // 교환주문
 }
 
 export enum PaymentStatus {
-  PENDING = 'PENDING',           // 결제대기
-  PARTIAL = 'PARTIAL',           // 부분결제
-  PAID = 'PAID',                 // 결제완료
-  OVERDUE = 'OVERDUE',           // 연체
-  CANCELLED = 'CANCELLED',       // 결제취소
-  REFUNDED = 'REFUNDED'          // 환불완료
+  PENDING = 'PENDING', // 결제대기
+  PARTIAL = 'PARTIAL', // 부분결제
+  PAID = 'PAID', // 결제완료
+  OVERDUE = 'OVERDUE', // 연체
+  CANCELLED = 'CANCELLED', // 결제취소
+  REFUNDED = 'REFUNDED', // 환불완료
 }
 
 export enum DeliveryStatus {
-  PENDING = 'PENDING',           // 배송대기
-  PREPARING = 'PREPARING',       // 준비중
-  SHIPPED = 'SHIPPED',           // 배송중
-  DELIVERED = 'DELIVERED',       // 배송완료
-  CANCELLED = 'CANCELLED'        // 취소됨
+  PENDING = 'PENDING', // 배송대기
+  PREPARING = 'PREPARING', // 준비중
+  SHIPPED = 'SHIPPED', // 배송중
+  DELIVERED = 'DELIVERED', // 배송완료
+  CANCELLED = 'CANCELLED', // 취소됨
 }
 
 export interface OrderItem {
@@ -570,21 +570,21 @@ export interface OrderStats {
 // ================================
 
 export enum QuoteStatus {
-  DRAFT = 'DRAFT',               // 임시저장
-  SENT = 'SENT',                 // 발송됨
-  VIEWED = 'VIEWED',             // 확인됨
-  ACCEPTED = 'ACCEPTED',         // 승인됨
-  REJECTED = 'REJECTED',         // 거부됨
-  EXPIRED = 'EXPIRED',           // 만료됨
-  CONVERTED = 'CONVERTED',       // 주문전환
-  CANCELLED = 'CANCELLED'        // 취소됨
+  DRAFT = 'DRAFT', // 임시저장
+  SENT = 'SENT', // 발송됨
+  VIEWED = 'VIEWED', // 확인됨
+  ACCEPTED = 'ACCEPTED', // 승인됨
+  REJECTED = 'REJECTED', // 거부됨
+  EXPIRED = 'EXPIRED', // 만료됨
+  CONVERTED = 'CONVERTED', // 주문전환
+  CANCELLED = 'CANCELLED', // 취소됨
 }
 
 export enum QuotePriority {
-  LOW = 'LOW',                   // 낮음
-  NORMAL = 'NORMAL',             // 보통
-  HIGH = 'HIGH',                 // 높음
-  URGENT = 'URGENT'              // 긴급
+  LOW = 'LOW', // 낮음
+  NORMAL = 'NORMAL', // 보통
+  HIGH = 'HIGH', // 높음
+  URGENT = 'URGENT', // 긴급
 }
 
 export interface Quote {
@@ -687,34 +687,34 @@ export interface QuoteItem {
 // ================================
 
 export enum ContractStatus {
-  DRAFT = 'DRAFT',               // 임시저장
-  PENDING = 'PENDING',           // 검토중
-  APPROVED = 'APPROVED',         // 승인됨
-  ACTIVE = 'ACTIVE',             // 활성
-  SUSPENDED = 'SUSPENDED',       // 중단
-  COMPLETED = 'COMPLETED',       // 완료
-  TERMINATED = 'TERMINATED',     // 해지
-  EXPIRED = 'EXPIRED',           // 만료
-  CANCELLED = 'CANCELLED'        // 취소
+  DRAFT = 'DRAFT', // 임시저장
+  PENDING = 'PENDING', // 검토중
+  APPROVED = 'APPROVED', // 승인됨
+  ACTIVE = 'ACTIVE', // 활성
+  SUSPENDED = 'SUSPENDED', // 중단
+  COMPLETED = 'COMPLETED', // 완료
+  TERMINATED = 'TERMINATED', // 해지
+  EXPIRED = 'EXPIRED', // 만료
+  CANCELLED = 'CANCELLED', // 취소
 }
 
 export enum ContractType {
-  SALES = 'SALES',               // 판매계약
-  SERVICE = 'SERVICE',           // 서비스계약
-  MAINTENANCE = 'MAINTENANCE',   // 유지보수계약
-  SUPPLY = 'SUPPLY',             // 공급계약
+  SALES = 'SALES', // 판매계약
+  SERVICE = 'SERVICE', // 서비스계약
+  MAINTENANCE = 'MAINTENANCE', // 유지보수계약
+  SUPPLY = 'SUPPLY', // 공급계약
   DISTRIBUTION = 'DISTRIBUTION', // 유통계약
-  LICENSE = 'LICENSE',           // 라이선스계약
-  PARTNERSHIP = 'PARTNERSHIP',   // 파트너십계약
+  LICENSE = 'LICENSE', // 라이선스계약
+  PARTNERSHIP = 'PARTNERSHIP', // 파트너십계약
   SUBSCRIPTION = 'SUBSCRIPTION', // 구독계약
-  LEASE = 'LEASE',               // 임대계약
-  FRAMEWORK = 'FRAMEWORK'        // 기본계약
+  LEASE = 'LEASE', // 임대계약
+  FRAMEWORK = 'FRAMEWORK', // 기본계약
 }
 
 export enum RenewalType {
-  MANUAL = 'MANUAL',             // 수동갱신
-  AUTOMATIC = 'AUTOMATIC',       // 자동갱신
-  NONE = 'NONE'                  // 갱신없음
+  MANUAL = 'MANUAL', // 수동갱신
+  AUTOMATIC = 'AUTOMATIC', // 자동갱신
+  NONE = 'NONE', // 갱신없음
 }
 
 export interface Contract {
@@ -844,7 +844,7 @@ export const CustomerTypeLabels: Record<CustomerType, string> = {
   [CustomerType.PARTNER]: '파트너사',
   [CustomerType.DISTRIBUTOR]: '유통업체',
   [CustomerType.RETAILER]: '소매업체',
-  [CustomerType.WHOLESALER]: '도매업체'
+  [CustomerType.WHOLESALER]: '도매업체',
 }
 
 export const CustomerStatusLabels: Record<CustomerStatus, string> = {
@@ -853,7 +853,7 @@ export const CustomerStatusLabels: Record<CustomerStatus, string> = {
   [CustomerStatus.INACTIVE]: '비활성고객',
   [CustomerStatus.VIP]: 'VIP고객',
   [CustomerStatus.DORMANT]: '휴면고객',
-  [CustomerStatus.BLACKLIST]: '블랙리스트'
+  [CustomerStatus.BLACKLIST]: '블랙리스트',
 }
 
 export const CustomerGradeLabels: Record<CustomerGrade, string> = {
@@ -861,7 +861,7 @@ export const CustomerGradeLabels: Record<CustomerGrade, string> = {
   [CustomerGrade.GOLD]: '골드',
   [CustomerGrade.SILVER]: '실버',
   [CustomerGrade.BRONZE]: '브론즈',
-  [CustomerGrade.GENERAL]: '일반'
+  [CustomerGrade.GENERAL]: '일반',
 }
 
 export const OrderStatusLabels: Record<OrderStatus, string> = {
@@ -874,7 +874,7 @@ export const OrderStatusLabels: Record<OrderStatus, string> = {
   [OrderStatus.COMPLETED]: '완료',
   [OrderStatus.CANCELLED]: '취소됨',
   [OrderStatus.REFUNDED]: '환불됨',
-  [OrderStatus.RETURNED]: '반품됨'
+  [OrderStatus.RETURNED]: '반품됨',
 }
 
 export const OrderTypeLabels: Record<OrderType, string> = {
@@ -885,7 +885,7 @@ export const OrderTypeLabels: Record<OrderType, string> = {
   [OrderType.SUBSCRIPTION]: '정기주문',
   [OrderType.SAMPLE]: '샘플주문',
   [OrderType.RETURN]: '반품주문',
-  [OrderType.EXCHANGE]: '교환주문'
+  [OrderType.EXCHANGE]: '교환주문',
 }
 
 export const PaymentStatusLabels: Record<PaymentStatus, string> = {
@@ -894,7 +894,7 @@ export const PaymentStatusLabels: Record<PaymentStatus, string> = {
   [PaymentStatus.PAID]: '결제완료',
   [PaymentStatus.OVERDUE]: '연체',
   [PaymentStatus.CANCELLED]: '결제취소',
-  [PaymentStatus.REFUNDED]: '환불완료'
+  [PaymentStatus.REFUNDED]: '환불완료',
 }
 
 export const QuoteStatusLabels: Record<QuoteStatus, string> = {
@@ -905,7 +905,7 @@ export const QuoteStatusLabels: Record<QuoteStatus, string> = {
   [QuoteStatus.REJECTED]: '거부됨',
   [QuoteStatus.EXPIRED]: '만료됨',
   [QuoteStatus.CONVERTED]: '주문전환',
-  [QuoteStatus.CANCELLED]: '취소됨'
+  [QuoteStatus.CANCELLED]: '취소됨',
 }
 
 export const ContractStatusLabels: Record<ContractStatus, string> = {
@@ -917,9 +917,5 @@ export const ContractStatusLabels: Record<ContractStatus, string> = {
   [ContractStatus.COMPLETED]: '완료',
   [ContractStatus.TERMINATED]: '해지',
   [ContractStatus.EXPIRED]: '만료',
-  [ContractStatus.CANCELLED]: '취소'
+  [ContractStatus.CANCELLED]: '취소',
 }
-
-
-
-

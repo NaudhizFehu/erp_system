@@ -20,43 +20,43 @@ export const SEARCH_TYPES: Record<string, SearchTypeInfo> = {
     label: '직원',
     color: 'text-blue-600',
     bgColor: 'bg-blue-50',
-    icon: 'Users'
+    icon: 'Users',
   },
   product: {
     value: 'product',
     label: '상품',
     color: 'text-green-600',
     bgColor: 'bg-green-50',
-    icon: 'Package'
+    icon: 'Package',
   },
   order: {
     value: 'order',
     label: '주문',
     color: 'text-purple-600',
     bgColor: 'bg-purple-50',
-    icon: 'ShoppingCart'
+    icon: 'ShoppingCart',
   },
   customer: {
     value: 'customer',
     label: '고객',
     color: 'text-orange-600',
     bgColor: 'bg-orange-50',
-    icon: 'Building2'
+    icon: 'Building2',
   },
   department: {
     value: 'department',
     label: '부서',
     color: 'text-indigo-600',
     bgColor: 'bg-indigo-50',
-    icon: 'FolderOpen'
+    icon: 'FolderOpen',
   },
   company: {
     value: 'company',
     label: '회사',
     color: 'text-gray-600',
     bgColor: 'bg-gray-50',
-    icon: 'Building2'
-  }
+    icon: 'Building2',
+  },
 }
 
 /**
@@ -80,4 +80,3 @@ export const getAllSearchTypes = (): SearchTypeInfo[] => {
 export const getActiveSearchTypes = (): SearchTypeInfo[] => {
   return getAllSearchTypes()
 }
-

@@ -61,7 +61,7 @@ export interface Product {
   metadata?: string
   createdAt: string
   updatedAt?: string
-  
+
   // 재고 관련 정보 (백엔드에서 기본값으로 설정됨)
   quantity?: number
   totalStock?: number
@@ -111,7 +111,9 @@ class ProductService {
   /**
    * 상품 목록 조회
    */
-  async getProducts(params: ProductListParams = {}): Promise<ProductListResponse> {
+  async getProducts(
+    params: ProductListParams = {},
+  ): Promise<ProductListResponse> {
     try {
       const response = await api.get(this.baseUrl, { params })
       return response.data
@@ -139,7 +141,9 @@ class ProductService {
   /**
    * 상품 생성
    */
-  async createProduct(product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>): Promise<Product> {
+  async createProduct(
+    product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>,
+  ): Promise<Product> {
     try {
       const response = await api.post(this.baseUrl, product)
       return response.data
@@ -180,7 +184,7 @@ class ProductService {
   async searchProducts(searchTerm: string): Promise<Product[]> {
     try {
       const response = await api.get(`${this.baseUrl}/search`, {
-        params: { q: searchTerm }
+        params: { q: searchTerm },
       })
       return response.data
     } catch (error) {
@@ -204,6 +208,3 @@ class ProductService {
 }
 
 export const productService = new ProductService()
-
-
-

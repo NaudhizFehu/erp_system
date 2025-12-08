@@ -59,7 +59,9 @@ class CustomerService {
   /**
    * 고객 목록 조회
    */
-  async getCustomers(params: CustomerListParams = {}): Promise<CustomerListResponse> {
+  async getCustomers(
+    params: CustomerListParams = {},
+  ): Promise<CustomerListResponse> {
     try {
       const response = await api.get(this.baseUrl, { params })
       return response.data
@@ -90,7 +92,9 @@ class CustomerService {
   /**
    * 고객 생성
    */
-  async createCustomer(customer: Omit<Customer, 'id' | 'createdAt' | 'updatedAt'>): Promise<Customer> {
+  async createCustomer(
+    customer: Omit<Customer, 'id' | 'createdAt' | 'updatedAt'>,
+  ): Promise<Customer> {
     try {
       const response = await api.post(this.baseUrl, customer)
       return response.data
@@ -103,7 +107,10 @@ class CustomerService {
   /**
    * 고객 수정
    */
-  async updateCustomer(id: number, customer: Partial<Customer>): Promise<Customer> {
+  async updateCustomer(
+    id: number,
+    customer: Partial<Customer>,
+  ): Promise<Customer> {
     try {
       const response = await api.put(`${this.baseUrl}/${id}`, customer)
       return response.data
@@ -131,7 +138,7 @@ class CustomerService {
   async searchCustomers(searchTerm: string): Promise<Customer[]> {
     try {
       const response = await api.get(`${this.baseUrl}/search`, {
-        params: { q: searchTerm }
+        params: { q: searchTerm },
       })
       return response.data
     } catch (error) {
@@ -142,6 +149,3 @@ class CustomerService {
 }
 
 export const customerService = new CustomerService()
-
-
-

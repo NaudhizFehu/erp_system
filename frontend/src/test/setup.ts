@@ -87,7 +87,7 @@ afterEach(() => {
 })
 
 // 전역 에러 핸들링
-process.on('unhandledRejection', (reason) => {
+process.on('unhandledRejection', reason => {
   console.error('테스트 중 처리되지 않은 Promise 거부:', reason)
 })
 
@@ -108,8 +108,3 @@ beforeAll(() => {
 afterAll(() => {
   console.error = originalError
 })
-
-
-
-
-

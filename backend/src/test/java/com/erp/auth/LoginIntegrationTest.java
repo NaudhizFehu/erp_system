@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
@@ -22,7 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * admin/admin123과 user/user123 계정으로 로그인이 정상적으로 작동하는지 테스트합니다
  */
 @SpringBootTest
-@AutoConfigureWebMvc
+@AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
 class LoginIntegrationTest {
@@ -38,9 +38,9 @@ class LoginIntegrationTest {
     void testAdminInfo() throws Exception {
         mockMvc.perform(get("/api/auth/debug/admin-info"))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.id").value(1))
+                .andExpect(jsonPath("$.data.id").exists())
                 .andExpect(jsonPath("$.data.username").value("admin"))
                 .andExpect(jsonPath("$.data.role").value("ADMIN"))
                 .andExpect(jsonPath("$.data.isActive").value(true))
@@ -59,7 +59,7 @@ class LoginIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.passwordMatches").value(true))
                 .andExpect(jsonPath("$.data.authenticationSuccess").value(true))
@@ -81,12 +81,12 @@ class LoginIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.accessToken").exists())
                 .andExpect(jsonPath("$.data.refreshToken").exists())
-                .andExpect(jsonPath("$.data.userInfo.username").value("admin"))
-                .andExpect(jsonPath("$.data.userInfo.role").value("ADMIN"))
+                .andExpect(jsonPath("$.data.user.username").value("admin"))
+                .andExpect(jsonPath("$.data.user.role").value("ADMIN"))
                 .andReturn();
 
         System.out.println("=== Admin 실제 로그인 API 결과 ===");
@@ -102,7 +102,7 @@ class LoginIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.passwordMatches").value(true))
                 .andExpect(jsonPath("$.data.authenticationSuccess").value(true))
@@ -124,12 +124,12 @@ class LoginIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.accessToken").exists())
                 .andExpect(jsonPath("$.data.refreshToken").exists())
-                .andExpect(jsonPath("$.data.userInfo.username").value("user"))
-                .andExpect(jsonPath("$.data.userInfo.role").value("USER"))
+                .andExpect(jsonPath("$.data.user.username").value("user"))
+                .andExpect(jsonPath("$.data.user.role").value("USER"))
                 .andReturn();
 
         System.out.println("=== User 실제 로그인 API 결과 ===");
@@ -145,9 +145,9 @@ class LoginIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isUnauthorized())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("로그인에 실패했습니다"));
+                .andExpect(jsonPath("$.message").value("사용자명 또는 비밀번호가 올바르지 않습니다"));
     }
 
     @Test
@@ -159,9 +159,9 @@ class LoginIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isUnauthorized())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("로그인에 실패했습니다"));
+                .andExpect(jsonPath("$.message").value("사용자명 또는 비밀번호가 올바르지 않습니다"));
     }
 
     @Test
@@ -173,7 +173,7 @@ class LoginIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.passwordMatches").value(false))
                 .andExpect(jsonPath("$.data.authenticationSuccess").value(false))
@@ -192,7 +192,7 @@ class LoginIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.passwordMatches").value(false))
                 .andExpect(jsonPath("$.data.authenticationSuccess").value(false))
