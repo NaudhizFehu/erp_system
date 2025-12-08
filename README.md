@@ -13,41 +13,6 @@
 - **재고관리**: 제품 관리, 재고 추적, 입출고 관리
 - **영업관리**: 고객 관리, 주문 처리, 견적 관리
 
-## 🔄 멀티 리모트 관리
-
-이 프로젝트는 **GitLab(개발) + GitHub(포트폴리오) 멀티 리모트 관리**를 사용합니다.
-
-### 리모트 설정
-```bash
-# GitLab (개발용)
-git remote add origin https://gitlab.fehu.kr/naudhizfehu1/cursor-erp-system.git
-
-# GitHub (포트폴리오용)
-git remote add github https://github.com/NaudhizFehu/erp_system.git
-```
-
-### 파일 분류 전략
-
-#### GitLab 전용 (민감정보 포함)
-- `application-dev.yml` - 실제 개발 설정
-- `application-prod.yml` - 실제 운영 설정
-- 실제 서버 정보가 포함된 설정 파일들
-
-#### GitHub 공개 (포트폴리오용)
-- `application.yml` - 기본 공개 설정
-- `application-dev.yml.example` - 개발 환경 템플릿
-- 소스 코드 (민감정보 제거된 버전)
-- `README.md` - 포트폴리오용 문서
-
-### 배포 전략
-```bash
-# GitLab에 개발 코드 푸시
-git push origin develop
-
-# GitHub에 포트폴리오용 코드 푸시
-git push github develop
-```
-
 ## 🏗️ 기술 스택
 
 ### 백엔드

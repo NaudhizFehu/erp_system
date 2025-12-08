@@ -281,6 +281,10 @@ backend/logs/
 # 배포 스크립트 (서버 정보 포함)
 scripts/
 
+# 배포 문서 및 설정 (서버 정보 포함)
+DEPLOYMENT.md
+docker-compose.prod.yml
+
 
 
 
