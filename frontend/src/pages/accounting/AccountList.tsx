@@ -15,37 +15,7 @@ import {
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+import { AccountForm } from '@/components/accounting/AccountForm'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -56,11 +26,57 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-
-import { useAccounts, useDeleteAccount } from '@/hooks/useAccounts'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import {
+  useAccounts,
+  useDeleteAccount,
+  useCreateAccount,
+  useUpdateAccount,
+} from '@/hooks/useAccounts'
 import { useDebounce } from '@/hooks/useDebounce'
 import { AccountType, KOREAN_LABELS } from '@/types/accounting'
-import type { Account } from '@/types/accounting'
+import type {
+  Account,
+  AccountCreateRequest,
+  AccountUpdateRequest,
+} from '@/types/accounting'
 
 /**
  * 계정 목록 페이지
@@ -83,6 +99,11 @@ function AccountList() {
   // 삭제 다이얼로그 상태
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [accountToDelete, setAccountToDelete] = useState<Account | null>(null)
+
+  // 모달 상태
+  const [isFormOpen, setIsFormOpen] = useState(false)
+  const [formMode, setFormMode] = useState<'create' | 'edit'>('create')
+  const [selectedAccount, setSelectedAccount] = useState<Account | null>(null)
 
   // 디바운스된 검색어 (300ms)
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
@@ -115,6 +136,10 @@ function AccountList() {
 
   // 계정과목 삭제
   const deleteAccount = useDeleteAccount()
+
+  // 계정과목 등록 및 수정
+  const createAccount = useCreateAccount()
+  const updateAccount = useUpdateAccount()
 
   // 계정 타입별 Badge
   const getTypeBadge = (type: AccountType) => {
@@ -238,6 +263,49 @@ function AccountList() {
     setPage(0)
   }
 
+  // 계정 추가 핸들러
+  const handleCreate = () => {
+    setFormMode('create')
+    setSelectedAccount(null)
+    setIsFormOpen(true)
+  }
+
+  // 계정 수정 핸들러
+  const handleEdit = (account: Account) => {
+    setFormMode('edit')
+    setSelectedAccount(account)
+    setIsFormOpen(true)
+  }
+
+  // 폼 제출 핸들러
+  const handleFormSubmit = (
+    formData: AccountCreateRequest | AccountUpdateRequest
+  ) => {
+    if (formMode === 'create') {
+      createAccount.mutate(
+        formData as AccountCreateRequest & { companyId: number },
+        {
+          onSuccess: () => {
+            setIsFormOpen(false)
+            refetch()
+          },
+        }
+      )
+    } else {
+      if (selectedAccount) {
+        updateAccount.mutate(
+          { id: selectedAccount.id, data: formData as AccountUpdateRequest },
+          {
+            onSuccess: () => {
+              setIsFormOpen(false)
+              refetch()
+            },
+          }
+        )
+      }
+    }
+  }
+
   return (
     <div className="space-y-6 p-6">
       {/* 헤더 */}
@@ -260,7 +328,7 @@ function AccountList() {
             <RefreshCw className="mr-2 h-4 w-4" />
             새로고침
           </Button>
-          <Button>
+          <Button onClick={handleCreate}>
             <Plus className="mr-2 h-4 w-4" />
             계정 추가
           </Button>
@@ -324,9 +392,7 @@ function AccountList() {
                   <SelectContent>
                     <SelectItem value="ALL">전체</SelectItem>
                     <SelectItem value={AccountType.ASSET}>자산</SelectItem>
-                    <SelectItem value={AccountType.LIABILITY}>
-                      부채
-                    </SelectItem>
+                    <SelectItem value={AccountType.LIABILITY}>부채</SelectItem>
                     <SelectItem value={AccountType.EQUITY}>자본</SelectItem>
                     <SelectItem value={AccountType.REVENUE}>수익</SelectItem>
                     <SelectItem value={AccountType.EXPENSE}>비용</SelectItem>
@@ -460,7 +526,9 @@ function AccountList() {
                                   <Eye className="mr-2 h-4 w-4" />
                                   상세보기
                                 </DropdownMenuItem>
-                                <DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleEdit(account)}
+                                >
                                   <Edit className="mr-2 h-4 w-4" />
                                   수정
                                 </DropdownMenuItem>
@@ -537,8 +605,7 @@ function AccountList() {
             <AlertDialogTitle>계정과목 삭제</AlertDialogTitle>
             <AlertDialogDescription>
               정말 "{accountToDelete?.accountName}" 계정을 삭제하시겠습니까?
-              <br />
-              이 작업은 되돌릴 수 없습니다.
+              <br />이 작업은 되돌릴 수 없습니다.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -552,6 +619,31 @@ function AccountList() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* 계정과목 등록/수정 모달 */}
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {formMode === 'create' ? '계정과목 등록' : '계정과목 수정'}
+            </DialogTitle>
+            <DialogDescription>
+              {formMode === 'create'
+                ? '새로운 계정과목을 등록합니다. 모든 필수 항목을 입력해주세요.'
+                : '계정과목 정보를 수정합니다. 모든 필드를 확인한 후 저장해주세요.'}
+            </DialogDescription>
+          </DialogHeader>
+          <AccountForm
+            account={
+              formMode === 'edit' ? selectedAccount || undefined : undefined
+            }
+            onSubmit={handleFormSubmit}
+            onCancel={() => setIsFormOpen(false)}
+            isSubmitting={createAccount.isPending || updateAccount.isPending}
+            mode={formMode}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

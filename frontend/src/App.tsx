@@ -6,6 +6,7 @@ import { RoleProtectedRoute } from '@/components/auth/RoleProtectedRoute'
 import { Layout } from '@/components/layout/Layout'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { NotificationProvider } from '@/contexts/NotificationContext'
+import AccountDetail from '@/pages/accounting/AccountDetail'
 import { AccountList } from '@/pages/accounting/AccountList'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { CompanyDetail } from '@/pages/company/CompanyDetail'
@@ -109,6 +110,16 @@ function App() {
                     <Route
                       path="/accounting/accounts"
                       element={<AccountList />}
+                    />
+                    <Route
+                      path="/accounting/accounts/:id"
+                      element={
+                        <RoleProtectedRoute
+                          requiredRoles={['SUPER_ADMIN', 'ADMIN']}
+                        >
+                          <AccountDetail />
+                        </RoleProtectedRoute>
+                      }
                     />
 
                     {/* 회사관리 */}

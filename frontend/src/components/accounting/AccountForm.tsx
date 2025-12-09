@@ -44,21 +44,16 @@ import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import { useAuth } from '@/contexts/AuthContext'
-import {
-  useCheckAccountCode,
-  useAccountTree,
-} from '@/hooks/useAccounts'
+import { useCheckAccountCode, useAccountTree } from '@/hooks/useAccounts'
 import { cn } from '@/lib/utils'
-import type {
-  Account,
-  AccountCreateRequest,
-  AccountUpdateRequest,
-} from '@/types/accounting'
 import {
   AccountType,
   AccountCategory,
   DebitCreditType,
   KOREAN_LABELS,
+  type Account,
+  type AccountCreateRequest,
+  type AccountUpdateRequest,
 } from '@/types/accounting'
 
 // 계정 분류 매핑
@@ -163,8 +158,7 @@ export function AccountForm({
       accountType: account?.accountType || AccountType.ASSET,
       accountCategory:
         account?.accountCategory || AccountCategory.CURRENT_ASSET,
-      debitCreditType:
-        account?.debitCreditType || DebitCreditType.DEBIT,
+      debitCreditType: account?.debitCreditType || DebitCreditType.DEBIT,
       accountLevel: account?.accountLevel || 1,
       parentAccountId: account?.parentAccount?.id,
       sortOrder: account?.sortOrder || 0,
@@ -267,13 +261,16 @@ export function AccountForm({
                         {codeCheckData ? (
                           <span className="text-sm text-red-600">중복</span>
                         ) : (
-                          <span className="text-sm text-green-600">사용 가능</span>
+                          <span className="text-sm text-green-600">
+                            사용 가능
+                          </span>
                         )}
                       </div>
                     )}
                   </div>
                   <FormDescription>
-                    계정 레벨에 따라: 대분류(4자리), 중분류(6자리), 소분류(8자리)
+                    계정 레벨에 따라: 대분류(4자리), 중분류(6자리),
+                    소분류(8자리)
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -547,7 +544,9 @@ export function AccountForm({
                       }
                     />
                   </FormControl>
-                  <FormDescription>숫자가 작을수록 먼저 표시됩니다</FormDescription>
+                  <FormDescription>
+                    숫자가 작을수록 먼저 표시됩니다
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

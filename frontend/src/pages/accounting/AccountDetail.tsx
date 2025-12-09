@@ -1,10 +1,9 @@
-import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Edit, Trash2, Plus } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useState } from 'react'
+import toast from 'react-hot-toast'
+import { useNavigate, useParams } from 'react-router-dom'
+
+import { AccountForm } from '@/components/accounting/AccountForm'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,6 +14,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -30,14 +38,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import toast from 'react-hot-toast'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   useAccount,
   useAccountTree,
   useUpdateAccount,
   useDeleteAccount,
 } from '@/hooks/useAccounts'
-import { AccountForm } from '@/components/accounting/AccountForm'
 import {
   AccountType,
   AccountCategory,
@@ -92,7 +99,10 @@ export default function AccountDetail() {
   const deleteAccount = useDeleteAccount()
 
   // 하위 계정 찾기
-  const findChildren = (accountId: number, tree?: AccountTreeNode[]): AccountTreeNode[] => {
+  const findChildren = (
+    accountId: number,
+    tree?: AccountTreeNode[]
+  ): AccountTreeNode[] => {
     if (!tree) return []
 
     for (const node of tree) {
@@ -116,7 +126,9 @@ export default function AccountDetail() {
       toast.success(`${data.accountName} 계정과목이 성공적으로 수정되었습니다.`)
       setEditDialogOpen(false)
     } catch (error: any) {
-      toast.error(error.response?.data?.message || '계정과목 수정에 실패했습니다.')
+      toast.error(
+        error.response?.data?.message || '계정과목 수정에 실패했습니다.'
+      )
     }
   }
 
@@ -126,10 +138,14 @@ export default function AccountDetail() {
 
     try {
       await deleteAccount.mutateAsync(account.id)
-      toast.success(`${account.accountName} 계정과목이 성공적으로 삭제되었습니다.`)
+      toast.success(
+        `${account.accountName} 계정과목이 성공적으로 삭제되었습니다.`
+      )
       navigate('/accounting/accounts')
     } catch (error: any) {
-      toast.error(error.response?.data?.message || '계정과목 삭제에 실패했습니다.')
+      toast.error(
+        error.response?.data?.message || '계정과목 삭제에 실패했습니다.'
+      )
     }
   }
 
@@ -141,10 +157,12 @@ export default function AccountDetail() {
   // 로딩 상태
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex h-screen items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">계정과목 정보를 불러오는 중...</p>
+          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-primary" />
+          <p className="text-muted-foreground">
+            계정과목 정보를 불러오는 중...
+          </p>
         </div>
       </div>
     )
@@ -153,11 +171,14 @@ export default function AccountDetail() {
   // 에러 상태
   if (error || !account) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex h-screen items-center justify-center">
         <div className="text-center">
-          <p className="text-destructive text-lg mb-2">계정과목을 불러올 수 없습니다.</p>
-          <p className="text-muted-foreground mb-4">
-            {error?.message || '계정과목이 존재하지 않거나 접근 권한이 없습니다.'}
+          <p className="mb-2 text-lg text-destructive">
+            계정과목을 불러올 수 없습니다.
+          </p>
+          <p className="mb-4 text-muted-foreground">
+            {error?.message ||
+              '계정과목이 존재하지 않거나 접근 권한이 없습니다.'}
           </p>
           <Button onClick={handleBack}>목록으로 돌아가기</Button>
         </div>
@@ -183,11 +204,14 @@ export default function AccountDetail() {
         </div>
         <div className="flex space-x-2">
           <Button variant="outline" onClick={() => setEditDialogOpen(true)}>
-            <Edit className="h-4 w-4 mr-2" />
+            <Edit className="mr-2 h-4 w-4" />
             수정
           </Button>
-          <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)}>
-            <Trash2 className="h-4 w-4 mr-2" />
+          <Button
+            variant="destructive"
+            onClick={() => setDeleteDialogOpen(true)}
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
             삭제
           </Button>
         </div>
@@ -197,61 +221,96 @@ export default function AccountDetail() {
       <Card>
         <CardHeader>
           <CardTitle>기본 정보</CardTitle>
-          <CardDescription>계정과목의 기본 정보를 확인할 수 있습니다.</CardDescription>
+          <CardDescription>
+            계정과목의 기본 정보를 확인할 수 있습니다.
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div>
-              <h3 className="text-sm font-medium text-muted-foreground mb-1">계정코드</h3>
+              <h3 className="mb-1 text-sm font-medium text-muted-foreground">
+                계정코드
+              </h3>
               <p className="text-base">{account.accountCode}</p>
             </div>
             <div>
-              <h3 className="text-sm font-medium text-muted-foreground mb-1">계정명</h3>
+              <h3 className="mb-1 text-sm font-medium text-muted-foreground">
+                계정명
+              </h3>
               <p className="text-base">{account.accountName}</p>
             </div>
             {account.accountNameEn && (
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">계정명 (영문)</h3>
+                <h3 className="mb-1 text-sm font-medium text-muted-foreground">
+                  계정명 (영문)
+                </h3>
                 <p className="text-base">{account.accountNameEn}</p>
               </div>
             )}
             <div>
-              <h3 className="text-sm font-medium text-muted-foreground mb-1">계정 타입</h3>
-              <p className="text-base">{KOREAN_LABELS.accountType[account.accountType]}</p>
+              <h3 className="mb-1 text-sm font-medium text-muted-foreground">
+                계정 타입
+              </h3>
+              <p className="text-base">
+                {KOREAN_LABELS.accountType[account.accountType]}
+              </p>
             </div>
             <div>
-              <h3 className="text-sm font-medium text-muted-foreground mb-1">계정 분류</h3>
-              <p className="text-base">{KOREAN_LABELS.accountCategory[account.accountCategory]}</p>
+              <h3 className="mb-1 text-sm font-medium text-muted-foreground">
+                계정 분류
+              </h3>
+              <p className="text-base">
+                {KOREAN_LABELS.accountCategory[account.accountCategory]}
+              </p>
             </div>
             <div>
-              <h3 className="text-sm font-medium text-muted-foreground mb-1">차변/대변</h3>
-              <p className="text-base">{KOREAN_LABELS.debitCreditType[account.debitCreditType]}</p>
+              <h3 className="mb-1 text-sm font-medium text-muted-foreground">
+                차변/대변
+              </h3>
+              <p className="text-base">
+                {KOREAN_LABELS.debitCreditType[account.debitCreditType]}
+              </p>
             </div>
             <div>
-              <h3 className="text-sm font-medium text-muted-foreground mb-1">계정 레벨</h3>
-              <p className="text-base">{KOREAN_LABELS.accountLevel[account.accountLevel as 1 | 2 | 3]}</p>
+              <h3 className="mb-1 text-sm font-medium text-muted-foreground">
+                계정 레벨
+              </h3>
+              <p className="text-base">
+                {KOREAN_LABELS.accountLevel[account.accountLevel as 1 | 2 | 3]}
+              </p>
             </div>
             <div>
-              <h3 className="text-sm font-medium text-muted-foreground mb-1">정렬 순서</h3>
+              <h3 className="mb-1 text-sm font-medium text-muted-foreground">
+                정렬 순서
+              </h3>
               <p className="text-base">{account.sortOrder}</p>
             </div>
             {account.parentAccount && (
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">상위 계정</h3>
+                <h3 className="mb-1 text-sm font-medium text-muted-foreground">
+                  상위 계정
+                </h3>
                 <p className="text-base">
-                  {account.parentAccount.accountName} ({account.parentAccount.accountCode})
+                  {account.parentAccount.accountName} (
+                  {account.parentAccount.accountCode})
                 </p>
               </div>
             )}
             {account.taxCode && (
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">세금 코드</h3>
+                <h3 className="mb-1 text-sm font-medium text-muted-foreground">
+                  세금 코드
+                </h3>
                 <p className="text-base">{account.taxCode}</p>
               </div>
             )}
             <div>
-              <h3 className="text-sm font-medium text-muted-foreground mb-1">잔액 추적</h3>
-              <p className="text-base">{account.trackBalance ? '사용' : '미사용'}</p>
+              <h3 className="mb-1 text-sm font-medium text-muted-foreground">
+                잔액 추적
+              </h3>
+              <p className="text-base">
+                {account.trackBalance ? '사용' : '미사용'}
+              </p>
             </div>
           </div>
         </CardContent>
@@ -261,24 +320,32 @@ export default function AccountDetail() {
       <Card>
         <CardHeader>
           <CardTitle>잔액 정보</CardTitle>
-          <CardDescription>계정과목의 잔액 및 예산 정보를 확인할 수 있습니다.</CardDescription>
+          <CardDescription>
+            계정과목의 잔액 및 예산 정보를 확인할 수 있습니다.
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
             <div>
-              <h3 className="text-sm font-medium text-muted-foreground mb-1">기초 잔액</h3>
+              <h3 className="mb-1 text-sm font-medium text-muted-foreground">
+                기초 잔액
+              </h3>
               <p className="text-2xl font-bold">
                 {account.openingBalance?.toLocaleString() || 0} 원
               </p>
             </div>
             <div>
-              <h3 className="text-sm font-medium text-muted-foreground mb-1">현재 잔액</h3>
+              <h3 className="mb-1 text-sm font-medium text-muted-foreground">
+                현재 잔액
+              </h3>
               <p className="text-2xl font-bold">
                 {account.currentBalance?.toLocaleString() || 0} 원
               </p>
             </div>
             <div>
-              <h3 className="text-sm font-medium text-muted-foreground mb-1">예산 금액</h3>
+              <h3 className="mb-1 text-sm font-medium text-muted-foreground">
+                예산 금액
+              </h3>
               <p className="text-2xl font-bold">
                 {account.budgetAmount?.toLocaleString() || 0} 원
               </p>
@@ -311,18 +378,20 @@ export default function AccountDetail() {
                 </div>
                 <Button
                   size="sm"
-                  onClick={() => navigate('/accounting/accounts/new', {
-                    state: { parentAccountId: account.id }
-                  })}
+                  onClick={() =>
+                    navigate('/accounting/accounts/new', {
+                      state: { parentAccountId: account.id },
+                    })
+                  }
                 >
-                  <Plus className="h-4 w-4 mr-2" />
+                  <Plus className="mr-2 h-4 w-4" />
                   하위 계정 추가
                 </Button>
               </div>
             </CardHeader>
             <CardContent>
               {childAccounts.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
+                <div className="py-8 text-center text-muted-foreground">
                   하위 계정이 없습니다.
                 </div>
               ) : (
@@ -336,19 +405,31 @@ export default function AccountDetail() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {childAccounts.map((child) => (
+                    {childAccounts.map(child => (
                       <TableRow
                         key={child.id}
                         className="cursor-pointer hover:bg-muted/50"
-                        onClick={() => navigate(`/accounting/accounts/${child.id}`)}
+                        onClick={() =>
+                          navigate(`/accounting/accounts/${child.id}`)
+                        }
                       >
-                        <TableCell className="font-mono">{child.accountCode}</TableCell>
-                        <TableCell className="font-medium">{child.accountName}</TableCell>
+                        <TableCell className="font-mono">
+                          {child.accountCode}
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {child.accountName}
+                        </TableCell>
                         <TableCell>
-                          {KOREAN_LABELS.accountLevel[child.accountLevel as 1 | 2 | 3]}
+                          {
+                            KOREAN_LABELS.accountLevel[
+                              child.accountLevel as 1 | 2 | 3
+                            ]
+                          }
                         </TableCell>
                         <TableCell className="text-center">
-                          <Badge variant={child.isActive ? 'default' : 'secondary'}>
+                          <Badge
+                            variant={child.isActive ? 'default' : 'secondary'}
+                          >
                             {child.isActive ? '활성' : '비활성'}
                           </Badge>
                         </TableCell>
@@ -369,7 +450,7 @@ export default function AccountDetail() {
               <CardDescription>이 계정의 최근 거래 내역입니다.</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
+              <div className="py-8 text-center text-muted-foreground">
                 거래 내역 기능은 PHASE 2에서 구현 예정입니다.
               </div>
             </CardContent>
@@ -384,14 +465,16 @@ export default function AccountDetail() {
             <CardTitle>설명</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-base whitespace-pre-wrap">{account.description}</p>
+            <p className="whitespace-pre-wrap text-base">
+              {account.description}
+            </p>
           </CardContent>
         </Card>
       )}
 
       {/* 수정 모달 */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>계정과목 수정</DialogTitle>
             <DialogDescription>
@@ -414,13 +497,15 @@ export default function AccountDetail() {
           <AlertDialogHeader>
             <AlertDialogTitle>계정과목 삭제</AlertDialogTitle>
             <AlertDialogDescription>
-              정말로 <strong>{account.accountName}</strong> 계정과목을 삭제하시겠습니까?
+              정말로 <strong>{account.accountName}</strong> 계정과목을
+              삭제하시겠습니까?
               {childAccounts.length > 0 && (
-                <div className="mt-2 p-2 bg-destructive/10 rounded-md">
-                  <p className="text-destructive font-medium">
-                    ⚠️ 이 계정에는 {childAccounts.length}개의 하위 계정이 있습니다.
+                <div className="mt-2 rounded-md bg-destructive/10 p-2">
+                  <p className="font-medium text-destructive">
+                    ⚠️ 이 계정에는 {childAccounts.length}개의 하위 계정이
+                    있습니다.
                   </p>
-                  <p className="text-destructive text-sm">
+                  <p className="text-sm text-destructive">
                     하위 계정을 먼저 삭제하거나 다른 상위 계정으로 이동해주세요.
                   </p>
                 </div>
