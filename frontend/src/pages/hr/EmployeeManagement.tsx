@@ -95,14 +95,14 @@ export function EmployeeManagement() {
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table')
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<EmploymentStatus | 'all'>(
-    'all',
+    'all'
   )
   const [selectedEmployees, setSelectedEmployees] = useState<number[]>([])
   const [showForm, setShowForm] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [showTerminateDialog, setShowTerminateDialog] = useState(false)
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(
-    null,
+    null
   )
   const [formMode, setFormMode] = useState<'create' | 'edit'>('create')
 
@@ -182,7 +182,7 @@ export function EmployeeManagement() {
         return newParams
       })
     },
-    [setSearchParams],
+    [setSearchParams]
   )
 
   // 상태 필터 변경
@@ -242,7 +242,7 @@ export function EmployeeManagement() {
 
   // 폼 제출 처리
   const handleFormSubmit = async (
-    data: EmployeeCreateRequest | EmployeeUpdateRequest,
+    data: EmployeeCreateRequest | EmployeeUpdateRequest
   ) => {
     try {
       if (formMode === 'create') {
@@ -310,7 +310,7 @@ export function EmployeeManagement() {
   }
 
   const handleFileSelect = async (
-    event: React.ChangeEvent<HTMLInputElement>,
+    event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = event.target.files?.[0]
     if (!file) return
@@ -603,7 +603,7 @@ export function EmployeeManagement() {
                           {pageNum + 1}
                         </Button>
                       )
-                    },
+                    }
                   )}
                 </div>
 
@@ -739,7 +739,7 @@ export function EmployeeManagement() {
                   value={selectedCompanyForExport?.toString()}
                   onValueChange={value =>
                     setSelectedCompanyForExport(
-                      value === 'all' ? undefined : Number(value),
+                      value === 'all' ? undefined : Number(value)
                     )
                   }
                 >

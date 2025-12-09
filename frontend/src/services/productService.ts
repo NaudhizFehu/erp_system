@@ -112,7 +112,7 @@ class ProductService {
    * 상품 목록 조회
    */
   async getProducts(
-    params: ProductListParams = {},
+    params: ProductListParams = {}
   ): Promise<ProductListResponse> {
     try {
       const response = await api.get(this.baseUrl, { params })
@@ -142,7 +142,7 @@ class ProductService {
    * 상품 생성
    */
   async createProduct(
-    product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>,
+    product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>
   ): Promise<Product> {
     try {
       const response = await api.post(this.baseUrl, product)

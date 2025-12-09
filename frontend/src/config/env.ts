@@ -28,7 +28,7 @@ interface AppConfig {
  */
 function parseBoolean(
   value: string | undefined,
-  defaultValue: boolean = false,
+  defaultValue: boolean = false
 ): boolean {
   if (!value) return defaultValue
   return value.toLowerCase() === 'true'
@@ -48,7 +48,7 @@ function parseNumber(value: string | undefined, defaultValue: number): number {
  */
 function parseArray(
   value: string | undefined,
-  defaultValue: string[] = [],
+  defaultValue: string[] = []
 ): string[] {
   if (!value) return defaultValue
   return value
@@ -71,7 +71,7 @@ export const config: AppConfig = {
     analytics: parseBoolean(import.meta.env.VITE_FEATURE_ANALYTICS, false),
     notifications: parseBoolean(
       import.meta.env.VITE_FEATURE_NOTIFICATIONS,
-      true,
+      true
     ),
   },
 

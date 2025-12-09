@@ -3,6 +3,7 @@
  * 백엔드 REST API와 통신하는 함수들을 정의합니다
  */
 
+import type { ApiResponse } from '@/types/common'
 import type {
   PageResponse,
   Employee,
@@ -19,10 +20,10 @@ import type {
   Company,
   Department,
   ImportResult,
-  ExportFormat
+  ExportFormat,
 } from '@/types/hr'
+
 import api from './api'
-import type { ApiResponse } from '@/types/common'
 
 // Mock API import
 import { mockEmployeeApi, mockPositionApi } from './hrMockApi'
@@ -118,7 +119,7 @@ export const employeeApi = {
         size: params.size || 20,
         sort: params.sort || 'employeeNumber',
         ...params,
-      }
+      },
     })
 
     // 백엔드는 ApiResponse<PageResponse<Employee>> 형식으로 응답하므로 response.data.data를 사용
@@ -210,7 +211,7 @@ export const employeeApi = {
         page: params.page || 0,
         size: params.size || 20,
         sort: params.sort || 'employeeNumber',
-      }
+      },
     })
 
     // 백엔드는 ApiResponse<PageResponse<Employee>> 형식으로 응답하므로 response.data.data를 사용
@@ -576,7 +577,7 @@ export const employeeApi = {
     )
     return data.data.map(([gender, count]) => ({
       label: gender === 'MALE' ? '남성' : '여성',
-      count, 
+      count,
     }))
   },
 
@@ -661,7 +662,7 @@ export const employeeApi = {
     }
 
     const { data } = await api.get<ApiResponse<Record<string, number>>>(
-      `${API_BASE_URL}/employees/count/by-status`,
+      `${API_BASE_URL}/employees/count/by-status`
     )
     return data.data
   },
@@ -817,7 +818,9 @@ export const positionApi = {
     searchTerm: string,
     params: SearchParams = {}
   ): Promise<PageResponse<Position>> => {
-    const { data } = await api.get<ApiResponse<PageResponse<Position>>>('/positions/search', {
+    const { data } = await api.get<ApiResponse<PageResponse<Position>>>(
+      '/positions/search',
+      {
         params: {
           searchTerm,
           page: params.page || 0,
@@ -836,7 +839,9 @@ export const positionApi = {
     companyId: number,
     currentLevel: number
   ): Promise<Position[]> => {
-    const { data } = await api.get<ApiResponse<Position[]>>('/positions/promotable', {
+    const { data } = await api.get<ApiResponse<Position[]>>(
+      '/positions/promotable',
+      {
         params: { companyId, currentLevel },
       }
     )
@@ -847,7 +852,9 @@ export const positionApi = {
    * 급여 범위별 직급 조회
    */
   getPositionsBySalaryRange: async (salary: number): Promise<Position[]> => {
-    const { data } = await api.get<ApiResponse<Position[]>>('/positions/salary-range', {
+    const { data } = await api.get<ApiResponse<Position[]>>(
+      '/positions/salary-range',
+      {
         params: { salary },
       }
     )
@@ -860,7 +867,10 @@ export const positionApi = {
   createPosition: async (
     position: PositionCreateRequest
   ): Promise<Position> => {
-    const { data } = await api.post<ApiResponse<Position>>('/positions', position)
+    const { data } = await api.post<ApiResponse<Position>>(
+      '/positions',
+      position
+    )
     return data.data
   },
 
@@ -902,7 +912,9 @@ export const positionApi = {
     positionCode: string,
     excludeId?: number
   ): Promise<boolean> => {
-    const { data } = await api.get<ApiResponse<boolean>>('/positions/check/position-code', {
+    const { data } = await api.get<ApiResponse<boolean>>(
+      '/positions/check/position-code',
+      {
         params: { positionCode, excludeId },
       }
     )
@@ -931,7 +943,7 @@ export const positionApi = {
    */
   getPositionCountByCategory: async (): Promise<StatisticsData[]> => {
     const { data } = await api.get<ApiResponse<[PositionCategory, number][]>>(
-      `/positions/statistics/category`
+      '/positions/statistics/category'
     )
     return data.data.map(([category, count]) => ({
       label:
@@ -944,7 +956,7 @@ export const positionApi = {
               : category === 'JUNIOR'
                 ? '주니어'
                 : '인턴',
-      count, 
+      count,
     }))
   },
 
@@ -953,7 +965,7 @@ export const positionApi = {
    */
   getPositionCountByType: async (): Promise<StatisticsData[]> => {
     const { data } = await api.get<ApiResponse<[PositionType, number][]>>(
-      `/positions/statistics/type`
+      '/positions/statistics/type'
     )
     return data.data.map(([type, count]) => ({
       label:
@@ -964,7 +976,7 @@ export const positionApi = {
             : type === 'TEMPORARY'
               ? '임시직'
               : '컨설턴트',
-      count, 
+      count,
     }))
   },
 
@@ -973,7 +985,7 @@ export const positionApi = {
    */
   getPositionCountByCompany: async (): Promise<StatisticsData[]> => {
     const { data } = await api.get<ApiResponse<[string, number][]>>(
-      `/positions/statistics/company`
+      '/positions/statistics/company'
     )
     return data.data.map(([label, count]) => ({ label, count }))
   },
@@ -983,7 +995,7 @@ export const positionApi = {
    */
   getPositionCountByLevel: async (): Promise<StatisticsData[]> => {
     const { data } = await api.get<ApiResponse<[number, number][]>>(
-      `/positions/statistics/level`
+      '/positions/statistics/level'
     )
     return data.data.map(([level, count]) => ({ label: `${level}레벨`, count }))
   },

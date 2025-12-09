@@ -79,7 +79,7 @@ const employeeFormSchema = z.object({
     .string()
     .regex(
       /^\d{2,3}-\d{3,4}-\d{4}$/,
-      '올바른 전화번호 형식이어야 합니다 (예: 02-1234-5678)',
+      '올바른 전화번호 형식이어야 합니다 (예: 02-1234-5678)'
     )
     .optional()
     .or(z.literal('')),
@@ -88,7 +88,7 @@ const employeeFormSchema = z.object({
     .min(1, '휴대폰번호는 필수입니다')
     .regex(
       /^010-\d{4}-\d{4}$/,
-      '올바른 휴대폰번호 형식이어야 합니다 (예: 010-1234-5678)',
+      '올바른 휴대폰번호 형식이어야 합니다 (예: 010-1234-5678)'
     ),
   birthDate: z.date({
     required_error: '생년월일은 필수입니다',
@@ -469,7 +469,7 @@ export function EmployeeForm({
                           variant="outline"
                           className={cn(
                             'h-10 w-full pl-3 text-left font-normal',
-                            !field.value && 'text-muted-foreground',
+                            !field.value && 'text-muted-foreground'
                           )}
                         >
                           {field.value ? (
@@ -720,7 +720,7 @@ export function EmployeeForm({
                           variant="outline"
                           className={cn(
                             'h-10 w-full pl-3 text-left font-normal',
-                            !field.value && 'text-muted-foreground',
+                            !field.value && 'text-muted-foreground'
                           )}
                         >
                           {field.value ? (

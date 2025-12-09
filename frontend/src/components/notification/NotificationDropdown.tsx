@@ -72,7 +72,7 @@ function NotificationDropdown() {
       await markAsRead(id)
       // 읽은 알림을 바로 제거
       setNotifications(prev =>
-        prev.filter(notification => notification.id !== id),
+        prev.filter(notification => notification.id !== id)
       )
     } catch (error) {
       console.error('알림 읽음 처리 실패:', error)
@@ -100,7 +100,7 @@ function NotificationDropdown() {
       await notificationService.deleteNotification(id)
       // 로컬 상태 업데이트
       setNotifications(prev =>
-        prev.filter(notification => notification.id !== id),
+        prev.filter(notification => notification.id !== id)
       )
       // unreadCount는 전역 상태에서 자동으로 갱신됨
     } catch (error) {

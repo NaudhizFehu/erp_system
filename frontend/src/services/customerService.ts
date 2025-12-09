@@ -60,7 +60,7 @@ class CustomerService {
    * 고객 목록 조회
    */
   async getCustomers(
-    params: CustomerListParams = {},
+    params: CustomerListParams = {}
   ): Promise<CustomerListResponse> {
     try {
       const response = await api.get(this.baseUrl, { params })
@@ -93,7 +93,7 @@ class CustomerService {
    * 고객 생성
    */
   async createCustomer(
-    customer: Omit<Customer, 'id' | 'createdAt' | 'updatedAt'>,
+    customer: Omit<Customer, 'id' | 'createdAt' | 'updatedAt'>
   ): Promise<Customer> {
     try {
       const response = await api.post(this.baseUrl, customer)
@@ -109,7 +109,7 @@ class CustomerService {
    */
   async updateCustomer(
     id: number,
-    customer: Partial<Customer>,
+    customer: Partial<Customer>
   ): Promise<Customer> {
     try {
       const response = await api.put(`${this.baseUrl}/${id}`, customer)

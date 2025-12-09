@@ -251,7 +251,7 @@ export const mockAgeGroupStats: StatisticsData[] = [
 export function createMockPageResponse<T>(
   data: T[],
   page: number = 0,
-  size: number = 20,
+  size: number = 20
 ): PageResponse<T> {
   const startIndex = page * size
   const endIndex = startIndex + size

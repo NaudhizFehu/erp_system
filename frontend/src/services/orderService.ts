@@ -112,7 +112,7 @@ class OrderService {
    * 주문 생성
    */
   async createOrder(
-    order: Omit<Order, 'id' | 'createdAt' | 'updatedAt'>,
+    order: Omit<Order, 'id' | 'createdAt' | 'updatedAt'>
   ): Promise<Order> {
     try {
       const response = await axios.post(this.baseUrl, order)
@@ -153,7 +153,7 @@ class OrderService {
    */
   async updateOrderStatus(
     id: number,
-    status: Order['orderStatus'],
+    status: Order['orderStatus']
   ): Promise<Order> {
     try {
       const response = await axios.patch(`${this.baseUrl}/${id}/status`, {
@@ -171,12 +171,12 @@ class OrderService {
    */
   async updatePaymentStatus(
     id: number,
-    paymentStatus: Order['paymentStatus'],
+    paymentStatus: Order['paymentStatus']
   ): Promise<Order> {
     try {
       const response = await axios.patch(
         `${this.baseUrl}/${id}/payment-status`,
-        { paymentStatus },
+        { paymentStatus }
       )
       return response.data.data
     } catch (error) {

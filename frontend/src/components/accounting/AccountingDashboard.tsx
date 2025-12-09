@@ -208,7 +208,7 @@ export function AccountingDashboard({
             <div className="text-2xl font-bold">
               {transactionStats
                 ? accountingUtils.formatNumber(
-                    transactionStats.totalTransactionCount,
+                    transactionStats.totalTransactionCount
                   )
                 : '0'}
             </div>
@@ -244,7 +244,7 @@ export function AccountingDashboard({
                   <p className="mt-1 text-sm text-red-600">
                     차이:{' '}
                     {accountingUtils.formatCurrency(
-                      balanceVerification.balanceDifference,
+                      balanceVerification.balanceDifference
                     )}
                   </p>
                 )}
@@ -320,7 +320,7 @@ export function AccountingDashboard({
                         <span className="text-sm font-medium">총 자산</span>
                         <span className="text-lg font-bold text-blue-600">
                           {accountingUtils.formatCurrency(
-                            balanceSheet.totalAssets,
+                            balanceSheet.totalAssets
                           )}
                         </span>
                       </div>
@@ -328,7 +328,7 @@ export function AccountingDashboard({
                         <span className="text-sm font-medium">총 부채</span>
                         <span className="text-lg font-bold text-red-600">
                           {accountingUtils.formatCurrency(
-                            balanceSheet.totalLiabilities,
+                            balanceSheet.totalLiabilities
                           )}
                         </span>
                       </div>
@@ -336,7 +336,7 @@ export function AccountingDashboard({
                         <span className="text-sm font-medium">총 자본</span>
                         <span className="text-lg font-bold text-green-600">
                           {accountingUtils.formatCurrency(
-                            balanceSheet.totalEquity,
+                            balanceSheet.totalEquity
                           )}
                         </span>
                       </div>
@@ -349,7 +349,7 @@ export function AccountingDashboard({
                             className={`text-lg font-bold ${accountingUtils.getRatioColor(balanceSheet.equityRatio, 'equity')}`}
                           >
                             {accountingUtils.formatPercentage(
-                              balanceSheet.equityRatio,
+                              balanceSheet.equityRatio
                             )}
                           </span>
                         </div>
@@ -413,7 +413,7 @@ export function AccountingDashboard({
                           className={`text-lg font-bold ${accountingUtils.getRatioColor(financialRatios.debtRatio, 'debt')}`}
                         >
                           {accountingUtils.formatPercentage(
-                            financialRatios.debtRatio,
+                            financialRatios.debtRatio
                           )}
                         </span>
                       </div>
@@ -425,7 +425,7 @@ export function AccountingDashboard({
                           className={`text-lg font-bold ${accountingUtils.getRatioColor(financialRatios.equityRatio, 'equity')}`}
                         >
                           {accountingUtils.formatPercentage(
-                            financialRatios.equityRatio,
+                            financialRatios.equityRatio
                           )}
                         </span>
                       </div>
@@ -437,7 +437,7 @@ export function AccountingDashboard({
                           className={`text-lg font-bold ${accountingUtils.getRatioColor(financialRatios.roa, 'roa')}`}
                         >
                           {accountingUtils.formatPercentage(
-                            financialRatios.roa,
+                            financialRatios.roa
                           )}
                         </span>
                       </div>
@@ -449,7 +449,7 @@ export function AccountingDashboard({
                           className={`text-lg font-bold ${accountingUtils.getRatioColor(financialRatios.roe, 'roe')}`}
                         >
                           {accountingUtils.formatPercentage(
-                            financialRatios.roe,
+                            financialRatios.roe
                           )}
                         </span>
                       </div>
@@ -474,7 +474,7 @@ export function AccountingDashboard({
                     <RechartsPieChart>
                       <Pie
                         data={Object.entries(
-                          transactionStats.transactionCountByType,
+                          transactionStats.transactionCountByType
                         ).map(([type, count], index) => ({
                           name: type,
                           value: count,
@@ -495,7 +495,7 @@ export function AccountingDashboard({
                         }) => `${name} ${(percent * 100).toFixed(0)}%`}
                       >
                         {Object.entries(
-                          transactionStats.transactionCountByType,
+                          transactionStats.transactionCountByType
                         ).map((_, index) => (
                           <Cell
                             key={`cell-${index}`}
@@ -524,7 +524,7 @@ export function AccountingDashboard({
                         </span>
                         <span className="text-lg font-bold">
                           {accountingUtils.formatNumber(
-                            transactionStats.totalTransactionCount,
+                            transactionStats.totalTransactionCount
                           )}
                           건
                         </span>
@@ -535,7 +535,7 @@ export function AccountingDashboard({
                         </span>
                         <span className="text-lg font-bold">
                           {accountingUtils.formatCurrency(
-                            transactionStats.totalTransactionAmount,
+                            transactionStats.totalTransactionAmount
                           )}
                         </span>
                       </div>
@@ -543,7 +543,7 @@ export function AccountingDashboard({
                         <span className="text-sm font-medium">차변 합계</span>
                         <span className="text-lg font-bold text-blue-600">
                           {accountingUtils.formatCurrency(
-                            transactionStats.totalDebitAmount,
+                            transactionStats.totalDebitAmount
                           )}
                         </span>
                       </div>
@@ -551,7 +551,7 @@ export function AccountingDashboard({
                         <span className="text-sm font-medium">대변 합계</span>
                         <span className="text-lg font-bold text-green-600">
                           {accountingUtils.formatCurrency(
-                            transactionStats.totalCreditAmount,
+                            transactionStats.totalCreditAmount
                           )}
                         </span>
                       </div>

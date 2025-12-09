@@ -151,7 +151,7 @@ function GlobalSearch() {
     if (user?.id && term.trim()) {
       const updated = [term, ...recentSearches.filter(t => t !== term)].slice(
         0,
-        5,
+        5
       )
       setRecentSearches(updated)
       localStorage.setItem(`recentSearches_${user.id}`, JSON.stringify(updated))
@@ -185,7 +185,7 @@ function GlobalSearch() {
       } else if (user?.company?.id) {
         // 일반 사용자: 자기 회사만 검색
         console.log(
-          `🏢 일반 사용자 권한: 회사 ${user.company.id}(${user.company.name}) 데이터만 검색`,
+          `🏢 일반 사용자 권한: 회사 ${user.company.id}(${user.company.name}) 데이터만 검색`
         )
         searchUrl = `/search?q=${encodeURIComponent(term)}&companyId=${user.company.id}`
       } else {
@@ -222,7 +222,7 @@ function GlobalSearch() {
       } else {
         console.error(
           '❌ 검색 API 오류:',
-          response?.data?.message || '알 수 없는 오류',
+          response?.data?.message || '알 수 없는 오류'
         )
         console.error('❌ 응답 구조:', response)
         setResults([])
@@ -255,10 +255,10 @@ function GlobalSearch() {
           response = await api.get('/hr/employees?page=0&size=100')
         } else if (user?.company?.id) {
           console.log(
-            `🏢 일반 사용자: 회사 ${user.company.id}(${user.company.name}) 직원만 조회`,
+            `🏢 일반 사용자: 회사 ${user.company.id}(${user.company.name}) 직원만 조회`
           )
           response = await api.get(
-            `/hr/employees/company/${user.company.id}?page=0&size=100`,
+            `/hr/employees/company/${user.company.id}?page=0&size=100`
           )
         } else {
           console.warn('⚠️ 회사 정보가 없어 직원을 조회할 수 없습니다')
@@ -275,10 +275,10 @@ function GlobalSearch() {
           response = await api.get('/products?page=0&size=100')
         } else if (user?.company?.id) {
           console.log(
-            `🏢 일반 사용자: 회사 ${user.company.id}(${user.company.name}) 상품만 조회`,
+            `🏢 일반 사용자: 회사 ${user.company.id}(${user.company.name}) 상품만 조회`
           )
           response = await api.get(
-            `/products/companies/${user.company.id}?page=0&size=100`,
+            `/products/companies/${user.company.id}?page=0&size=100`
           )
         } else {
           console.warn('⚠️ 회사 정보가 없어 상품을 조회할 수 없습니다')
@@ -295,10 +295,10 @@ function GlobalSearch() {
           response = await api.get('/sales/customers?page=0&size=100')
         } else if (user?.company?.id) {
           console.log(
-            `🏢 일반 사용자: 회사 ${user.company.id}(${user.company.name}) 고객만 조회`,
+            `🏢 일반 사용자: 회사 ${user.company.id}(${user.company.name}) 고객만 조회`
           )
           response = await api.get(
-            `/sales/customers/company/${user.company.id}?page=0&size=100`,
+            `/sales/customers/company/${user.company.id}?page=0&size=100`
           )
         } else {
           console.warn('⚠️ 회사 정보가 없어 고객을 조회할 수 없습니다')
@@ -315,10 +315,10 @@ function GlobalSearch() {
           response = await api.get('/departments?page=0&size=100')
         } else if (user?.company?.id) {
           console.log(
-            `🏢 일반 사용자: 회사 ${user.company.id}(${user.company.name}) 부서만 조회`,
+            `🏢 일반 사용자: 회사 ${user.company.id}(${user.company.name}) 부서만 조회`
           )
           response = await api.get(
-            `/departments/company/${user.company.id}?page=0&size=100`,
+            `/departments/company/${user.company.id}?page=0&size=100`
           )
         } else {
           console.warn('⚠️ 회사 정보가 없어 부서를 조회할 수 없습니다')
@@ -348,10 +348,10 @@ function GlobalSearch() {
           response = await api.get(`/search?q=${encodeURIComponent(term)}`)
         } else if (user?.company?.id) {
           console.log(
-            `🏢 일반 사용자: 회사 ${user.company.id}(${user.company.name}) 데이터만 검색`,
+            `🏢 일반 사용자: 회사 ${user.company.id}(${user.company.name}) 데이터만 검색`
           )
           response = await api.get(
-            `/search?q=${encodeURIComponent(term)}&companyId=${user.company.id}`,
+            `/search?q=${encodeURIComponent(term)}&companyId=${user.company.id}`
           )
         } else {
           console.warn('⚠️ 회사 정보가 없어 검색할 수 없습니다')
@@ -418,7 +418,7 @@ function GlobalSearch() {
       } else {
         console.error(
           '❌ 카테고리 검색 API 오류:',
-          response?.data?.message || '알 수 없는 오류',
+          response?.data?.message || '알 수 없는 오류'
         )
         setResults([])
       }

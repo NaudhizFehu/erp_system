@@ -333,7 +333,7 @@ function MainDashboard({
   const { isLoading, hasError, loadingProgress } = useDashboardLoading(
     companyId,
     userId,
-    filter,
+    filter
   )
 
   // 자동 새로고침 (5분마다)
@@ -539,7 +539,7 @@ function MainDashboard({
               navigate(
                 type === 'activities'
                   ? '/dashboard/activities'
-                  : '/dashboard/notifications',
+                  : '/dashboard/notifications'
               )
             }}
           />

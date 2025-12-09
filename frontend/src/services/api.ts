@@ -58,7 +58,7 @@ api.interceptors.response.use(
       // 401 오류는 조용히 처리 (토큰 만료 등)
       console.warn(
         '인증 오류:',
-        error.response?.data?.message || 'Unauthorized',
+        error.response?.data?.message || 'Unauthorized'
       )
     } else if (error.response?.data?.message) {
       // 백엔드에서 제공하는 한국어 에러 메시지 표시

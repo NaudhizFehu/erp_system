@@ -78,12 +78,12 @@ function UserProfilePage() {
       console.log('UserProfilePage useEffect에서 user 정보:', user)
       console.log(
         'UserProfilePage useEffect에서 user 정보 상세:',
-        JSON.stringify(user, null, 2),
+        JSON.stringify(user, null, 2)
       )
       console.log('UserProfilePage useEffect department 필드:', user.department)
       console.log(
         'UserProfilePage useEffect department?.name:',
-        user.department?.name,
+        user.department?.name
       )
       console.log('UserProfilePage useEffect position 필드:', user.position)
       setFormData({
@@ -125,7 +125,7 @@ function UserProfilePage() {
         if (user) {
           setFormData(prev => {
             const selectedDept = deptData.find(
-              dept => dept.name === user.department?.name,
+              dept => dept.name === user.department?.name
             )
             const selectedPos = posData.find(pos => pos.name === user.position)
 
@@ -169,7 +169,7 @@ function UserProfilePage() {
    */
   const handleDepartmentSelect = (departmentId: string) => {
     const selectedDept = departments.find(
-      dept => dept.id.toString() === departmentId,
+      dept => dept.id.toString() === departmentId
     )
     setFormData(prev => ({
       ...prev,
@@ -313,7 +313,7 @@ function UserProfilePage() {
       console.log('업데이트된 사용자 정보:', updatedUser)
       console.log(
         '업데이트된 사용자 정보 상세:',
-        JSON.stringify(updatedUser, null, 2),
+        JSON.stringify(updatedUser, null, 2)
       )
       console.log('department 필드:', updatedUser.department)
       console.log('position 필드:', updatedUser.position)
@@ -321,10 +321,10 @@ function UserProfilePage() {
       // 폼 데이터를 업데이트된 사용자 정보로 동기화
       // 부서와 직급의 ID도 찾아서 설정해야 함
       const selectedDepartment = departments.find(
-        dept => dept.name === updatedUser.department,
+        dept => dept.name === updatedUser.department
       )
       const selectedPosition = positions.find(
-        pos => pos.name === updatedUser.position,
+        pos => pos.name === updatedUser.position
       )
 
       const newFormData = {

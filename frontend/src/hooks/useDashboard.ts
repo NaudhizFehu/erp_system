@@ -223,7 +223,7 @@ export const useMarkNotificationAsRead = () => {
     },
     onError: (error: any) => {
       toast.error(
-        `알림 읽음 처리 실패: ${error.response?.data?.message || error.message}`,
+        `알림 읽음 처리 실패: ${error.response?.data?.message || error.message}`
       )
     },
   })
@@ -248,7 +248,7 @@ export const useMarkAllNotificationsAsRead = () => {
     },
     onError: (error: any) => {
       toast.error(
-        `알림 읽음 처리 실패: ${error.response?.data?.message || error.message}`,
+        `알림 읽음 처리 실패: ${error.response?.data?.message || error.message}`
       )
     },
   })
@@ -296,7 +296,7 @@ export const useCreateTodo = () => {
     },
     onError: (error: any) => {
       toast.error(
-        `할일 생성 실패: ${error.response?.data?.message || error.message}`,
+        `할일 생성 실패: ${error.response?.data?.message || error.message}`
       )
     },
   })
@@ -326,7 +326,7 @@ export const useUpdateTodoStatus = () => {
     },
     onError: (error: any) => {
       toast.error(
-        `할일 상태 변경 실패: ${error.response?.data?.message || error.message}`,
+        `할일 상태 변경 실패: ${error.response?.data?.message || error.message}`
       )
     },
   })
@@ -406,7 +406,7 @@ export const useSaveUserDashboardConfig = () => {
     },
     onError: (error: any) => {
       toast.error(
-        `설정 저장 실패: ${error.response?.data?.message || error.message}`,
+        `설정 저장 실패: ${error.response?.data?.message || error.message}`
       )
     },
   })
@@ -433,7 +433,7 @@ export const useUpdateWidgetConfig = () => {
     },
     onError: (error: any) => {
       toast.error(
-        `위젯 설정 업데이트 실패: ${error.response?.data?.message || error.message}`,
+        `위젯 설정 업데이트 실패: ${error.response?.data?.message || error.message}`
       )
     },
   })
@@ -453,7 +453,7 @@ export const useToggleWidgetVisibility = () => {
     },
     onError: (error: any) => {
       toast.error(
-        `위젯 표시 설정 변경 실패: ${error.response?.data?.message || error.message}`,
+        `위젯 표시 설정 변경 실패: ${error.response?.data?.message || error.message}`
       )
     },
   })
@@ -492,7 +492,7 @@ export const useRefreshWidget = () => {
     },
     onError: (error: any) => {
       toast.error(
-        `위젯 새로고침 실패: ${error.response?.data?.message || error.message}`,
+        `위젯 새로고침 실패: ${error.response?.data?.message || error.message}`
       )
     },
   })

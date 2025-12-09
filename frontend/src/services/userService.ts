@@ -65,7 +65,7 @@ class UserService {
       console.log('응답 data 필드:', response.data.data)
       console.log(
         '응답 data 필드 상세:',
-        JSON.stringify(response.data.data, null, 2),
+        JSON.stringify(response.data.data, null, 2)
       )
       // ApiResponse 구조에서 실제 데이터 추출
       const userData = response.data.data || response.data
@@ -109,7 +109,7 @@ class UserService {
 
       console.log(
         '프로필 이미지 업로드 API 호출:',
-        `${this.baseUrl}/profile-image`,
+        `${this.baseUrl}/profile-image`
       )
       const response = await api.post(
         `${this.baseUrl}/profile-image`,
@@ -118,7 +118,7 @@ class UserService {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
-        },
+        }
       )
       console.log('프로필 이미지 업로드 API 응답:', response)
       return response.data

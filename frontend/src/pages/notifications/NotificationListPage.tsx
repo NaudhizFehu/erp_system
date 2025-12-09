@@ -68,7 +68,7 @@ function NotificationListPage() {
       await notificationService.deleteNotification(id)
       // 로컬 상태에서 제거
       setNotifications(prev =>
-        prev.filter(notification => notification.id !== id),
+        prev.filter(notification => notification.id !== id)
       )
     } catch (error) {
       console.error('알림 삭제 실패:', error)

@@ -31,7 +31,7 @@ export const mockEmployeeApi = {
    * 직원 목록 조회 (페이징)
    */
   getEmployees: async (
-    params: SearchParams = {},
+    params: SearchParams = {}
   ): Promise<PageResponse<Employee>> => {
     // 실제 API 호출을 시뮬레이션하기 위한 지연
     await new Promise(resolve => setTimeout(resolve, 500))
@@ -81,7 +81,7 @@ export const mockEmployeeApi = {
   getEmployeeByNumber: async (employeeNumber: string): Promise<Employee> => {
     await new Promise(resolve => setTimeout(resolve, 300))
     const employee = mockEmployees.find(
-      emp => emp.employeeNumber === employeeNumber,
+      emp => emp.employeeNumber === employeeNumber
     )
     if (!employee) {
       throw new Error('직원을 찾을 수 없습니다')
@@ -106,7 +106,7 @@ export const mockEmployeeApi = {
    */
   searchEmployees: async (
     searchTerm: string,
-    params: SearchParams = {},
+    params: SearchParams = {}
   ): Promise<PageResponse<Employee>> => {
     await new Promise(resolve => setTimeout(resolve, 500))
 
@@ -133,12 +133,12 @@ export const mockEmployeeApi = {
    */
   getEmployeesByCompany: async (
     companyId: number,
-    params: SearchParams = {},
+    params: SearchParams = {}
   ): Promise<PageResponse<Employee>> => {
     await new Promise(resolve => setTimeout(resolve, 500))
 
     const filteredEmployees = mockEmployees.filter(
-      emp => emp.company.id === companyId,
+      emp => emp.company.id === companyId
     )
 
     return createMockPageResponse(
@@ -153,12 +153,12 @@ export const mockEmployeeApi = {
    */
   getEmployeesByDepartment: async (
     departmentId: number,
-    params: SearchParams = {},
+    params: SearchParams = {}
   ): Promise<PageResponse<Employee>> => {
     await new Promise(resolve => setTimeout(resolve, 500))
 
     const filteredEmployees = mockEmployees.filter(
-      emp => emp.department.id === departmentId,
+      emp => emp.department.id === departmentId
     )
 
     return createMockPageResponse(
@@ -174,7 +174,7 @@ export const mockEmployeeApi = {
   getActiveEmployees: async (): Promise<Employee[]> => {
     await new Promise(resolve => setTimeout(resolve, 300))
     return mockEmployees.filter(
-      emp => emp.employmentStatus === EmploymentStatus.ACTIVE,
+      emp => emp.employmentStatus === EmploymentStatus.ACTIVE
     )
   },
 
@@ -182,7 +182,7 @@ export const mockEmployeeApi = {
    * 회사별 재직 중인 직원 목록 조회
    */
   getActiveEmployeesByCompany: async (
-    companyId: number,
+    companyId: number
   ): Promise<Employee[]> => {
     await new Promise(resolve => setTimeout(resolve, 300))
     return mockEmployees.filter(
@@ -196,7 +196,7 @@ export const mockEmployeeApi = {
    * 직원 등록
    */
   createEmployee: async (
-    employee: EmployeeCreateRequest,
+    employee: EmployeeCreateRequest
   ): Promise<Employee> => {
     await new Promise(resolve => setTimeout(resolve, 1000))
 
@@ -248,7 +248,7 @@ export const mockEmployeeApi = {
    */
   updateEmployee: async (
     id: number,
-    employee: EmployeeUpdateRequest,
+    employee: EmployeeUpdateRequest
   ): Promise<Employee> => {
     await new Promise(resolve => setTimeout(resolve, 1000))
 
@@ -286,7 +286,7 @@ export const mockEmployeeApi = {
    */
   checkEmployeeNumber: async (
     employeeNumber: string,
-    excludeId?: number,
+    excludeId?: number
   ): Promise<boolean> => {
     await new Promise(resolve => setTimeout(resolve, 300))
 
@@ -342,7 +342,7 @@ export const mockEmployeeApi = {
    * 회사별 최근 직원 목록 조회 (사번 중복 방지용)
    */
   getRecentEmployeesByCompany: async (
-    companyId: number,
+    companyId: number
   ): Promise<Employee[]> => {
     await new Promise(resolve => setTimeout(resolve, 300))
     return mockEmployees
@@ -357,13 +357,13 @@ export const mockPositionApi = {
    * 직급 목록 조회
    */
   getPositions: async (
-    params: SearchParams = {},
+    params: SearchParams = {}
   ): Promise<PageResponse<Position>> => {
     await new Promise(resolve => setTimeout(resolve, 300))
     return createMockPageResponse(
       mockPositions,
       params.page || 0,
-      params.size || 20,
+      params.size || 20
     )
   },
 

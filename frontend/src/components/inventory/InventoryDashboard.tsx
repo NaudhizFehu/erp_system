@@ -236,7 +236,7 @@ function InventoryDashboard({ companyId }: InventoryDashboardProps) {
     useWarehouseUtilization(companyId)
   const { data: inventoryTrend, isLoading: isLoadingTrend } = useInventoryTrend(
     companyId,
-    30,
+    30
   )
   const { data: lowStockProducts } = useLowStockProducts(companyId)
   const { data: outOfStockProducts } = useOutOfStockProducts(companyId)
@@ -262,7 +262,7 @@ function InventoryDashboard({ companyId }: InventoryDashboardProps) {
   const lowStockAlerts = alerts.filter(alert => alert.type === 'LOW_STOCK')
   const outOfStockAlerts = alerts.filter(alert => alert.type === 'OUT_OF_STOCK')
   const expiringSoonAlerts = alerts.filter(
-    alert => alert.type === 'EXPIRING_SOON',
+    alert => alert.type === 'EXPIRING_SOON'
   )
 
   // 창고 활용도 차트 데이터
@@ -284,7 +284,7 @@ function InventoryDashboard({ companyId }: InventoryDashboardProps) {
         (product.productName?.length > 15 ? '...' : ''),
       value: product.totalStockValue,
       color: CHART_COLORS[index % CHART_COLORS.length],
-    }),
+    })
   )
 
   if (isLoading) {

@@ -57,15 +57,15 @@ class PositionService {
    * 특정 회사의 직급 목록 조회
    */
   async getPositionsByCompany(
-    companyId: number,
+    companyId: number
   ): Promise<{ id: number; name: string }[]> {
     try {
       console.log(
         '회사별 직급 목록 조회 API 호출:',
-        `${this.baseUrl}/company/${companyId}`,
+        `${this.baseUrl}/company/${companyId}`
       )
       const response = await api.get(
-        `${this.baseUrl}/company/${companyId}?page=0&size=1000`,
+        `${this.baseUrl}/company/${companyId}?page=0&size=1000`
       )
       console.log('회사별 직급 목록 조회 API 응답:', response)
 

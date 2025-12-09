@@ -182,7 +182,7 @@ export function formatPhoneNumber(phone: string | undefined | null): string {
  * 사업자등록번호 포맷팅
  */
 export function formatBusinessNumber(
-  number: string | undefined | null,
+  number: string | undefined | null
 ): string {
   if (!number) return '-'
 

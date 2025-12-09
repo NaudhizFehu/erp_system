@@ -41,7 +41,7 @@ export const ACCOUNTING_QUERY_KEYS = {
   transactionsByCompany: (
     companyId: number,
     searchTerm: string,
-    params: AccountingSearchParams,
+    params: AccountingSearchParams
   ) =>
     [
       ...ACCOUNTING_QUERY_KEYS.transactions,
@@ -131,7 +131,7 @@ export const ACCOUNTING_QUERY_KEYS = {
  */
 export function useTransactionSearch(
   searchTerm: string,
-  params: AccountingSearchParams = {},
+  params: AccountingSearchParams = {}
 ) {
   return useQuery({
     queryKey: ACCOUNTING_QUERY_KEYS.transactionSearch(searchTerm, params),
@@ -148,13 +148,13 @@ export function useTransactionSearch(
 export function useTransactionsByCompany(
   companyId: number,
   searchTerm: string,
-  params: AccountingSearchParams = {},
+  params: AccountingSearchParams = {}
 ) {
   return useQuery({
     queryKey: ACCOUNTING_QUERY_KEYS.transactionsByCompany(
       companyId,
       searchTerm,
-      params,
+      params
     ),
     queryFn: () =>
       transactionApi.searchTransactionsByCompany(companyId, searchTerm, params),
@@ -169,12 +169,12 @@ export function useTransactionsByCompany(
  */
 export function useTransactionNumber(
   companyId: number,
-  transactionType: TransactionType,
+  transactionType: TransactionType
 ) {
   return useQuery({
     queryKey: ACCOUNTING_QUERY_KEYS.transactionNumber(
       companyId,
-      transactionType,
+      transactionType
     ),
     queryFn: () =>
       transactionApi.generateTransactionNumber(companyId, transactionType),
@@ -190,13 +190,13 @@ export function useTransactionNumber(
 export function useTransactionStatistics(
   companyId: number,
   startDate: string,
-  endDate: string,
+  endDate: string
 ) {
   return useQuery({
     queryKey: ACCOUNTING_QUERY_KEYS.transactionStats(
       companyId,
       startDate,
-      endDate,
+      endDate
     ),
     queryFn: () =>
       transactionApi.getTransactionStatistics(companyId, startDate, endDate),
@@ -225,13 +225,13 @@ export function useAccountBalance(accountId: number, asOfDate?: string) {
 export function useGeneralLedger(
   accountId: number,
   startDate: string,
-  endDate: string,
+  endDate: string
 ) {
   return useQuery({
     queryKey: ACCOUNTING_QUERY_KEYS.generalLedger(
       accountId,
       startDate,
-      endDate,
+      endDate
     ),
     queryFn: () => accountApi.getGeneralLedger(accountId, startDate, endDate),
     enabled: !!accountId && !!startDate && !!endDate,
@@ -246,7 +246,7 @@ export function useGeneralLedger(
 export function useTrialBalance(
   companyId: number,
   startDate: string,
-  endDate: string,
+  endDate: string
 ) {
   return useQuery({
     queryKey: ACCOUNTING_QUERY_KEYS.trialBalance(companyId, startDate, endDate),
@@ -328,7 +328,7 @@ export function useFinancialTrends(companyId: number, periods: number = 12) {
  */
 export function useFinancialRatioAnalysis(
   companyId: number,
-  fiscalYear: number,
+  fiscalYear: number
 ) {
   return useQuery({
     queryKey: ACCOUNTING_QUERY_KEYS.financialRatios(companyId, fiscalYear),
@@ -344,7 +344,7 @@ export function useFinancialRatioAnalysis(
  */
 export function useReportSearch(
   searchTerm: string,
-  params: AccountingSearchParams = {},
+  params: AccountingSearchParams = {}
 ) {
   return useQuery({
     queryKey: ACCOUNTING_QUERY_KEYS.reportSearch(searchTerm, params),
@@ -556,7 +556,7 @@ export function useGenerateBalanceSheet() {
         companyId,
         fiscalYear,
         fiscalPeriod,
-        baseDate,
+        baseDate
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ACCOUNTING_QUERY_KEYS.reports })
@@ -595,7 +595,7 @@ export function useGenerateIncomeStatement() {
         fiscalYear,
         fiscalPeriod,
         startDate,
-        endDate,
+        endDate
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ACCOUNTING_QUERY_KEYS.reports })

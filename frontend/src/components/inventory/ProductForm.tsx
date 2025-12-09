@@ -77,7 +77,7 @@ const productFormSchema = z.object({
     .max(50, '상품코드는 50자 이내여야 합니다')
     .regex(
       /^[A-Z0-9-_]+$/,
-      '상품코드는 영문 대문자, 숫자, 하이픈(-), 언더스코어(_)만 사용 가능합니다',
+      '상품코드는 영문 대문자, 숫자, 하이픈(-), 언더스코어(_)만 사용 가능합니다'
     ),
   productName: z
     .string()
@@ -499,7 +499,7 @@ function ProductForm({
                                     <SelectItem key={type} value={type}>
                                       {KOREAN_LABELS[type]}
                                     </SelectItem>
-                                  ),
+                                  )
                                 )}
                               </SelectContent>
                             </Select>
@@ -969,7 +969,7 @@ function ProductForm({
                                   field.onChange(
                                     e.target.value
                                       ? Number(e.target.value)
-                                      : undefined,
+                                      : undefined
                                   )
                                 }
                               />
@@ -1014,7 +1014,7 @@ function ProductForm({
                                   field.onChange(
                                     e.target.value
                                       ? Number(e.target.value)
-                                      : undefined,
+                                      : undefined
                                   )
                                 }
                               />
@@ -1041,7 +1041,7 @@ function ProductForm({
                                   field.onChange(
                                     e.target.value
                                       ? Number(e.target.value)
-                                      : undefined,
+                                      : undefined
                                   )
                                 }
                               />
@@ -1068,7 +1068,7 @@ function ProductForm({
                                   field.onChange(
                                     e.target.value
                                       ? Number(e.target.value)
-                                      : undefined,
+                                      : undefined
                                   )
                                 }
                               />
@@ -1095,7 +1095,7 @@ function ProductForm({
                                   field.onChange(
                                     e.target.value
                                       ? Number(e.target.value)
-                                      : undefined,
+                                      : undefined
                                   )
                                 }
                               />

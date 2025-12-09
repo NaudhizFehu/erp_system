@@ -124,7 +124,7 @@ export function useProduct(id: number) {
 
 export function useProductsByCategory(
   categoryId: number,
-  params?: InventorySearchParams,
+  params?: InventorySearchParams
 ) {
   return useQuery({
     queryKey: [...INVENTORY_QUERY_KEYS.productsByCategory(categoryId), params],
@@ -138,7 +138,7 @@ export function useProductsByCategory(
 export function useProductSearch(
   companyId: number,
   searchTerm: string,
-  params?: InventorySearchParams,
+  params?: InventorySearchParams
 ) {
   return useQuery({
     queryKey: [
@@ -221,7 +221,7 @@ export function useProductStockStatus(id: number) {
  */
 export function useInventories(
   companyId: number,
-  params?: InventorySearchParams,
+  params?: InventorySearchParams
 ) {
   return useQuery({
     queryKey: [...INVENTORY_QUERY_KEYS.inventories(companyId), params],
@@ -253,7 +253,7 @@ export function useInventoriesByProduct(productId: number) {
 
 export function useInventoriesByWarehouse(
   warehouseId: number,
-  params?: InventorySearchParams,
+  params?: InventorySearchParams
 ) {
   return useQuery({
     queryKey: [
@@ -263,7 +263,7 @@ export function useInventoriesByWarehouse(
     queryFn: () =>
       inventoryApiService.inventory.getInventoriesByWarehouse(
         warehouseId,
-        params,
+        params
       ),
     enabled: !!warehouseId,
     staleTime: 2 * 60 * 1000,
@@ -273,7 +273,7 @@ export function useInventoriesByWarehouse(
 export function useInventorySearch(
   companyId: number,
   searchTerm: string,
-  params?: InventorySearchParams,
+  params?: InventorySearchParams
 ) {
   return useQuery({
     queryKey: [
@@ -284,7 +284,7 @@ export function useInventorySearch(
       inventoryApiService.inventory.searchInventories(
         companyId,
         searchTerm,
-        params,
+        params
       ),
     enabled: !!companyId && !!searchTerm.trim(),
     staleTime: 2 * 60 * 1000,
@@ -344,7 +344,7 @@ export function useInventoryAlerts(companyId: number) {
  */
 export function useStockMovements(
   companyId: number,
-  params?: InventorySearchParams,
+  params?: InventorySearchParams
 ) {
   return useQuery({
     queryKey: [...INVENTORY_QUERY_KEYS.stockMovements(companyId), params],
@@ -366,7 +366,7 @@ export function useStockMovement(id: number) {
 
 export function useStockMovementsByProduct(
   productId: number,
-  params?: InventorySearchParams,
+  params?: InventorySearchParams
 ) {
   return useQuery({
     queryKey: [
@@ -376,7 +376,7 @@ export function useStockMovementsByProduct(
     queryFn: () =>
       inventoryApiService.stockMovement.getStockMovementsByProduct(
         productId,
-        params,
+        params
       ),
     enabled: !!productId,
     staleTime: 2 * 60 * 1000,
@@ -385,7 +385,7 @@ export function useStockMovementsByProduct(
 
 export function useStockMovementsByWarehouse(
   warehouseId: number,
-  params?: InventorySearchParams,
+  params?: InventorySearchParams
 ) {
   return useQuery({
     queryKey: [
@@ -395,7 +395,7 @@ export function useStockMovementsByWarehouse(
     queryFn: () =>
       inventoryApiService.stockMovement.getStockMovementsByWarehouse(
         warehouseId,
-        params,
+        params
       ),
     enabled: !!warehouseId,
     staleTime: 2 * 60 * 1000,
@@ -579,7 +579,7 @@ export function useToggleProductActive() {
     },
     onError: (error: any) => {
       toast.error(
-        error?.response?.data?.message || '상품 활성화 상태 변경에 실패했습니다',
+        error?.response?.data?.message || '상품 활성화 상태 변경에 실패했습니다'
       )
     },
   })
@@ -606,7 +606,7 @@ export function useReceiveStock() {
     },
     onError: (error: any) => {
       toast.error(
-        error?.response?.data?.message || '재고 입고 처리에 실패했습니다',
+        error?.response?.data?.message || '재고 입고 처리에 실패했습니다'
       )
     },
   })
@@ -632,7 +632,7 @@ export function useIssueStock() {
     },
     onError: (error: any) => {
       toast.error(
-        error?.response?.data?.message || '재고 출고 처리에 실패했습니다',
+        error?.response?.data?.message || '재고 출고 처리에 실패했습니다'
       )
     },
   })
@@ -676,7 +676,7 @@ export function useUnreserveStock() {
       inventoryApiService.inventory.unreserveStock(
         inventoryId,
         quantity,
-        reason,
+        reason
       ),
     onSuccess: (data, variables) => {
       toast.success('재고 예약 해제가 성공적으로 처리되었습니다')
@@ -690,7 +690,7 @@ export function useUnreserveStock() {
     },
     onError: (error: any) => {
       toast.error(
-        error?.response?.data?.message || '재고 예약 해제에 실패했습니다',
+        error?.response?.data?.message || '재고 예약 해제에 실패했습니다'
       )
     },
   })
@@ -716,7 +716,7 @@ export function usePerformStocktaking() {
     },
     onError: (error: any) => {
       toast.error(
-        error?.response?.data?.message || '재고 실사 처리에 실패했습니다',
+        error?.response?.data?.message || '재고 실사 처리에 실패했습니다'
       )
     },
   })
@@ -760,7 +760,7 @@ export function useMoveInventoryLocation() {
       inventoryApiService.inventory.moveInventoryLocation(
         inventoryId,
         newLocationCode,
-        newLocationDescription,
+        newLocationDescription
       ),
     onSuccess: (data, variables) => {
       toast.success('재고 위치 이동이 성공적으로 처리되었습니다')
@@ -776,7 +776,7 @@ export function useMoveInventoryLocation() {
     },
     onError: (error: any) => {
       toast.error(
-        error?.response?.data?.message || '재고 위치 이동에 실패했습니다',
+        error?.response?.data?.message || '재고 위치 이동에 실패했습니다'
       )
     },
   })

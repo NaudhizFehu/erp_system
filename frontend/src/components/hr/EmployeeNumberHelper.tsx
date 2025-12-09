@@ -39,14 +39,14 @@ export function EmployeeNumberHelper({
 }: EmployeeNumberHelperProps) {
   const { user } = useAuth()
   const [selectedCompanyId, setSelectedCompanyId] = useState<number | null>(
-    null,
+    null
   )
 
   // 데이터 조회
   const { data: allCompanies = [], isLoading: isLoadingCompanies } =
     useCompanies()
   const { data: recentEmployees = [], isLoading } = useRecentEmployeesByCompany(
-    selectedCompanyId || 0,
+    selectedCompanyId || 0
   )
 
   // 권한별 회사 목록 필터링
@@ -207,7 +207,7 @@ export function EmployeeNumberHelper({
                             ) {
                               onSelectEmployeeNumber(
                                 nextNumber,
-                                selectedCompanyId,
+                                selectedCompanyId
                               )
                               onOpenChange(false)
                             }

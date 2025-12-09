@@ -75,7 +75,7 @@ export const productApi = {
    * 상품 생성
    */
   async createProduct(
-    productData: ProductCreateRequest,
+    productData: ProductCreateRequest
   ): Promise<ApiResponse<Product>> {
     const response = await inventoryApiClient.post('/products', productData)
     return response.data
@@ -86,11 +86,11 @@ export const productApi = {
    */
   async updateProduct(
     id: number,
-    productData: Partial<ProductCreateRequest>,
+    productData: Partial<ProductCreateRequest>
   ): Promise<ApiResponse<Product>> {
     const response = await inventoryApiClient.put(
       `/products/${id}`,
-      productData,
+      productData
     )
     return response.data
   },
@@ -120,7 +120,7 @@ export const productApi = {
   ): Promise<ApiResponse<PageResponse<Product>>> {
     const response = await inventoryApiClient.get(
       `/products/companies/${companyId}`,
-      { params },
+      { params }
     )
     return response.data
   },
@@ -134,7 +134,7 @@ export const productApi = {
   ): Promise<ApiResponse<PageResponse<Product>>> {
     const response = await inventoryApiClient.get(
       `/products/categories/${categoryId}`,
-      { params },
+      { params }
     )
     return response.data
   },
@@ -151,7 +151,7 @@ export const productApi = {
       `/products/companies/${companyId}/search`,
       {
         params: { searchTerm, ...params },
-      },
+      }
     )
     return response.data
   },
@@ -165,7 +165,7 @@ export const productApi = {
   ): Promise<ApiResponse<PageResponse<Product>>> {
     const response = await inventoryApiClient.post(
       `/products/companies/${companyId}/search/advanced`,
-      searchParams,
+      searchParams
     )
     return response.data
   },
@@ -175,7 +175,7 @@ export const productApi = {
    */
   async getProductByBarcode(barcode: string): Promise<ApiResponse<Product>> {
     const response = await inventoryApiClient.get(
-      `/products/barcode/${barcode}`,
+      `/products/barcode/${barcode}`
     )
     return response.data
   },
@@ -184,10 +184,10 @@ export const productApi = {
    * 안전재고 미달 상품 조회
    */
   async getLowStockProducts(
-    companyId: number,
+    companyId: number
   ): Promise<ApiResponse<Product[]>> {
     const response = await inventoryApiClient.get(
-      `/products/companies/${companyId}/low-stock`,
+      `/products/companies/${companyId}/low-stock`
     )
     return response.data
   },
@@ -196,10 +196,10 @@ export const productApi = {
    * 재고없음 상품 조회
    */
   async getOutOfStockProducts(
-    companyId: number,
+    companyId: number
   ): Promise<ApiResponse<Product[]>> {
     const response = await inventoryApiClient.get(
-      `/products/companies/${companyId}/out-of-stock`,
+      `/products/companies/${companyId}/out-of-stock`
     )
     return response.data
   },
@@ -208,10 +208,10 @@ export const productApi = {
    * 재주문 필요 상품 조회
    */
   async getReorderNeededProducts(
-    companyId: number,
+    companyId: number
   ): Promise<ApiResponse<Product[]>> {
     const response = await inventoryApiClient.get(
-      `/products/companies/${companyId}/reorder-needed`,
+      `/products/companies/${companyId}/reorder-needed`
     )
     return response.data
   },
@@ -221,7 +221,7 @@ export const productApi = {
    */
   async getProductStats(companyId: number): Promise<ApiResponse<ProductStats>> {
     const response = await inventoryApiClient.get(
-      `/products/companies/${companyId}/statistics`,
+      `/products/companies/${companyId}/statistics`
     )
     return response.data
   },
@@ -230,10 +230,10 @@ export const productApi = {
    * 브랜드별 상품 통계
    */
   async getBrandStatistics(
-    companyId: number,
+    companyId: number
   ): Promise<ApiResponse<Array<{ brand: string; count: number }>>> {
     const response = await inventoryApiClient.get(
-      `/products/companies/${companyId}/brands/statistics`,
+      `/products/companies/${companyId}/brands/statistics`
     )
     return response.data
   },
@@ -243,7 +243,7 @@ export const productApi = {
    */
   async getProductStockStatus(id: number): Promise<ApiResponse<any>> {
     const response = await inventoryApiClient.get(
-      `/products/${id}/stock-status`,
+      `/products/${id}/stock-status`
     )
     return response.data
   },
@@ -253,7 +253,7 @@ export const productApi = {
    */
   async toggleProductActive(id: number): Promise<ApiResponse<Product>> {
     const response = await inventoryApiClient.put(
-      `/products/${id}/toggle-active`,
+      `/products/${id}/toggle-active`
     )
     return response.data
   },
@@ -270,7 +270,7 @@ export const productApi = {
       `/products/companies/${companyId}/check-code/${productCode}`,
       {
         params: { excludeId },
-      },
+      }
     )
     return response.data
   },
@@ -280,13 +280,13 @@ export const productApi = {
    */
   async checkBarcodeDuplicate(
     barcode: string,
-    excludeId?: number,
+    excludeId?: number
   ): Promise<ApiResponse<boolean>> {
     const response = await inventoryApiClient.get(
       `/products/check-barcode/${barcode}`,
       {
         params: { excludeId },
-      },
+      }
     )
     return response.data
   },
@@ -309,11 +309,11 @@ export const inventoryApi = {
    */
   async updateInventory(
     id: number,
-    inventoryData: any,
+    inventoryData: any
   ): Promise<ApiResponse<Inventory>> {
     const response = await inventoryApiClient.put(
       `/inventory/${id}`,
-      inventoryData,
+      inventoryData
     )
     return response.data
   },
@@ -343,7 +343,7 @@ export const inventoryApi = {
   ): Promise<ApiResponse<PageResponse<Inventory>>> {
     const response = await inventoryApiClient.get(
       `/inventory/companies/${companyId}`,
-      { params },
+      { params }
     )
     return response.data
   },
@@ -352,10 +352,10 @@ export const inventoryApi = {
    * 상품별 재고 목록 조회
    */
   async getInventoriesByProduct(
-    productId: number,
+    productId: number
   ): Promise<ApiResponse<Inventory[]>> {
     const response = await inventoryApiClient.get(
-      `/inventory/products/${productId}`,
+      `/inventory/products/${productId}`
     )
     return response.data
   },
@@ -369,7 +369,7 @@ export const inventoryApi = {
   ): Promise<ApiResponse<PageResponse<Inventory>>> {
     const response = await inventoryApiClient.get(
       `/inventory/warehouses/${warehouseId}`,
-      { params },
+      { params }
     )
     return response.data
   },
@@ -386,7 +386,7 @@ export const inventoryApi = {
       `/inventory/companies/${companyId}/search`,
       {
         params: { searchTerm, ...params },
-      },
+      }
     )
     return response.data
   },
@@ -395,7 +395,7 @@ export const inventoryApi = {
    * 재고 입고 처리
    */
   async receiveStock(
-    request: StockReceiptRequest,
+    request: StockReceiptRequest
   ): Promise<ApiResponse<Inventory>> {
     const { inventoryId, quantity, unitCost, reason } = request
     const response = await inventoryApiClient.post(
@@ -403,7 +403,7 @@ export const inventoryApi = {
       null,
       {
         params: { quantity, unitCost, reason },
-      },
+      }
     )
     return response.data
   },
@@ -412,7 +412,7 @@ export const inventoryApi = {
    * 재고 출고 처리
    */
   async issueStock(
-    request: StockIssueRequest,
+    request: StockIssueRequest
   ): Promise<ApiResponse<Inventory>> {
     const { inventoryId, quantity, reason } = request
     const response = await inventoryApiClient.post(
@@ -420,7 +420,7 @@ export const inventoryApi = {
       null,
       {
         params: { quantity, reason },
-      },
+      }
     )
     return response.data
   },
@@ -429,11 +429,11 @@ export const inventoryApi = {
    * 재고 예약
    */
   async reserveStock(
-    request: StockReservationRequest,
+    request: StockReservationRequest
   ): Promise<ApiResponse<Inventory>> {
     const response = await inventoryApiClient.post(
       '/inventory/reserve',
-      request,
+      request
     )
     return response.data
   },
@@ -444,14 +444,14 @@ export const inventoryApi = {
   async unreserveStock(
     inventoryId: number,
     quantity: number,
-    reason?: string,
+    reason?: string
   ): Promise<ApiResponse<Inventory>> {
     const response = await inventoryApiClient.post(
       `/inventory/${inventoryId}/unreserve`,
       null,
       {
         params: { quantity, reason },
-      },
+      }
     )
     return response.data
   },
@@ -460,11 +460,11 @@ export const inventoryApi = {
    * 재고 실사 처리
    */
   async performStocktaking(
-    request: StocktakingRequest,
+    request: StocktakingRequest
   ): Promise<ApiResponse<StocktakingResult>> {
     const response = await inventoryApiClient.post(
       '/inventory/stocktaking',
-      request,
+      request
     )
     return response.data
   },
@@ -481,11 +481,11 @@ export const inventoryApi = {
    * 재고 이동 (창고간)
    */
   async transferInventory(
-    request: InventoryTransferRequest,
+    request: InventoryTransferRequest
   ): Promise<ApiResponse<Inventory[]>> {
     const response = await inventoryApiClient.post(
       '/inventory/transfer',
-      request,
+      request
     )
     return response.data
   },
@@ -503,7 +503,7 @@ export const inventoryApi = {
       null,
       {
         params: { newLocationCode, newLocationDescription },
-      },
+      }
     )
     return response.data
   },
@@ -512,10 +512,10 @@ export const inventoryApi = {
    * 안전재고 미달 재고 조회
    */
   async getLowStockInventories(
-    companyId: number,
+    companyId: number
   ): Promise<ApiResponse<Inventory[]>> {
     const response = await inventoryApiClient.get(
-      `/inventory/companies/${companyId}/low-stock`,
+      `/inventory/companies/${companyId}/low-stock`
     )
     return response.data
   },
@@ -524,10 +524,10 @@ export const inventoryApi = {
    * 재고없음 재고 조회
    */
   async getOutOfStockInventories(
-    companyId: number,
+    companyId: number
   ): Promise<ApiResponse<Inventory[]>> {
     const response = await inventoryApiClient.get(
-      `/inventory/companies/${companyId}/out-of-stock`,
+      `/inventory/companies/${companyId}/out-of-stock`
     )
     return response.data
   },
@@ -536,10 +536,10 @@ export const inventoryApi = {
    * 재고 통계 조회
    */
   async getInventoryStats(
-    companyId: number,
+    companyId: number
   ): Promise<ApiResponse<InventoryStats>> {
     const response = await inventoryApiClient.get(
-      `/inventory/companies/${companyId}/statistics`,
+      `/inventory/companies/${companyId}/statistics`
     )
     return response.data
   },
@@ -548,10 +548,10 @@ export const inventoryApi = {
    * ABC 분석
    */
   async performAbcAnalysis(
-    companyId: number,
+    companyId: number
   ): Promise<ApiResponse<AbcAnalysisResult[]>> {
     const response = await inventoryApiClient.get(
-      `/inventory/companies/${companyId}/abc-analysis`,
+      `/inventory/companies/${companyId}/abc-analysis`
     )
     return response.data
   },
@@ -560,10 +560,10 @@ export const inventoryApi = {
    * 재고 알림 대상 조회
    */
   async getInventoryAlerts(
-    companyId: number,
+    companyId: number
   ): Promise<ApiResponse<InventoryAlert[]>> {
     const response = await inventoryApiClient.get(
-      `/inventory/companies/${companyId}/alerts`,
+      `/inventory/companies/${companyId}/alerts`
     )
     return response.data
   },
@@ -582,7 +582,7 @@ export const stockMovementApi = {
   ): Promise<ApiResponse<PageResponse<StockMovement>>> {
     const response = await inventoryApiClient.get(
       `/stock-movements/companies/${companyId}`,
-      { params },
+      { params }
     )
     return response.data
   },
@@ -604,7 +604,7 @@ export const stockMovementApi = {
   ): Promise<ApiResponse<PageResponse<StockMovement>>> {
     const response = await inventoryApiClient.get(
       `/stock-movements/products/${productId}`,
-      { params },
+      { params }
     )
     return response.data
   },
@@ -618,7 +618,7 @@ export const stockMovementApi = {
   ): Promise<ApiResponse<PageResponse<StockMovement>>> {
     const response = await inventoryApiClient.get(
       `/stock-movements/warehouses/${warehouseId}`,
-      { params },
+      { params }
     )
     return response.data
   },
@@ -633,7 +633,7 @@ export const warehouseApi = {
    */
   async getWarehouses(companyId: number): Promise<ApiResponse<Warehouse[]>> {
     const response = await inventoryApiClient.get(
-      `/warehouses/companies/${companyId}`,
+      `/warehouses/companies/${companyId}`
     )
     return response.data
   },
@@ -650,10 +650,10 @@ export const warehouseApi = {
    * 창고별 재고 현황 조회
    */
   async getWarehouseInventory(
-    warehouseId: number,
+    warehouseId: number
   ): Promise<ApiResponse<WarehouseInventory>> {
     const response = await inventoryApiClient.get(
-      `/warehouses/${warehouseId}/inventory`,
+      `/warehouses/${warehouseId}/inventory`
     )
     return response.data
   },
@@ -668,7 +668,7 @@ export const categoryApi = {
    */
   async getCategories(companyId: number): Promise<ApiResponse<Category[]>> {
     const response = await inventoryApiClient.get(
-      `/products/categories/companies/${companyId}`,
+      `/products/categories/companies/${companyId}`
     )
     return response.data
   },
@@ -690,10 +690,10 @@ export const dashboardApi = {
    * 재고 대시보드 데이터 조회
    */
   async getInventoryDashboard(
-    companyId: number,
+    companyId: number
   ): Promise<ApiResponse<InventoryDashboard>> {
     const response = await inventoryApiClient.get(
-      `/dashboard/inventory/companies/${companyId}`,
+      `/dashboard/inventory/companies/${companyId}`
     )
     return response.data
   },
@@ -703,13 +703,13 @@ export const dashboardApi = {
    */
   async getInventoryTrend(
     companyId: number,
-    days: number = 30,
+    days: number = 30
   ): Promise<ApiResponse<any[]>> {
     const response = await inventoryApiClient.get(
       `/dashboard/inventory/companies/${companyId}/trend`,
       {
         params: { days },
-      },
+      }
     )
     return response.data
   },
@@ -718,10 +718,10 @@ export const dashboardApi = {
    * 창고 활용도 조회
    */
   async getWarehouseUtilization(
-    companyId: number,
+    companyId: number
   ): Promise<ApiResponse<WarehouseInventory[]>> {
     const response = await inventoryApiClient.get(
-      `/dashboard/inventory/companies/${companyId}/warehouse-utilization`,
+      `/dashboard/inventory/companies/${companyId}/warehouse-utilization`
     )
     return response.data
   },

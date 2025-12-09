@@ -23,7 +23,7 @@ interface NotificationContextType {
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(
-  undefined,
+  undefined
 )
 
 interface NotificationProviderProps {
@@ -38,7 +38,7 @@ function NotificationProvider({ children }: NotificationProviderProps) {
   const [unreadCount, setUnreadCount] = useState(0)
   const [isPolling, setIsPolling] = useState(false)
   const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(
-    null,
+    null
   )
 
   /**
@@ -204,7 +204,7 @@ function useNotifications() {
   const context = useContext(NotificationContext)
   if (context === undefined) {
     throw new Error(
-      'useNotifications must be used within a NotificationProvider',
+      'useNotifications must be used within a NotificationProvider'
     )
   }
   return context

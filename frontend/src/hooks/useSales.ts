@@ -115,7 +115,7 @@ export const useCreateCustomer = () => {
     },
     onError: (error: any) => {
       toast.error(
-        `고객 생성 실패: ${error.response?.data?.message || error.message}`,
+        `고객 생성 실패: ${error.response?.data?.message || error.message}`
       )
     },
   })
@@ -142,7 +142,7 @@ export const useUpdateCustomer = () => {
     },
     onError: (error: any) => {
       toast.error(
-        `고객 수정 실패: ${error.response?.data?.message || error.message}`,
+        `고객 수정 실패: ${error.response?.data?.message || error.message}`
       )
     },
   })
@@ -162,7 +162,7 @@ export const useDeleteCustomer = () => {
     },
     onError: (error: any) => {
       toast.error(
-        `고객 삭제 실패: ${error.response?.data?.message || error.message}`,
+        `고객 삭제 실패: ${error.response?.data?.message || error.message}`
       )
     },
   })
@@ -189,7 +189,7 @@ export const useChangeCustomerStatus = () => {
     },
     onError: (error: any) => {
       toast.error(
-        `고객 상태 변경 실패: ${error.response?.data?.message || error.message}`,
+        `고객 상태 변경 실패: ${error.response?.data?.message || error.message}`
       )
     },
   })
@@ -216,7 +216,7 @@ export const useChangeCustomerGrade = () => {
     },
     onError: (error: any) => {
       toast.error(
-        `고객 등급 변경 실패: ${error.response?.data?.message || error.message}`,
+        `고객 등급 변경 실패: ${error.response?.data?.message || error.message}`
       )
     },
   })
@@ -237,7 +237,7 @@ export const useToggleCustomerActive = () => {
     },
     onError: (error: any) => {
       toast.error(
-        `고객 활성화 상태 변경 실패: ${error.response?.data?.message || error.message}`,
+        `고객 활성화 상태 변경 실패: ${error.response?.data?.message || error.message}`
       )
     },
   })
@@ -274,7 +274,7 @@ export const useOrders = (companyId: number, params?: PaginationParams) => {
  */
 export const useCustomerOrders = (
   customerId: number,
-  params?: PaginationParams,
+  params?: PaginationParams
 ) => {
   return useQuery({
     queryKey: ['orders', 'customer', customerId, params],
@@ -361,7 +361,7 @@ export const useCreateOrder = () => {
     },
     onError: (error: any) => {
       toast.error(
-        `주문 생성 실패: ${error.response?.data?.message || error.message}`,
+        `주문 생성 실패: ${error.response?.data?.message || error.message}`
       )
     },
   })
@@ -392,7 +392,7 @@ export const useCreateOrderFromQuote = () => {
     },
     onError: (error: any) => {
       toast.error(
-        `주문 생성 실패: ${error.response?.data?.message || error.message}`,
+        `주문 생성 실패: ${error.response?.data?.message || error.message}`
       )
     },
   })
@@ -419,7 +419,7 @@ export const useUpdateOrder = () => {
     },
     onError: (error: any) => {
       toast.error(
-        `주문 수정 실패: ${error.response?.data?.message || error.message}`,
+        `주문 수정 실패: ${error.response?.data?.message || error.message}`
       )
     },
   })
@@ -440,7 +440,7 @@ export const useDeleteOrder = () => {
     },
     onError: (error: any) => {
       toast.error(
-        `주문 삭제 실패: ${error.response?.data?.message || error.message}`,
+        `주문 삭제 실패: ${error.response?.data?.message || error.message}`
       )
     },
   })
@@ -467,7 +467,7 @@ export const useChangeOrderStatus = () => {
     },
     onError: (error: any) => {
       toast.error(
-        `주문 상태 변경 실패: ${error.response?.data?.message || error.message}`,
+        `주문 상태 변경 실패: ${error.response?.data?.message || error.message}`
       )
     },
   })
@@ -488,7 +488,7 @@ export const useConfirmOrder = () => {
     },
     onError: (error: any) => {
       toast.error(
-        `주문 확정 실패: ${error.response?.data?.message || error.message}`,
+        `주문 확정 실패: ${error.response?.data?.message || error.message}`
       )
     },
   })
@@ -520,7 +520,7 @@ export const useShipOrder = () => {
     },
     onError: (error: any) => {
       toast.error(
-        `주문 배송 처리 실패: ${error.response?.data?.message || error.message}`,
+        `주문 배송 처리 실패: ${error.response?.data?.message || error.message}`
       )
     },
   })
@@ -548,7 +548,7 @@ export const useCancelOrder = () => {
     },
     onError: (error: any) => {
       toast.error(
-        `주문 취소 실패: ${error.response?.data?.message || error.message}`,
+        `주문 취소 실패: ${error.response?.data?.message || error.message}`
       )
     },
   })
@@ -582,7 +582,7 @@ export const useProcessOrderPayment = () => {
     },
     onError: (error: any) => {
       toast.error(
-        `주문 결제 처리 실패: ${error.response?.data?.message || error.message}`,
+        `주문 결제 처리 실패: ${error.response?.data?.message || error.message}`
       )
     },
   })

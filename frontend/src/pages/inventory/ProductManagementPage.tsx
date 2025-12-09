@@ -223,7 +223,7 @@ function ProductManagementPage({ companyId }: ProductManagementPageProps) {
             setEditingProduct(null)
             refetchProducts()
           },
-        },
+        }
       )
     } else {
       createProductMutation.mutate(data, {
@@ -607,7 +607,7 @@ function ProductManagementPage({ companyId }: ProductManagementPageProps) {
                         size="sm"
                         onClick={() =>
                           setCurrentPage(
-                            Math.min(totalPages - 1, currentPage + 1),
+                            Math.min(totalPages - 1, currentPage + 1)
                           )
                         }
                         disabled={currentPage === totalPages - 1}

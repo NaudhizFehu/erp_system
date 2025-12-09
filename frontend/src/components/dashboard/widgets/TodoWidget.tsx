@@ -382,7 +382,7 @@ function TodoWidget({
   const [activeTab, setActiveTab] = useState('todos')
 
   const pendingTodos = todos.filter(
-    todo => todo.status === 'pending' || todo.status === 'in_progress',
+    todo => todo.status === 'pending' || todo.status === 'in_progress'
   )
   const completedTodos = todos.filter(todo => todo.status === 'completed')
   const overdueTodos = todos.filter(

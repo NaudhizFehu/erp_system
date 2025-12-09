@@ -240,7 +240,7 @@ export const notificationApi = {
       null,
       {
         params: { userId },
-      },
+      }
     )
   },
 
@@ -496,7 +496,7 @@ export const realtimeApi = {
  * 시간 범위를 날짜로 변환
  */
 export const getDateRangeFromTimeRange = (
-  timeRange: string,
+  timeRange: string
 ): { startDate: string; endDate: string } => {
   const now = new Date()
   const endDate = now.toISOString().split('T')[0]

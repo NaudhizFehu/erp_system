@@ -116,7 +116,7 @@ export function useEmployee(id: number) {
  */
 export function useEmployeeSearch(
   searchTerm: string,
-  params: SearchParams = {},
+  params: SearchParams = {}
 ) {
   return useQuery({
     queryKey: EMPLOYEE_QUERY_KEYS.search(searchTerm, params),
@@ -202,7 +202,7 @@ export function useActiveEmployeesByCompany(companyId: number) {
  */
 export function useEmployeesByCompany(
   companyId: number,
-  params: SearchParams = {},
+  params: SearchParams = {}
 ) {
   return useQuery({
     queryKey: EMPLOYEE_QUERY_KEYS.byCompany(companyId, params),
@@ -218,7 +218,7 @@ export function useEmployeesByCompany(
  */
 export function useEmployeesByDepartment(
   departmentId: number,
-  params: SearchParams = {},
+  params: SearchParams = {}
 ) {
   return useQuery({
     queryKey: EMPLOYEE_QUERY_KEYS.byDepartment(departmentId, params),
@@ -478,7 +478,7 @@ export function useDeleteEmployee() {
  */
 export function useCheckEmployeeNumber(
   employeeNumber: string,
-  excludeId?: number,
+  excludeId?: number
 ) {
   return useQuery({
     queryKey: [
@@ -644,7 +644,7 @@ export function useImportEmployees() {
 
       if (result.successCount > 0) {
         toast.success(
-          `${result.successCount}개 데이터를 성공적으로 가져왔습니다`,
+          `${result.successCount}개 데이터를 성공적으로 가져왔습니다`
         )
       }
 

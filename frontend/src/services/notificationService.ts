@@ -26,7 +26,7 @@ class NotificationService {
    */
   async getNotifications(
     page: number = 0,
-    size: number = 20,
+    size: number = 20
   ): Promise<{
     content: Notification[]
     totalElements: number
@@ -37,10 +37,10 @@ class NotificationService {
     try {
       console.log(
         '알림 목록 조회 API 호출:',
-        `${this.baseUrl}?page=${page}&size=${size}`,
+        `${this.baseUrl}?page=${page}&size=${size}`
       )
       const response = await api.get(
-        `${this.baseUrl}?page=${page}&size=${size}`,
+        `${this.baseUrl}?page=${page}&size=${size}`
       )
       console.log('알림 목록 조회 API 응답:', response)
       return response.data.data
@@ -57,7 +57,7 @@ class NotificationService {
     try {
       console.log(
         '읽지 않은 알림 개수 조회 API 호출:',
-        `${this.baseUrl}/unread-count`,
+        `${this.baseUrl}/unread-count`
       )
       const response = await api.get(`${this.baseUrl}/unread-count`)
       console.log('읽지 않은 알림 개수 조회 API 응답:', response)
@@ -75,7 +75,7 @@ class NotificationService {
     try {
       console.log(
         '읽지 않은 알림 목록 조회 API 호출:',
-        `${this.baseUrl}/unread`,
+        `${this.baseUrl}/unread`
       )
       const response = await api.get(`${this.baseUrl}/unread`)
       console.log('읽지 않은 알림 목록 조회 API 응답:', response)
@@ -93,7 +93,7 @@ class NotificationService {
     try {
       console.log(
         '최근 3일 이내 알림 목록 조회 API 호출:',
-        `${this.baseUrl}/recent`,
+        `${this.baseUrl}/recent`
       )
       const response = await api.get(`${this.baseUrl}/recent`)
       console.log('최근 3일 이내 알림 목록 조회 API 응답:', response)
@@ -101,7 +101,7 @@ class NotificationService {
     } catch (error) {
       console.error('최근 3일 이내 알림 목록 조회 오류:', error)
       throw new Error(
-        '최근 3일 이내 알림 목록을 불러오는 중 오류가 발생했습니다.',
+        '최근 3일 이내 알림 목록을 불러오는 중 오류가 발생했습니다.'
       )
     }
   }
@@ -113,7 +113,7 @@ class NotificationService {
     try {
       console.log(
         '최근 2주 이내 모든 알림 목록 조회 API 호출:',
-        `${this.baseUrl}/all`,
+        `${this.baseUrl}/all`
       )
       const response = await api.get(`${this.baseUrl}/all`)
       console.log('최근 2주 이내 모든 알림 목록 조회 API 응답:', response)
@@ -121,7 +121,7 @@ class NotificationService {
     } catch (error) {
       console.error('최근 2주 이내 모든 알림 목록 조회 오류:', error)
       throw new Error(
-        '최근 2주 이내 모든 알림 목록을 불러오는 중 오류가 발생했습니다.',
+        '최근 2주 이내 모든 알림 목록을 불러오는 중 오류가 발생했습니다.'
       )
     }
   }
@@ -133,7 +133,7 @@ class NotificationService {
     try {
       console.log(
         '알림 읽음 처리 API 호출:',
-        `${this.baseUrl}/${notificationId}/read`,
+        `${this.baseUrl}/${notificationId}/read`
       )
       const response = await api.put(`${this.baseUrl}/${notificationId}/read`)
       console.log('알림 읽음 처리 API 응답:', response)

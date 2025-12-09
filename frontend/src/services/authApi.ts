@@ -59,7 +59,7 @@ export const authApi = {
     console.log('현재 사용자 정보:', response.data)
     console.log(
       '현재 사용자 정보 상세:',
-      JSON.stringify(response.data, null, 2),
+      JSON.stringify(response.data, null, 2)
     )
     // 백엔드는 ApiResponse<UserInfo> 형식으로 응답하므로 response.data.data를 반환
     return response.data.data
@@ -70,7 +70,7 @@ export const authApi = {
    */
   changePassword: async (
     currentPassword: string,
-    newPassword: string,
+    newPassword: string
   ): Promise<void> => {
     await api.post(`${AUTH_BASE_URL}/change-password`, {
       currentPassword,

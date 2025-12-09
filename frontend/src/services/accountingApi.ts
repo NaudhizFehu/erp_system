@@ -37,7 +37,7 @@ export const transactionApi = {
    * 복식부기 분개 생성
    */
   createJournalEntry: async (
-    journalEntries: TransactionCreateRequest[],
+    journalEntries: TransactionCreateRequest[]
   ): Promise<Transaction[]> => {
     const { data } = await api.post<ApiResponse<Transaction[]>>(
       `${ACCOUNTING_API_BASE}/journal-entries`,
@@ -50,7 +50,7 @@ export const transactionApi = {
    * 단일 거래 생성
    */
   createTransaction: async (
-    transaction: TransactionCreateRequest,
+    transaction: TransactionCreateRequest
   ): Promise<Transaction> => {
     const { data } = await api.post<ApiResponse<Transaction>>(
       `${ACCOUNTING_API_BASE}/transactions`,
@@ -64,7 +64,7 @@ export const transactionApi = {
    */
   updateTransaction: async (
     id: number,
-    transaction: TransactionCreateRequest,
+    transaction: TransactionCreateRequest
   ): Promise<Transaction> => {
     const { data } = await api.put<ApiResponse<Transaction>>(
       `${ACCOUNTING_API_BASE}/transactions/${id}`,
@@ -78,7 +78,7 @@ export const transactionApi = {
    */
   approveTransaction: async (
     id: number,
-    approverId: number,
+    approverId: number
   ): Promise<Transaction> => {
     const { data } = await api.post<ApiResponse<Transaction>>(
       `${ACCOUNTING_API_BASE}/transactions/${id}/approve`,
@@ -104,7 +104,7 @@ export const transactionApi = {
   cancelTransaction: async (
     id: number,
     reason: string,
-    cancelById: number,
+    cancelById: number
   ): Promise<void> => {
     await api.post<ApiResponse<void>>(
       `${ACCOUNTING_API_BASE}/transactions/${id}/cancel`,
@@ -118,7 +118,7 @@ export const transactionApi = {
    */
   createAdjustingEntry: async (
     originalId: number,
-    newTransaction: TransactionCreateRequest,
+    newTransaction: TransactionCreateRequest
   ): Promise<Transaction[]> => {
     const { data } = await api.post<ApiResponse<Transaction[]>>(
       `${ACCOUNTING_API_BASE}/transactions/${originalId}/adjusting-entry`,
@@ -132,7 +132,7 @@ export const transactionApi = {
    */
   searchTransactions: async (
     searchTerm: string,
-    params: AccountingSearchParams = {},
+    params: AccountingSearchParams = {}
   ): Promise<PageResponse<Transaction>> => {
     const { data } = await api.get<ApiResponse<PageResponse<Transaction>>>(
       `${ACCOUNTING_API_BASE}/transactions/search`,
@@ -143,7 +143,7 @@ export const transactionApi = {
           size: params.size || 20,
           sort: params.sort || 'transactionDate,desc',
         },
-      },
+      }
     )
     return data.data
   },
@@ -154,7 +154,7 @@ export const transactionApi = {
   searchTransactionsByCompany: async (
     companyId: number,
     searchTerm: string,
-    params: AccountingSearchParams = {},
+    params: AccountingSearchParams = {}
   ): Promise<PageResponse<Transaction>> => {
     const { data } = await api.get<ApiResponse<PageResponse<Transaction>>>(
       `${ACCOUNTING_API_BASE}/companies/${companyId}/transactions/search`,
@@ -165,7 +165,7 @@ export const transactionApi = {
           size: params.size || 20,
           sort: params.sort || 'transactionDate,desc',
         },
-      },
+      }
     )
     return data.data
   },
@@ -175,7 +175,7 @@ export const transactionApi = {
    */
   generateTransactionNumber: async (
     companyId: number,
-    transactionType: TransactionType,
+    transactionType: TransactionType
   ): Promise<string> => {
     const { data } = await api.get<ApiResponse<string>>(
       `${ACCOUNTING_API_BASE}/companies/${companyId}/generate-transaction-number`,
@@ -190,7 +190,7 @@ export const transactionApi = {
   getTransactionStatistics: async (
     companyId: number,
     startDate: string,
-    endDate: string,
+    endDate: string
   ): Promise<TransactionStatistics> => {
     const { data } = await api.get<ApiResponse<TransactionStatistics>>(
       `${ACCOUNTING_API_BASE}/companies/${companyId}/transaction-statistics`,
@@ -209,7 +209,7 @@ export const accountApi = {
    */
   getAccountBalance: async (
     accountId: number,
-    asOfDate?: string,
+    asOfDate?: string
   ): Promise<number> => {
     const { data } = await api.get<ApiResponse<number>>(
       `${ACCOUNTING_API_BASE}/accounts/${accountId}/balance`,
@@ -233,7 +233,7 @@ export const accountApi = {
   getGeneralLedger: async (
     accountId: number,
     startDate: string,
-    endDate: string,
+    endDate: string
   ): Promise<GeneralLedger[]> => {
     const { data } = await api.get<ApiResponse<GeneralLedger[]>>(
       `${ACCOUNTING_API_BASE}/accounts/${accountId}/general-ledger`,
@@ -253,7 +253,7 @@ export const accountingApi = {
   generateTrialBalance: async (
     companyId: number,
     startDate: string,
-    endDate: string,
+    endDate: string
   ): Promise<TrialBalance[]> => {
     const { data } = await api.get<ApiResponse<TrialBalance[]>>(
       `${ACCOUNTING_API_BASE}/companies/${companyId}/trial-balance`,
@@ -267,7 +267,7 @@ export const accountingApi = {
    */
   verifyBalance: async (
     companyId: number,
-    asOfDate?: string,
+    asOfDate?: string
   ): Promise<BalanceVerification> => {
     const { data } = await api.get<ApiResponse<BalanceVerification>>(
       `${ACCOUNTING_API_BASE}/companies/${companyId}/balance-verification`,
@@ -282,7 +282,7 @@ export const accountingApi = {
   closeFiscalPeriod: async (
     companyId: number,
     fiscalYear: number,
-    fiscalMonth: number,
+    fiscalMonth: number
   ): Promise<void> => {
     await api.post<ApiResponse<void>>(
       `${ACCOUNTING_API_BASE}/companies/${companyId}/close-period`,
@@ -296,7 +296,7 @@ export const accountingApi = {
    */
   closeFiscalYear: async (
     companyId: number,
-    fiscalYear: number,
+    fiscalYear: number
   ): Promise<void> => {
     await api.post<ApiResponse<void>>(
       `${ACCOUNTING_API_BASE}/companies/${companyId}/close-year`,
@@ -317,7 +317,7 @@ export const reportApi = {
     companyId: number,
     fiscalYear: number,
     fiscalPeriod: string,
-    baseDate: string,
+    baseDate: string
   ): Promise<FinancialReport> => {
     const { data } = await api.post<ApiResponse<FinancialReport>>(
       `${REPORTS_API_BASE}/balance-sheet`,
@@ -335,7 +335,7 @@ export const reportApi = {
     fiscalYear: number,
     fiscalPeriod: string,
     startDate: string,
-    endDate: string,
+    endDate: string
   ): Promise<FinancialReport> => {
     const { data } = await api.post<ApiResponse<FinancialReport>>(
       `${REPORTS_API_BASE}/income-statement`,
@@ -353,7 +353,7 @@ export const reportApi = {
     fiscalYear: number,
     fiscalPeriod: string,
     startDate: string,
-    endDate: string,
+    endDate: string
   ): Promise<FinancialReport> => {
     const { data } = await api.post<ApiResponse<FinancialReport>>(
       `${REPORTS_API_BASE}/cash-flow-statement`,
@@ -371,7 +371,7 @@ export const reportApi = {
     fiscalYear: number,
     fiscalPeriod: string,
     startDate: string,
-    endDate: string,
+    endDate: string
   ): Promise<FinancialReport> => {
     const { data } = await api.post<ApiResponse<FinancialReport>>(
       `${REPORTS_API_BASE}/trial-balance`,
@@ -387,7 +387,7 @@ export const reportApi = {
   generateBudgetReport: async (
     companyId: number,
     fiscalYear: number,
-    fiscalPeriod: string,
+    fiscalPeriod: string
   ): Promise<FinancialReport> => {
     const { data } = await api.post<ApiResponse<FinancialReport>>(
       `${REPORTS_API_BASE}/budget-report`,
@@ -402,7 +402,7 @@ export const reportApi = {
    */
   approveReport: async (
     reportId: number,
-    approverId: number,
+    approverId: number
   ): Promise<FinancialReport> => {
     const { data } = await api.post<ApiResponse<FinancialReport>>(
       `${REPORTS_API_BASE}/${reportId}/approve`,
@@ -433,7 +433,7 @@ export const reportApi = {
    * 회사별 보고서 목록 조회
    */
   getReportsByCompany: async (
-    companyId: number,
+    companyId: number
   ): Promise<FinancialReport[]> => {
     const { data } = await api.get<ApiResponse<FinancialReport[]>>(
       `${REPORTS_API_BASE}/companies/${companyId}`
@@ -446,7 +446,7 @@ export const reportApi = {
    */
   getReportsByType: async (
     companyId: number,
-    reportType: ReportType,
+    reportType: ReportType
   ): Promise<FinancialReport[]> => {
     const { data } = await api.get<ApiResponse<FinancialReport[]>>(
       `${REPORTS_API_BASE}/companies/${companyId}/type/${reportType}`
@@ -458,7 +458,7 @@ export const reportApi = {
    * 최신 재무제표 조회
    */
   getLatestFinancialStatements: async (
-    companyId: number,
+    companyId: number
   ): Promise<Record<string, FinancialReport>> => {
     const { data } = await api.get<
       ApiResponse<Record<string, FinancialReport>>
@@ -471,7 +471,7 @@ export const reportApi = {
    */
   getFinancialTrends: async (
     companyId: number,
-    periods: number = 12,
+    periods: number = 12
   ): Promise<any> => {
     const { data } = await api.get<ApiResponse<any>>(
       `${REPORTS_API_BASE}/companies/${companyId}/trends`,
@@ -485,7 +485,7 @@ export const reportApi = {
    */
   getFinancialRatioAnalysis: async (
     companyId: number,
-    fiscalYear: number,
+    fiscalYear: number
   ): Promise<FinancialRatioAnalysis> => {
     const { data } = await api.get<ApiResponse<FinancialRatioAnalysis>>(
       `${REPORTS_API_BASE}/companies/${companyId}/ratios`,
@@ -499,7 +499,7 @@ export const reportApi = {
    */
   searchReports: async (
     searchTerm: string,
-    params: AccountingSearchParams = {},
+    params: AccountingSearchParams = {}
   ): Promise<PageResponse<FinancialReport>> => {
     const { data } = await api.get<ApiResponse<PageResponse<FinancialReport>>>(
       `${REPORTS_API_BASE}/search`,
@@ -510,7 +510,7 @@ export const reportApi = {
           size: params.size || 20,
           sort: params.sort || 'fiscalYear,desc',
         },
-      },
+      }
     )
     return data.data
   },
@@ -521,7 +521,7 @@ export const reportApi = {
   searchReportsByCompany: async (
     companyId: number,
     searchTerm: string,
-    params: AccountingSearchParams = {},
+    params: AccountingSearchParams = {}
   ): Promise<PageResponse<FinancialReport>> => {
     const { data } = await api.get<ApiResponse<PageResponse<FinancialReport>>>(
       `${REPORTS_API_BASE}/companies/${companyId}/search`,
@@ -532,7 +532,7 @@ export const reportApi = {
           size: params.size || 20,
           sort: params.sort || 'fiscalYear,desc',
         },
-      },
+      }
     )
     return data.data
   },
@@ -542,7 +542,7 @@ export const reportApi = {
    */
   getReportStatistics: async (
     companyId: number,
-    fiscalYear: number,
+    fiscalYear: number
   ): Promise<any> => {
     const { data } = await api.get<ApiResponse<any>>(
       `${REPORTS_API_BASE}/companies/${companyId}/statistics`,
@@ -603,7 +603,7 @@ export const accountingUtils = {
    */
   getRatioColor: (
     ratio: number,
-    type: 'current' | 'debt' | 'equity' | 'roa' | 'roe',
+    type: 'current' | 'debt' | 'equity' | 'roa' | 'roe'
   ): string => {
     switch (type) {
       case 'current':

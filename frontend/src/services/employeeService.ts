@@ -88,7 +88,7 @@ class EmployeeService {
    * 직원 목록 조회
    */
   async getEmployees(
-    params: EmployeeListParams = {},
+    params: EmployeeListParams = {}
   ): Promise<EmployeeListResponse> {
     try {
       const response = await api.get(this.baseUrl, { params })
@@ -123,7 +123,7 @@ class EmployeeService {
    * 직원 생성
    */
   async createEmployee(
-    employee: Omit<Employee, 'id' | 'createdAt' | 'updatedAt'>,
+    employee: Omit<Employee, 'id' | 'createdAt' | 'updatedAt'>
   ): Promise<Employee> {
     try {
       const response = await api.post(this.baseUrl, employee)
@@ -139,7 +139,7 @@ class EmployeeService {
    */
   async updateEmployee(
     id: number,
-    employee: Partial<Employee>,
+    employee: Partial<Employee>
   ): Promise<Employee> {
     try {
       const response = await api.put(`${this.baseUrl}/${id}`, employee)

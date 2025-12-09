@@ -88,7 +88,7 @@ function NotificationTestPage() {
    * 빠른 테스트 알림 생성
    */
   const createQuickTestNotification = async (
-    type: 'INFO' | 'WARNING' | 'ERROR' | 'SUCCESS',
+    type: 'INFO' | 'WARNING' | 'ERROR' | 'SUCCESS'
   ) => {
     const testData = {
       INFO: {

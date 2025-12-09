@@ -297,7 +297,7 @@ const getAvailableWidgets = (userRole: string): Partial<WidgetConfig>[] => {
         chartType: 'pie' as ChartType,
         width: 6,
         height: 6,
-      },
+      }
     )
   }
 
@@ -414,7 +414,7 @@ function DashboardCustomizer({
   const availableWidgets = getAvailableWidgets(userRole)
   const currentWidgetIds = localConfig.widgets.map(w => w.id)
   const availableToAdd = availableWidgets.filter(
-    w => !currentWidgetIds.includes(w.id!),
+    w => !currentWidgetIds.includes(w.id!)
   )
 
   return (
