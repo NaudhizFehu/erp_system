@@ -128,6 +128,28 @@ export const transactionApi = {
   },
 
   /**
+   * 거래 ID로 상세 조회
+   */
+  getTransactionById: async (id: number): Promise<Transaction> => {
+    const { data } = await api.get<ApiResponse<Transaction>>(
+      `${ACCOUNTING_API_BASE}/transactions/${id}`
+    )
+    return data.data
+  },
+
+  /**
+   * 전표번호로 분개 항목 조회 (복식부기 그룹)
+   */
+  getTransactionsByNumber: async (
+    transactionNumber: string
+  ): Promise<Transaction[]> => {
+    const { data} = await api.get<ApiResponse<Transaction[]>>(
+      `${ACCOUNTING_API_BASE}/transactions/by-number/${transactionNumber}`
+    )
+    return data.data
+  },
+
+  /**
    * 거래 검색
    */
   searchTransactions: async (

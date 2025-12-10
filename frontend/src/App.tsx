@@ -8,6 +8,8 @@ import { AuthProvider } from '@/contexts/AuthContext'
 import { NotificationProvider } from '@/contexts/NotificationContext'
 import AccountDetail from '@/pages/accounting/AccountDetail'
 import { AccountList } from '@/pages/accounting/AccountList'
+import TransactionDetail from '@/pages/accounting/TransactionDetail'
+import TransactionList from '@/pages/accounting/TransactionList'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { CompanyDetail } from '@/pages/company/CompanyDetail'
 import { CompanyList } from '@/pages/company/CompanyList'
@@ -118,6 +120,20 @@ function App() {
                           requiredRoles={['SUPER_ADMIN', 'ADMIN']}
                         >
                           <AccountDetail />
+                        </RoleProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/accounting/transactions"
+                      element={<TransactionList />}
+                    />
+                    <Route
+                      path="/accounting/transactions/:id"
+                      element={
+                        <RoleProtectedRoute
+                          requiredRoles={['SUPER_ADMIN', 'ADMIN', 'MANAGER']}
+                        >
+                          <TransactionDetail />
                         </RoleProtectedRoute>
                       }
                     />

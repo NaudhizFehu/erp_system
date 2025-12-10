@@ -691,4 +691,34 @@ public class AccountingServiceImpl implements AccountingService {
             dailyAmounts
         );
     }
+
+    /**
+     * 거래 ID로 상세 조회
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public TransactionDto getTransactionById(Long id) {
+        log.info("거래 조회 - ID: {}", id);
+
+        Transaction transaction = transactionRepository.findById(id)
+            .orElseThrow(() -> ExceptionUtils.businessException("거래를 찾을 수 없습니다: " + id));
+
+        return TransactionDto.from(transaction);
+    }
+
+    /**
+     * 전표번호로 분개 항목 조회 (복식부기 그룹)
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public List<TransactionDto> getTransactionsByNumber(String transactionNumber) {
+        log.info("전표 조회 - 전표번호: {}", transactionNumber);
+
+        List<Transaction> transactions = transactionRepository
+            .findByTransactionNumber(transactionNumber);
+
+        return transactions.stream()
+            .map(TransactionDto::from)
+            .collect(Collectors.toList());
+    }
 }

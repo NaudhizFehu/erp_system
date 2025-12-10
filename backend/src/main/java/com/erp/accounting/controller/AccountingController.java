@@ -380,6 +380,53 @@ public class AccountingController {
     }
 
     /**
+     * 거래 ID로 상세 조회
+     */
+    @GetMapping("/transactions/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
+    public ResponseEntity<ApiResponse<TransactionDto>> getTransactionById(@PathVariable Long id) {
+        try {
+            log.info("거래 조회 요청 - ID: {}", id);
+
+            TransactionDto result = accountingService.getTransactionById(id);
+
+            return ResponseEntity.ok(ApiResponse.success(
+                "거래 정보를 조회했습니다",
+                result
+            ));
+        } catch (Exception e) {
+            log.error("거래 조회 실패 - ID: {}", id, e);
+            return ResponseEntity.badRequest().body(
+                ApiResponse.error("거래 조회에 실패했습니다: " + e.getMessage())
+            );
+        }
+    }
+
+    /**
+     * 전표번호로 분개 항목 조회 (복식부기 그룹)
+     */
+    @GetMapping("/transactions/by-number/{transactionNumber}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
+    public ResponseEntity<ApiResponse<List<TransactionDto>>> getTransactionsByNumber(
+            @PathVariable String transactionNumber) {
+        try {
+            log.info("전표 조회 요청 - 전표번호: {}", transactionNumber);
+
+            List<TransactionDto> result = accountingService.getTransactionsByNumber(transactionNumber);
+
+            return ResponseEntity.ok(ApiResponse.success(
+                "전표 항목을 조회했습니다",
+                result
+            ));
+        } catch (Exception e) {
+            log.error("전표 조회 실패 - 전표번호: {}", transactionNumber, e);
+            return ResponseEntity.badRequest().body(
+                ApiResponse.error("전표 조회에 실패했습니다: " + e.getMessage())
+            );
+        }
+    }
+
+    /**
      * 거래 검색
      */
     @GetMapping("/transactions/search")
@@ -389,9 +436,9 @@ public class AccountingController {
             @PageableDefault(size = 20) Pageable pageable) {
         try {
             log.info("거래 검색 요청 - 검색어: {}", searchTerm);
-            
+
             Page<TransactionDto> result = accountingService.searchTransactions(searchTerm, pageable);
-            
+
             return ResponseEntity.ok(ApiResponse.success(
                 "거래 검색이 완료되었습니다",
                 result

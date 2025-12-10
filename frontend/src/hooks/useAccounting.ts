@@ -165,6 +165,36 @@ export function useTransactionsByCompany(
 }
 
 /**
+ * 거래 ID로 상세 조회 훅
+ */
+export function useTransaction(id: number) {
+  return useQuery({
+    queryKey: [...ACCOUNTING_QUERY_KEYS.transactions, 'detail', id],
+    queryFn: () => transactionApi.getTransactionById(id),
+    enabled: !!id,
+    staleTime: 2 * 60 * 1000, // 2분
+    retry: 3,
+  })
+}
+
+/**
+ * 전표번호로 분개 항목 조회 훅 (복식부기 그룹)
+ */
+export function useTransactionsByNumber(transactionNumber: string) {
+  return useQuery({
+    queryKey: [
+      ...ACCOUNTING_QUERY_KEYS.transactions,
+      'by-number',
+      transactionNumber,
+    ],
+    queryFn: () => transactionApi.getTransactionsByNumber(transactionNumber),
+    enabled: !!transactionNumber,
+    staleTime: 2 * 60 * 1000, // 2분
+    retry: 3,
+  })
+}
+
+/**
  * 거래번호 생성 훅
  */
 export function useTransactionNumber(

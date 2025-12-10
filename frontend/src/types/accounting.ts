@@ -169,6 +169,7 @@ export interface Account {
   id: number
   accountCode: string
   accountName: string
+  name?: string // accountName의 별칭 (호환성)
   accountNameEn?: string
   description?: string
   company: {
@@ -248,8 +249,11 @@ export interface AccountTreeNode {
   id: number
   accountCode: string
   accountName: string
+  name?: string // accountName의 별칭 (호환성)
   accountLevel: number
   isActive: boolean
+  isLeafAccount: boolean
+  description?: string
   children: AccountTreeNode[]
 }
 
@@ -292,8 +296,13 @@ export interface Transaction {
     name: string
   }
   approvedAt?: string
+  postedAt?: string
   cancelReason?: string
   cancelledAt?: string
+  cancelledBy?: {
+    id: number
+    name: string
+  }
   originalTransaction?: Transaction
   amount: number
   isDebitTransaction: boolean
@@ -593,63 +602,110 @@ export interface FinancialRatioAnalysis {
  */
 export const KOREAN_LABELS = {
   // 계정과목 유형
-  [AccountType.ASSET]: '자산',
-  [AccountType.LIABILITY]: '부채',
-  [AccountType.EQUITY]: '자본',
-  [AccountType.REVENUE]: '수익',
-  [AccountType.EXPENSE]: '비용',
+  accountType: {
+    [AccountType.ASSET]: '자산',
+    [AccountType.LIABILITY]: '부채',
+    [AccountType.EQUITY]: '자본',
+    [AccountType.REVENUE]: '수익',
+    [AccountType.EXPENSE]: '비용',
+  },
 
   // 계정과목 분류
-  [AccountCategory.CURRENT_ASSET]: '유동자산',
-  [AccountCategory.NON_CURRENT_ASSET]: '비유동자산',
-  [AccountCategory.CURRENT_LIABILITY]: '유동부채',
-  [AccountCategory.NON_CURRENT_LIABILITY]: '비유동부채',
-  [AccountCategory.PAID_IN_CAPITAL]: '납입자본',
-  [AccountCategory.RETAINED_EARNINGS]: '이익잉여금',
-  [AccountCategory.OPERATING_REVENUE]: '영업수익',
-  [AccountCategory.NON_OPERATING_REVENUE]: '영업외수익',
-  [AccountCategory.OPERATING_EXPENSE]: '영업비용',
-  [AccountCategory.NON_OPERATING_EXPENSE]: '영업외비용',
+  accountCategory: {
+    [AccountCategory.CURRENT_ASSET]: '유동자산',
+    [AccountCategory.NON_CURRENT_ASSET]: '비유동자산',
+    [AccountCategory.CURRENT_LIABILITY]: '유동부채',
+    [AccountCategory.NON_CURRENT_LIABILITY]: '비유동부채',
+    [AccountCategory.PAID_IN_CAPITAL]: '납입자본',
+    [AccountCategory.RETAINED_EARNINGS]: '이익잉여금',
+    [AccountCategory.OPERATING_REVENUE]: '영업수익',
+    [AccountCategory.NON_OPERATING_REVENUE]: '영업외수익',
+    [AccountCategory.OPERATING_EXPENSE]: '영업비용',
+    [AccountCategory.NON_OPERATING_EXPENSE]: '영업외비용',
+  },
 
   // 차대구분
-  [DebitCreditType.DEBIT]: '차변',
-  [DebitCreditType.CREDIT]: '대변',
+  debitCreditType: {
+    [DebitCreditType.DEBIT]: '차변',
+    [DebitCreditType.CREDIT]: '대변',
+  },
 
   // 거래 유형
-  [TransactionType.JOURNAL]: '일반분개',
-  [TransactionType.SALES]: '매출',
-  [TransactionType.PURCHASE]: '매입',
-  [TransactionType.CASH_RECEIPT]: '현금수입',
-  [TransactionType.CASH_PAYMENT]: '현금지출',
-  [TransactionType.BANK_RECEIPT]: '예금수입',
-  [TransactionType.BANK_PAYMENT]: '예금지출',
-  [TransactionType.ADJUSTMENT]: '수정분개',
-  [TransactionType.CLOSING]: '결산분개',
+  transactionType: {
+    [TransactionType.JOURNAL]: '일반분개',
+    [TransactionType.SALES]: '매출',
+    [TransactionType.PURCHASE]: '매입',
+    [TransactionType.CASH_RECEIPT]: '현금수입',
+    [TransactionType.CASH_PAYMENT]: '현금지출',
+    [TransactionType.BANK_RECEIPT]: '예금수입',
+    [TransactionType.BANK_PAYMENT]: '예금지출',
+    [TransactionType.ADJUSTMENT]: '수정분개',
+    [TransactionType.CLOSING]: '결산분개',
+  },
 
   // 거래 상태
-  [TransactionStatus.DRAFT]: '임시저장',
-  [TransactionStatus.PENDING]: '승인대기',
-  [TransactionStatus.APPROVED]: '승인완료',
-  [TransactionStatus.POSTED]: '전기완료',
-  [TransactionStatus.CANCELLED]: '취소',
+  transactionStatus: {
+    [TransactionStatus.DRAFT]: '임시저장',
+    [TransactionStatus.PENDING]: '승인대기',
+    [TransactionStatus.APPROVED]: '승인완료',
+    [TransactionStatus.POSTED]: '전기완료',
+    [TransactionStatus.CANCELLED]: '취소',
+  },
 
   // 세금 유형
-  [TaxType.VAT_10]: '부가세 10%',
-  [TaxType.VAT_0]: '부가세 0%',
-  [TaxType.TAX_FREE]: '면세',
-  [TaxType.WITHHOLDING]: '원천세',
+  taxType: {
+    [TaxType.VAT_10]: '부가세 10%',
+    [TaxType.VAT_0]: '부가세 0%',
+    [TaxType.TAX_FREE]: '면세',
+    [TaxType.WITHHOLDING]: '원천세',
+  },
 
   // 증빙서류 유형
-  [DocumentType.TAX_INVOICE]: '세금계산서',
-  [DocumentType.OTHER]: '기타',
+  documentType: {
+    [DocumentType.TAX_INVOICE]: '세금계산서',
+    [DocumentType.OTHER]: '기타',
+  },
+} as const
 
-  // 예산 기간
+/**
+ * 분개 라인 (폼 상태용)
+ */
+export interface JournalEntryLine {
+  id: string // React key용 임시 ID
+  accountId: number | null
+  account: Account | null
+  debitAmount: number
+  creditAmount: number
+  description: string
+  memo?: string
+  businessPartner?: string
+  departmentInfo?: string
+  projectCode?: string
+  taxType?: TaxType
+  taxAmount?: number
+  documentType?: DocumentType
+  documentNumber?: string
+}
 
-  // 예산 유형
+/**
+ * 전표 입력 요청
+ */
+export interface JournalEntryRequest {
+  companyId: number
+  transactionDate: string // ISO format
+  transactionType: TransactionType
+  transactionNumber?: string // 비어있으면 백엔드에서 자동 생성
+  inputById?: number
+  lines: JournalEntryLine[]
+}
 
-  // 예산 상태
-
-  // 보고서 유형
-
-  // 보고서 상태
+/**
+ * 전표 상태별 색상
+ */
+export const TRANSACTION_STATUS_COLORS = {
+  [TransactionStatus.DRAFT]: 'bg-gray-100 text-gray-800',
+  [TransactionStatus.PENDING]: 'bg-yellow-100 text-yellow-800',
+  [TransactionStatus.APPROVED]: 'bg-blue-100 text-blue-800',
+  [TransactionStatus.POSTED]: 'bg-green-100 text-green-800',
+  [TransactionStatus.CANCELLED]: 'bg-red-100 text-red-800',
 } as const

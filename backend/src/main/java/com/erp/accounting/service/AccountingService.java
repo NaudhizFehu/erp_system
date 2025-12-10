@@ -94,6 +94,16 @@ public interface AccountingService {
     String generateTransactionNumber(Long companyId, Transaction.TransactionType transactionType);
 
     /**
+     * 거래 ID로 상세 조회
+     */
+    TransactionDto getTransactionById(Long id);
+
+    /**
+     * 전표번호로 분개 항목 조회 (복식부기 그룹)
+     */
+    List<TransactionDto> getTransactionsByNumber(String transactionNumber);
+
+    /**
      * 거래 검색
      */
     Page<TransactionDto> searchTransactions(String searchTerm, Pageable pageable);
