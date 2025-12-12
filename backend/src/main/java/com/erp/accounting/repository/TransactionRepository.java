@@ -21,15 +21,17 @@ import java.util.Optional;
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
 
     /**
-     * 거래번호로 조회
+     * 전표번호로 분개 항목 조회 (복식부기 그룹)
+     * 하나의 전표번호는 여러 분개 항목(Transaction)을 포함할 수 있음
      */
     @Query("SELECT t FROM Transaction t " +
            "JOIN FETCH t.company c " +
            "JOIN FETCH t.account a " +
            "LEFT JOIN FETCH t.inputBy ib " +
            "LEFT JOIN FETCH t.approvedBy ab " +
-           "WHERE t.transactionNumber = :transactionNumber AND t.isDeleted = false")
-    Optional<Transaction> findByTransactionNumber(@Param("transactionNumber") String transactionNumber);
+           "WHERE t.transactionNumber = :transactionNumber AND t.isDeleted = false " +
+           "ORDER BY t.id ASC")
+    List<Transaction> findByTransactionNumber(@Param("transactionNumber") String transactionNumber);
 
     /**
      * 회사별 거래 목록 조회
