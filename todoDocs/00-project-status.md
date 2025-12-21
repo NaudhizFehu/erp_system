@@ -1,7 +1,7 @@
 # Cursor ERP System - 프로젝트 현황 보고서
 
-**작성일**: 2025-12-09
-**버전**: 1.1
+**작성일**: 2025-12-19
+**버전**: 1.2
 
 ---
 
@@ -74,6 +74,40 @@
   - 병렬 실행으로 빌드 시간 최소화
   - Artifacts 7일 보관
 
+### 회계 전표 관리 완료 ✅
+
+#### 회계 전표 입력 기능 (2025-12-10)
+- **상태**: 완료
+- **구현 내용**:
+  - JournalEntryForm: 복식부기 다중 분개 입력 폼
+  - 실시간 차변/대변 균형 검증
+  - React Hook Form + Zod 스키마 검증
+  - AccountSelector: 계정과목 선택 컴포넌트 (leaf account만)
+
+#### 분개 처리 및 검증 로직 (2025-12-10)
+- **상태**: 완료
+- **구현 내용**:
+  - 복식부기 자동 균형 검증
+  - 전표 상태 관리 (DRAFT → PENDING → APPROVED → POSTED → CANCELLED)
+  - TransactionStatusBadge: 상태별 색상 코딩
+  - TransactionActions: 승인/전기/취소 액션 버튼
+
+#### 전표 조회 및 수정 기능 (2025-12-10)
+- **상태**: 완료
+- **구현 내용**:
+  - TransactionList: 검색, 필터링, 페이지네이션
+  - TransactionDetail: 상세 조회 및 승인 워크플로우
+  - Backend API: GET /transactions/{id}, GET /transactions/by-number/{transactionNumber}
+  - 전표번호로 분개 항목 그룹 조회 지원
+
+#### TransactionRepository 타입 수정 (2025-12-19)
+- **상태**: 완료
+- **구현 내용**:
+  - findByTransactionNumber() 반환 타입: Optional<Transaction> → List<Transaction>
+  - ORDER BY t.id ASC 추가 (분개 입력 순서 보장)
+  - 복식부기 그룹 조회 지원
+  - Java 17 환경 설정 확인 및 컴파일 성공
+
 ### 문서화 ✅
 - **guideDocs/ci_cd/** 디렉토리 생성:
   - `01-gitlab-cicd-overview.md`: Backend + Frontend CI/CD 통합 개요
@@ -124,7 +158,8 @@
 | **GitLab** | origin (내부 개발용, 전체 문서 포함) |
 | **GitHub** | github (공개용, guideDocs 제외) |
 | **Main Branch** | develop |
-| **Current Branch** | feature/enable-backend-tests |
+| **Current Branch** | develop |
+| **Latest Commit** | 1d5778d (TransactionRepository 타입 수정) |
 
 ---
 
@@ -132,17 +167,17 @@
 
 ### 🔴 즉시 작업 대상 (이번 주)
 
-#### 회계 전표 관리 (Journal Entry Management)
-- 회계 전표 입력 기능 개발
-- 분개 처리 및 검증 로직
-- 전표 조회 및 수정 기능
+#### 재무제표 조회 (Financial Statements)
+- 재무상태표 조회 기능
+- 손익계산서 조회 기능
+- 회계 기간 관리 기능
 
 ### 🟡 단기 작업 (2주 내)
 
 #### 핵심 비즈니스 기능 개발
-- 재무제표 기본 조회 (재무상태표, 손익계산서)
-- 회계 기간 관리 기능
 - 사용자 권한 관리 개선
+- 회계 데이터 내보내기 (Excel, CSV)
+- 전표 승인 워크플로우 개선
 
 ### 🟢 중기 작업 (1개월 내)
 
@@ -192,15 +227,15 @@
 ## 4. 향후 Roadmap
 
 ### 단기 (2주 내)
-1. **회계 전표 관리 (Journal Entry)**
-   - 회계 전표 입력 기능
-   - 분개 처리 및 검증
-   - 전표 조회 및 수정
-
-2. **재무제표 조회 (Financial Statements)**
+1. **재무제표 조회 (Financial Statements)**
    - 재무상태표 조회
    - 손익계산서 조회
    - 회계 기간 관리
+
+2. **핵심 비즈니스 기능 강화**
+   - 사용자 권한 관리 개선
+   - 회계 데이터 내보내기 (Excel, CSV)
+   - 전표 승인 워크플로우 개선
 
 ### 중기 (1개월 내)
 1. **배포 자동화**
@@ -289,5 +324,22 @@
 
 ---
 
-**마지막 업데이트**: 2025-12-09
-**다음 검토 예정**: 2주 후 (회계 전표 기능 완료 시점)
+## 7. 최근 변경사항 (2025-12-10 ~ 2025-12-19)
+
+### 2025-12-10
+- ✅ 회계 전표 입력 기능 완전 구현 (커밋 e238bbc)
+  - Frontend: JournalEntryForm, TransactionList, TransactionDetail 컴포넌트
+  - Backend: AccountingController GET 엔드포인트 추가
+  - 복식부기 검증 로직 및 승인 워크플로우
+
+### 2025-12-19
+- ✅ TransactionRepository 타입 수정 (커밋 1d5778d)
+  - findByTransactionNumber() 반환 타입: Optional → List
+  - ORDER BY 절 추가로 분개 순서 보장
+  - Java 17 환경 설정 확인 및 컴파일 검증
+- ✅ GitHub 푸시 완료 (e238bbc → 1d5778d)
+
+---
+
+**마지막 업데이트**: 2025-12-19
+**다음 검토 예정**: 2주 후 (재무제표 조회 기능 완료 시점)
