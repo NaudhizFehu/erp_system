@@ -72,32 +72,50 @@ public record TransactionDto(
         if (creditAmount == null || creditAmount.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("대변 금액은 0 이상이어야 합니다");
         }
-        if (fiscalYear == null) {
-            throw new IllegalArgumentException("회계연도는 필수입니다");
-        }
-        if (fiscalMonth == null) {
-            throw new IllegalArgumentException("회계월은 필수입니다");
-        }
+        // fiscalYear와 fiscalMonth는 기존 데이터에서 null일 수 있으므로 검증 제거
+        // 필요시 transactionDate에서 자동 계산
     }
     
     /**
      * Transaction 엔티티로부터 TransactionDto 생성
      */
     public static TransactionDto from(Transaction transaction) {
+        if (transaction == null) {
+            throw new IllegalArgumentException("Transaction 엔티티는 null일 수 없습니다");
+        }
+        
+        // 필수 필드 검증
+        if (transaction.getCompany() == null) {
+            throw new IllegalArgumentException("Transaction의 company는 null일 수 없습니다. transactionId: " + transaction.getId());
+        }
+        if (transaction.getAccount() == null) {
+            throw new IllegalArgumentException("Transaction의 account는 null일 수 없습니다. transactionId: " + transaction.getId());
+        }
+        
+        // fiscalYear와 fiscalMonth가 null인 경우 transactionDate에서 계산
+        Integer fiscalYear = transaction.getFiscalYear();
+        Integer fiscalMonth = transaction.getFiscalMonth();
+        if (fiscalYear == null && transaction.getTransactionDate() != null) {
+            fiscalYear = transaction.getTransactionDate().getYear();
+        }
+        if (fiscalMonth == null && transaction.getTransactionDate() != null) {
+            fiscalMonth = transaction.getTransactionDate().getMonthValue();
+        }
+        
         return new TransactionDto(
             transaction.getId(),
             transaction.getTransactionNumber(),
-            transaction.getCompany() != null ? CompanyDto.from(transaction.getCompany()) : null,
+            CompanyDto.from(transaction.getCompany()),
             transaction.getTransactionDate(),
             transaction.getTransactionType(),
             transaction.getTransactionStatus(),
-            transaction.getAccount() != null ? AccountDto.from(transaction.getAccount()) : null,
+            AccountDto.from(transaction.getAccount()),
             transaction.getDebitAmount(),
             transaction.getCreditAmount(),
             transaction.getDescription(),
             transaction.getMemo(),
-            transaction.getFiscalYear(),
-            transaction.getFiscalMonth(),
+            fiscalYear,
+            fiscalMonth,
             transaction.getFiscalQuarter(),
             transaction.getBusinessPartner(),
             transaction.getDepartmentInfo(),
@@ -113,10 +131,18 @@ public record TransactionDto(
             transaction.getApprovedAt(),
             transaction.getCancelReason(),
             transaction.getCancelledAt(),
-            transaction.getOriginalTransaction() != null ? TransactionDto.from(transaction.getOriginalTransaction()) : null,
-            transaction.getAmount(),
-            transaction.isDebitTransaction(),
-            transaction.isCreditTransaction(),
+            // originalTransaction은 재귀 호출을 피하기 위해 null로 설정 (필요시 별도 조회)
+            null,
+            // getAmount()는 debitAmount나 creditAmount가 null이면 NPE 발생 가능하므로 안전하게 처리
+            transaction.getDebitAmount() != null && transaction.getCreditAmount() != null 
+                ? (transaction.getDebitAmount().compareTo(BigDecimal.ZERO) > 0 
+                    ? transaction.getDebitAmount() 
+                    : transaction.getCreditAmount())
+                : (transaction.getDebitAmount() != null ? transaction.getDebitAmount() : 
+                   (transaction.getCreditAmount() != null ? transaction.getCreditAmount() : BigDecimal.ZERO)),
+            // isDebitTransaction()과 isCreditTransaction()도 null 체크 필요
+            transaction.getDebitAmount() != null && transaction.getDebitAmount().compareTo(BigDecimal.ZERO) > 0,
+            transaction.getCreditAmount() != null && transaction.getCreditAmount().compareTo(BigDecimal.ZERO) > 0,
             transaction.getCreatedAt(),
             transaction.getUpdatedAt()
         );

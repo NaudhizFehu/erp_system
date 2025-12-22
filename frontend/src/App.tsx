@@ -8,6 +8,9 @@ import { AuthProvider } from '@/contexts/AuthContext'
 import { NotificationProvider } from '@/contexts/NotificationContext'
 import AccountDetail from '@/pages/accounting/AccountDetail'
 import { AccountList } from '@/pages/accounting/AccountList'
+import FinancialReportDetailPage from '@/pages/accounting/FinancialReportDetailPage'
+import FinancialReportListPage from '@/pages/accounting/FinancialReportListPage'
+import FinancialStatementPage from '@/pages/accounting/FinancialStatementPage'
 import TransactionDetail from '@/pages/accounting/TransactionDetail'
 import TransactionList from '@/pages/accounting/TransactionList'
 import { LoginPage } from '@/pages/auth/LoginPage'
@@ -134,6 +137,41 @@ function App() {
                           requiredRoles={['SUPER_ADMIN', 'ADMIN', 'MANAGER']}
                         >
                           <TransactionDetail />
+                        </RoleProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/accounting/financial-statements"
+                      element={
+                        <RoleProtectedRoute
+                          requiredRoles={[
+                            'SUPER_ADMIN',
+                            'ADMIN',
+                            'MANAGER',
+                            'USER',
+                          ]}
+                        >
+                          <FinancialStatementPage />
+                        </RoleProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/accounting/reports"
+                      element={
+                        <RoleProtectedRoute
+                          requiredRoles={['SUPER_ADMIN', 'ADMIN', 'MANAGER']}
+                        >
+                          <FinancialReportListPage />
+                        </RoleProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/accounting/reports/:id"
+                      element={
+                        <RoleProtectedRoute
+                          requiredRoles={['SUPER_ADMIN', 'ADMIN', 'MANAGER']}
+                        >
+                          <FinancialReportDetailPage />
                         </RoleProtectedRoute>
                       }
                     />

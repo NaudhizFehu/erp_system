@@ -411,9 +411,7 @@ public class AccountingController {
             @PathVariable String transactionNumber) {
         try {
             log.info("전표 조회 요청 - 전표번호: {}", transactionNumber);
-
             List<TransactionDto> result = accountingService.getTransactionsByNumber(transactionNumber);
-
             return ResponseEntity.ok(ApiResponse.success(
                 "전표 항목을 조회했습니다",
                 result

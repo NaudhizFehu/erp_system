@@ -1,24 +1,23 @@
 /**
- * 전표 목록 페이지
- * 회계 전표 조회, 검색, 필터링 및 관리를 담당하는 페이지
+ * 재무보고서 목록 페이지
+ * 재무보고서 조회, 검색, 필터링 및 관리를 담당하는 페이지
  */
 
 import {
   Search,
-  Plus,
   Filter as FilterIcon,
   MoreHorizontal,
   Eye,
-  Edit,
+  CheckCircle,
   X,
-  Calendar,
   FileText,
+  Calendar,
+  TrendingUp,
 } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import { JournalEntryForm } from '@/components/accounting/JournalEntryForm'
-import { TransactionStatusBadge } from '@/components/accounting/TransactionStatusBadge'
+import { ReportStatusBadge } from '@/components/accounting/ReportStatusBadge'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -29,16 +28,10 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
@@ -58,111 +51,108 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import {
-  useTransactionSearch,
-  useCreateJournalEntry,
+  useReportSearch,
+  useApproveReport,
+  useDeleteReport,
+  useReportStatistics,
 } from '@/hooks/useAccounting'
 import { useDebounce } from '@/hooks/useDebounce'
-import {
-  formToApiRequest,
-  formatCurrency,
-  formatDate,
-} from '@/lib/utils/journalEntry'
-import { JournalEntryFormData } from '@/schemas/journalEntrySchema'
-import {
-  TransactionType,
-  TransactionStatus,
-  KOREAN_LABELS,
-} from '@/types/accounting'
+import { accountingUtils } from '@/services/accountingApi'
+import { ReportStatus, ReportType } from '@/types/accounting'
 
-export default function TransactionList() {
+/**
+ * 보고서 유형 한글 라벨
+ */
+const REPORT_TYPE_LABELS = {
+  [ReportType.BALANCE_SHEET]: '재무상태표',
+  [ReportType.INCOME_STATEMENT]: '손익계산서',
+  [ReportType.CASH_FLOW_STATEMENT]: '현금흐름표',
+  [ReportType.EQUITY_STATEMENT]: '자본변동표',
+} as const
+
+export default function FinancialReportListPage() {
   const navigate = useNavigate()
+  const currentYear = new Date().getFullYear()
 
   // 검색 및 필터 상태
   const [searchTerm, setSearchTerm] = useState('')
-  const [transactionType, setTransactionType] = useState<
-    TransactionType | 'ALL'
-  >('ALL')
-  const [transactionStatus, setTransactionStatus] = useState<
-    TransactionStatus | 'ALL'
-  >('ALL')
+  const [reportType, setReportType] = useState<ReportType | 'ALL'>('ALL')
+  const [reportStatus, setReportStatus] = useState<ReportStatus | 'ALL'>('ALL')
   const [showFilters, setShowFilters] = useState(false)
 
-  // 날짜 필터
-  const [dateFrom, setDateFrom] = useState('')
-  const [dateTo, setDateTo] = useState('')
+  // 필터 - 회계연도
+  const [fiscalYear, setFiscalYear] = useState<number>(currentYear)
 
   // 페이지네이션
   const [page, setPage] = useState(0)
   const [size] = useState(20)
 
-  // 전표 입력 폼 다이얼로그
-  const [isFormOpen, setIsFormOpen] = useState(false)
-
   // 검색어 디바운스
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
 
   // 데이터 조회
-  const { data, isLoading, refetch } = useTransactionSearch(
-    debouncedSearchTerm,
-    {
-      page,
-      size,
-      transactionType:
-        transactionType !== 'ALL'
-          ? (transactionType as TransactionType)
-          : undefined,
-      transactionStatus:
-        transactionStatus !== 'ALL'
-          ? (transactionStatus as TransactionStatus)
-          : undefined,
-      startDate: dateFrom || undefined,
-      endDate: dateTo || undefined,
-    }
-  )
+  const { data, isLoading, refetch } = useReportSearch(debouncedSearchTerm, {
+    page,
+    size,
+    reportType: reportType !== 'ALL' ? (reportType as ReportType) : undefined,
+    reportStatus:
+      reportStatus !== 'ALL' ? (reportStatus as ReportStatus) : undefined,
+    fiscalYear: fiscalYear || undefined,
+  })
 
-  // 전표 생성 mutation
-  const createMutation = useCreateJournalEntry()
+  // 통계 조회 (companyId=1 고정)
+  const { data: stats } = useReportStatistics(1, fiscalYear)
 
-  // 전표 생성 핸들러
-  const handleCreateTransaction = async (formData: JournalEntryFormData) => {
+  // 보고서 승인 mutation
+  const approveMutation = useApproveReport()
+
+  // 보고서 삭제 mutation
+  const deleteMutation = useDeleteReport()
+
+  // 보고서 승인 핸들러
+  const handleApproveReport = async (reportId: number) => {
+    if (!confirm('이 보고서를 승인하시겠습니까?')) return
+
     try {
-      const apiRequests = formToApiRequest(formData as any)
-      await createMutation.mutateAsync(apiRequests)
-
-      alert('전표가 성공적으로 생성되었습니다.')
-      setIsFormOpen(false)
+      // approverId는 실제 구현 시 로그인한 사용자 ID로 대체
+      await approveMutation.mutateAsync({ reportId, approverId: 1 })
       refetch()
     } catch (error) {
-      alert(
-        '전표 생성 실패: ' +
-          (error instanceof Error
-            ? error.message
-            : '전표 생성 중 오류가 발생했습니다.')
-      )
+      console.error('보고서 승인 실패:', error)
+    }
+  }
+
+  // 보고서 삭제 핸들러
+  const handleDeleteReport = async (reportId: number) => {
+    if (!confirm('이 보고서를 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.'))
+      return
+
+    try {
+      await deleteMutation.mutateAsync(reportId)
+      refetch()
+    } catch (error) {
+      console.error('보고서 삭제 실패:', error)
     }
   }
 
   // 필터 초기화
   const handleResetFilters = () => {
     setSearchTerm('')
-    setTransactionType('ALL')
-    setTransactionStatus('ALL')
-    setDateFrom('')
-    setDateTo('')
+    setReportType('ALL')
+    setReportStatus('ALL')
+    setFiscalYear(currentYear)
     setPage(0)
   }
 
   // 통계 계산
-  const stats = {
-    total: data?.totalElements || 0,
+  const reportStats = {
+    total: stats?.totalReports || 0,
     pending:
-      data?.content.filter(
-        t => t.transactionStatus === TransactionStatus.PENDING
-      ).length || 0,
-    posted:
-      data?.content.filter(
-        t => t.transactionStatus === TransactionStatus.POSTED
-      ).length || 0,
+      data?.content.filter(r => r.reportStatus === ReportStatus.GENERATED)
+        .length || 0,
+    approved:
+      data?.content.filter(r => r.reportStatus === ReportStatus.APPROVED)
+        .length || 0,
   }
 
   return (
@@ -170,12 +160,14 @@ export default function TransactionList() {
       {/* 헤더 */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">회계 전표</h1>
-          <p className="text-muted-foreground">복식부기 전표 조회 및 관리</p>
+          <h1 className="text-3xl font-bold">재무보고서</h1>
+          <p className="text-muted-foreground">
+            재무제표 및 보고서 조회 및 관리
+          </p>
         </div>
-        <Button onClick={() => setIsFormOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          전표 입력
+        <Button onClick={() => navigate('/accounting/financial-statements')}>
+          <TrendingUp className="mr-2 h-4 w-4" />
+          재무제표 조회
         </Button>
       </div>
 
@@ -183,34 +175,34 @@ export default function TransactionList() {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">총 전표</CardTitle>
+            <CardTitle className="text-sm font-medium">총 보고서</CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
+            <div className="text-2xl font-bold">{reportStats.total}</div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">승인 대기</CardTitle>
-            <Calendar className="h-4 w-4 text-yellow-500" />
+            <Calendar className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">
-              {stats.pending}
+            <div className="text-2xl font-bold text-blue-600">
+              {reportStats.pending}
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">전기 완료</CardTitle>
-            <FileText className="h-4 w-4 text-green-500" />
+            <CardTitle className="text-sm font-medium">승인 완료</CardTitle>
+            <CheckCircle className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {stats.posted}
+              {reportStats.approved}
             </div>
           </CardContent>
         </Card>
@@ -232,7 +224,7 @@ export default function TransactionList() {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>전표 검색</CardTitle>
+            <CardTitle>보고서 검색</CardTitle>
             <Button
               variant="ghost"
               size="sm"
@@ -249,17 +241,16 @@ export default function TransactionList() {
             <div className="relative flex-1">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="전표번호, 적요 검색..."
+                placeholder="보고서명, 회계기간 검색..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
                 className="pl-8"
               />
             </div>
             {(searchTerm ||
-              transactionType !== 'ALL' ||
-              transactionStatus !== 'ALL' ||
-              dateFrom ||
-              dateTo) && (
+              reportType !== 'ALL' ||
+              reportStatus !== 'ALL' ||
+              fiscalYear !== currentYear) && (
               <Button variant="ghost" onClick={handleResetFilters}>
                 <X className="mr-2 h-4 w-4" />
                 초기화
@@ -269,57 +260,37 @@ export default function TransactionList() {
 
           {/* 필터 옵션 */}
           {showFilters && (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-              {/* 시작일 */}
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              {/* 회계연도 */}
               <div className="space-y-2">
-                <label className="text-sm font-medium">시작일</label>
-                <Input
-                  type="date"
-                  value={dateFrom}
-                  onChange={e => setDateFrom(e.target.value)}
-                />
-              </div>
-
-              {/* 종료일 */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">종료일</label>
-                <Input
-                  type="date"
-                  value={dateTo}
-                  onChange={e => setDateTo(e.target.value)}
-                />
-              </div>
-
-              {/* 전표 유형 */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">전표 유형</label>
+                <label className="text-sm font-medium">회계연도</label>
                 <Select
-                  value={transactionType}
-                  onValueChange={value =>
-                    setTransactionType(value as TransactionType | 'ALL')
-                  }
+                  value={fiscalYear.toString()}
+                  onValueChange={value => setFiscalYear(parseInt(value))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="전체" />
+                    <SelectValue placeholder="회계연도 선택" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ALL">전체</SelectItem>
-                    {Object.values(TransactionType).map(type => (
-                      <SelectItem key={type} value={type}>
-                        {KOREAN_LABELS.transactionType[type]}
+                    {Array.from(
+                      { length: currentYear - 2019 },
+                      (_, i) => currentYear - i
+                    ).map(year => (
+                      <SelectItem key={year} value={year.toString()}>
+                        {year}년
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
 
-              {/* 전표 상태 */}
+              {/* 보고서 유형 */}
               <div className="space-y-2">
-                <label className="text-sm font-medium">상태</label>
+                <label className="text-sm font-medium">보고서 유형</label>
                 <Select
-                  value={transactionStatus}
+                  value={reportType}
                   onValueChange={value =>
-                    setTransactionStatus(value as TransactionStatus | 'ALL')
+                    setReportType(value as ReportType | 'ALL')
                   }
                 >
                   <SelectTrigger>
@@ -327,9 +298,32 @@ export default function TransactionList() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="ALL">전체</SelectItem>
-                    {Object.values(TransactionStatus).map(status => (
+                    {Object.values(ReportType).map(type => (
+                      <SelectItem key={type} value={type}>
+                        {REPORT_TYPE_LABELS[type]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* 보고서 상태 */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">상태</label>
+                <Select
+                  value={reportStatus}
+                  onValueChange={value =>
+                    setReportStatus(value as ReportStatus | 'ALL')
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="전체" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">전체</SelectItem>
+                    {Object.values(ReportStatus).map(status => (
                       <SelectItem key={status} value={status}>
-                        {KOREAN_LABELS.transactionStatus[status]}
+                        {status}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -340,23 +334,25 @@ export default function TransactionList() {
         </CardContent>
       </Card>
 
-      {/* 전표 테이블 */}
+      {/* 보고서 테이블 */}
       <Card>
         <CardHeader>
-          <CardTitle>전표 목록</CardTitle>
-          <CardDescription>{data?.totalElements || 0}개의 전표</CardDescription>
+          <CardTitle>보고서 목록</CardTitle>
+          <CardDescription>
+            {data?.totalElements || 0}개의 보고서
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>전표번호</TableHead>
-                  <TableHead>거래일자</TableHead>
+                  <TableHead>보고서명</TableHead>
                   <TableHead>유형</TableHead>
-                  <TableHead>적요</TableHead>
-                  <TableHead className="text-right">차변</TableHead>
-                  <TableHead className="text-right">대변</TableHead>
+                  <TableHead>회계기간</TableHead>
+                  <TableHead className="text-right">총자산</TableHead>
+                  <TableHead className="text-right">총부채</TableHead>
+                  <TableHead className="text-right">총자본</TableHead>
                   <TableHead>상태</TableHead>
                   <TableHead className="w-[70px]">작업</TableHead>
                 </TableRow>
@@ -369,40 +365,32 @@ export default function TransactionList() {
                     </TableCell>
                   </TableRow>
                 ) : data?.content && data.content.length > 0 ? (
-                  data.content.map(transaction => (
-                    <TableRow key={transaction.id}>
+                  data.content.map(report => (
+                    <TableRow key={report.id}>
                       <TableCell className="font-medium">
-                        {transaction.transactionNumber}
-                      </TableCell>
-                      <TableCell>
-                        {formatDate(transaction.transactionDate)}
+                        {report.reportTitle}
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline">
-                          {
-                            KOREAN_LABELS.transactionType[
-                              transaction.transactionType
-                            ]
-                          }
+                          {REPORT_TYPE_LABELS[report.reportType]}
                         </Badge>
                       </TableCell>
-                      <TableCell className="max-w-[200px] truncate">
-                        {transaction.description}
+                      <TableCell>
+                        {report.fiscalYear}년 {report.fiscalPeriod}
                       </TableCell>
                       <TableCell className="text-right">
-                        {transaction.debitAmount > 0
-                          ? formatCurrency(transaction.debitAmount)
-                          : ''}
+                        {accountingUtils.formatCurrency(report.totalAssets)}
                       </TableCell>
                       <TableCell className="text-right">
-                        {transaction.creditAmount > 0
-                          ? formatCurrency(transaction.creditAmount)
-                          : ''}
+                        {accountingUtils.formatCurrency(
+                          report.totalLiabilities
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {accountingUtils.formatCurrency(report.totalEquity)}
                       </TableCell>
                       <TableCell>
-                        <TransactionStatusBadge
-                          status={transaction.transactionStatus}
-                        />
+                        <ReportStatusBadge status={report.reportStatus} />
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
@@ -414,26 +402,36 @@ export default function TransactionList() {
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem
                               onClick={() =>
-                                navigate(
-                                  `/accounting/transactions/${transaction.id}`
-                                )
+                                navigate(`/accounting/reports/${report.id}`)
                               }
                             >
                               <Eye className="mr-2 h-4 w-4" />
                               상세 보기
                             </DropdownMenuItem>
-                            {transaction.transactionStatus ===
-                              TransactionStatus.DRAFT && (
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  navigate(
-                                    `/accounting/transactions/${transaction.id}/edit`
-                                  )
-                                }
-                              >
-                                <Edit className="mr-2 h-4 w-4" />
-                                수정
-                              </DropdownMenuItem>
+                            {(report.reportStatus === ReportStatus.GENERATED ||
+                              report.reportStatus ===
+                                ReportStatus.REVIEWED) && (
+                              <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={() => handleApproveReport(report.id)}
+                                >
+                                  <CheckCircle className="mr-2 h-4 w-4" />
+                                  승인
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                            {report.reportStatus !== ReportStatus.PUBLISHED && (
+                              <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={() => handleDeleteReport(report.id)}
+                                  className="text-red-600"
+                                >
+                                  <X className="mr-2 h-4 w-4" />
+                                  삭제
+                                </DropdownMenuItem>
+                              </>
                             )}
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -446,7 +444,7 @@ export default function TransactionList() {
                       colSpan={8}
                       className="text-center text-muted-foreground"
                     >
-                      전표가 없습니다
+                      보고서가 없습니다
                     </TableCell>
                   </TableRow>
                 )}
@@ -488,24 +486,6 @@ export default function TransactionList() {
           )}
         </CardContent>
       </Card>
-
-      {/* 전표 입력 폼 다이얼로그 */}
-      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="max-h-[90vh] max-w-5xl overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>전표 입력</DialogTitle>
-            <DialogDescription>
-              복식부기 원칙에 따라 차변과 대변의 합계가 일치해야 합니다.
-            </DialogDescription>
-          </DialogHeader>
-          <JournalEntryForm
-            onSubmit={handleCreateTransaction}
-            onCancel={() => setIsFormOpen(false)}
-            isSubmitting={createMutation.isPending}
-            mode="create"
-          />
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }

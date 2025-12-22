@@ -8,8 +8,6 @@
  * CANCELLED → 읽기 전용
  */
 
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import {
   CheckCircle,
   Send,
@@ -17,6 +15,8 @@ import {
   FileCheck,
   AlertCircle,
 } from 'lucide-react'
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -30,13 +30,13 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { useAuth } from '@/contexts/AuthContext'
 import {
   useApproveTransaction,
   usePostTransaction,
   useCancelTransaction,
   useUpdateTransaction,
 } from '@/hooks/useAccounting'
-import { useAuth } from '@/contexts/AuthContext'
 import { Transaction, TransactionStatus } from '@/types/accounting'
 
 interface TransactionActionsProps {
@@ -82,7 +82,9 @@ export function TransactionActions({
     } catch (error) {
       alert(
         '승인 실패: ' +
-          (error instanceof Error ? error.message : '승인 중 오류가 발생했습니다.')
+          (error instanceof Error
+            ? error.message
+            : '승인 중 오류가 발생했습니다.')
       )
     }
   }
@@ -98,7 +100,9 @@ export function TransactionActions({
     } catch (error) {
       alert(
         '전기 실패: ' +
-          (error instanceof Error ? error.message : '전기 중 오류가 발생했습니다.')
+          (error instanceof Error
+            ? error.message
+            : '전기 중 오류가 발생했습니다.')
       )
     }
   }
@@ -124,7 +128,9 @@ export function TransactionActions({
     } catch (error) {
       alert(
         '취소 실패: ' +
-          (error instanceof Error ? error.message : '취소 중 오류가 발생했습니다.')
+          (error instanceof Error
+            ? error.message
+            : '취소 중 오류가 발생했습니다.')
       )
     }
   }
@@ -137,9 +143,7 @@ export function TransactionActions({
           <Button
             variant="outline"
             onClick={() =>
-              navigate(
-                `/accounting/transactions/${transactionId}/edit`
-              )
+              navigate(`/accounting/transactions/${transactionId}/edit`)
             }
           >
             수정
@@ -205,9 +209,7 @@ export function TransactionActions({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>전표 승인</DialogTitle>
-            <DialogDescription>
-              이 전표를 승인하시겠습니까?
-            </DialogDescription>
+            <DialogDescription>이 전표를 승인하시겠습니까?</DialogDescription>
           </DialogHeader>
           <div className="py-4">
             <p className="text-sm text-muted-foreground">
@@ -240,10 +242,9 @@ export function TransactionActions({
           <DialogHeader>
             <DialogTitle>전표 전기</DialogTitle>
             <DialogDescription className="flex items-start gap-2">
-              <AlertCircle className="h-4 w-4 mt-0.5 text-yellow-500" />
+              <AlertCircle className="mt-0.5 h-4 w-4 text-yellow-500" />
               <span>
-                전기 후에는 수정이 불가능합니다. 계정 잔액에 즉시
-                반영됩니다.
+                전기 후에는 수정이 불가능합니다. 계정 잔액에 즉시 반영됩니다.
               </span>
             </DialogDescription>
           </DialogHeader>
@@ -272,13 +273,13 @@ export function TransactionActions({
           <DialogHeader>
             <DialogTitle>전표 취소</DialogTitle>
             <DialogDescription className="flex items-start gap-2">
-              <AlertCircle className="h-4 w-4 mt-0.5 text-red-500" />
+              <AlertCircle className="mt-0.5 h-4 w-4 text-red-500" />
               <span>취소 후 복구가 불가능합니다.</span>
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <p className="text-sm text-muted-foreground mb-2">
+              <p className="mb-2 text-sm text-muted-foreground">
                 전표번호: {firstTransaction.transactionNumber}
               </p>
               <p className="text-sm text-muted-foreground">
@@ -291,7 +292,7 @@ export function TransactionActions({
                 id="cancelReason"
                 placeholder="취소 사유를 입력해주세요"
                 value={cancelReason}
-                onChange={(e) => setCancelReason(e.target.value)}
+                onChange={e => setCancelReason(e.target.value)}
                 rows={3}
               />
             </div>

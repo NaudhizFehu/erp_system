@@ -65,11 +65,11 @@ export function AccountSelector({
   const leafAccounts = useMemo(() => {
     if (!accountTree) return []
     const allAccounts = flattenAccountTree(accountTree)
-    return allAccounts.filter((acc) => acc.isLeafAccount)
+    return allAccounts.filter(acc => acc.isLeafAccount)
   }, [accountTree])
 
   // 현재 선택된 계정 찾기
-  const selectedAccount = leafAccounts.find((acc) => acc.id === value)
+  const selectedAccount = leafAccounts.find(acc => acc.id === value)
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -105,7 +105,7 @@ export function AccountSelector({
           <CommandInput placeholder="계정과목 검색..." />
           <CommandEmpty>계정과목을 찾을 수 없습니다.</CommandEmpty>
           <CommandGroup className="max-h-[300px] overflow-auto">
-            {leafAccounts.map((account) => (
+            {leafAccounts.map(account => (
               <CommandItem
                 key={account.id}
                 value={`${account.accountCode} ${account.name || account.accountName}`}

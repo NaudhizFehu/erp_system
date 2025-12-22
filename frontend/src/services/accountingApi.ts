@@ -143,7 +143,7 @@ export const transactionApi = {
   getTransactionsByNumber: async (
     transactionNumber: string
   ): Promise<Transaction[]> => {
-    const { data} = await api.get<ApiResponse<Transaction[]>>(
+    const { data } = await api.get<ApiResponse<Transaction[]>>(
       `${ACCOUNTING_API_BASE}/transactions/by-number/${transactionNumber}`
     )
     return data.data
@@ -332,6 +332,16 @@ export const accountingApi = {
  * 재무보고서 관리 API 서비스
  */
 export const reportApi = {
+  /**
+   * 보고서 ID로 상세 조회
+   */
+  getReportById: async (reportId: number): Promise<FinancialReport> => {
+    const { data } = await api.get<ApiResponse<FinancialReport>>(
+      `${REPORTS_API_BASE}/${reportId}`
+    )
+    return data.data
+  },
+
   /**
    * 재무상태표 생성
    */

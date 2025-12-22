@@ -71,6 +71,7 @@ public class DdlForcer {
             String[] dropTables = {
                 "DROP TABLE IF EXISTS notification_settings CASCADE",
                 "DROP TABLE IF EXISTS notifications CASCADE",
+                "DROP TABLE IF EXISTS transactions CASCADE",
                 "DROP TABLE IF EXISTS stock_movements CASCADE",
                 "DROP TABLE IF EXISTS inventories CASCADE", 
                 "DROP TABLE IF EXISTS orders CASCADE",
@@ -339,12 +340,27 @@ public class DdlForcer {
                 "company_id BIGINT NOT NULL, " +
                 "parent_account_id BIGINT, " +
                 "account_code VARCHAR(20) NOT NULL, " +
-                "account_name VARCHAR(100) NOT NULL, " +
-                "account_name_en VARCHAR(200), " +
+                "name VARCHAR(100) NOT NULL, " +
+                "name_en VARCHAR(200), " +
                 "description VARCHAR(500), " +
                 "account_type VARCHAR(50) NOT NULL, " +
                 "account_category VARCHAR(50) NOT NULL, " +
+                "debit_credit_type VARCHAR(20) NOT NULL, " +
+                "account_level INTEGER NOT NULL DEFAULT 1, " +
+                "sort_order INTEGER DEFAULT 0, " +
                 "is_active BOOLEAN NOT NULL DEFAULT TRUE, " +
+                "track_balance BOOLEAN NOT NULL DEFAULT FALSE, " +
+                "debit_balance DECIMAL(15,2) DEFAULT 0, " +
+                "credit_balance DECIMAL(15,2) DEFAULT 0, " +
+                "current_balance DECIMAL(15,2) DEFAULT 0, " +
+                "opening_balance DECIMAL(15,2) DEFAULT 0, " +
+                "budget_amount DECIMAL(15,2) DEFAULT 0, " +
+                "tax_code VARCHAR(20), " +
+                "control_field1 VARCHAR(100), " +
+                "control_field2 VARCHAR(100), " +
+                "full_path VARCHAR(500), " +
+                "full_code_path VARCHAR(500), " +
+                "is_leaf_account BOOLEAN NOT NULL DEFAULT FALSE, " +
                 "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, " +
                 "updated_at TIMESTAMP, " +
                 "created_by BIGINT, " +
@@ -354,6 +370,50 @@ public class DdlForcer {
                 "deleted_by BIGINT, " +
                 "FOREIGN KEY (company_id) REFERENCES companies(id), " +
                 "FOREIGN KEY (parent_account_id) REFERENCES accounts(id)" +
+                ")",
+                
+                "CREATE TABLE IF NOT EXISTS transactions (" +
+                "id BIGSERIAL PRIMARY KEY, " +
+                "transaction_number VARCHAR(30) NOT NULL, " +
+                "company_id BIGINT NOT NULL, " +
+                "transaction_date DATE NOT NULL, " +
+                "transaction_type VARCHAR(20) NOT NULL, " +
+                "transaction_status VARCHAR(20) NOT NULL DEFAULT 'DRAFT', " +
+                "account_id BIGINT NOT NULL, " +
+                "debit_amount DECIMAL(15,2) NOT NULL DEFAULT 0, " +
+                "credit_amount DECIMAL(15,2) NOT NULL DEFAULT 0, " +
+                "description VARCHAR(500), " +
+                "memo VARCHAR(200), " +
+                "fiscal_year INTEGER, " +
+                "fiscal_month INTEGER, " +
+                "fiscal_quarter INTEGER, " +
+                "business_partner VARCHAR(100), " +
+                "department_info VARCHAR(100), " +
+                "project_code VARCHAR(50), " +
+                "tax_type VARCHAR(20), " +
+                "tax_amount DECIMAL(15,2) DEFAULT 0, " +
+                "tax_invoice_number VARCHAR(50), " +
+                "document_type VARCHAR(20), " +
+                "document_number VARCHAR(50), " +
+                "attachment_path VARCHAR(500), " +
+                "input_by BIGINT, " +
+                "approved_by BIGINT, " +
+                "approved_at TIMESTAMP, " +
+                "cancel_reason VARCHAR(200), " +
+                "cancelled_at TIMESTAMP, " +
+                "original_transaction_id BIGINT, " +
+                "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, " +
+                "updated_at TIMESTAMP, " +
+                "created_by BIGINT, " +
+                "updated_by BIGINT, " +
+                "is_deleted BOOLEAN NOT NULL DEFAULT FALSE, " +
+                "deleted_at TIMESTAMP, " +
+                "deleted_by BIGINT, " +
+                "FOREIGN KEY (company_id) REFERENCES companies(id), " +
+                "FOREIGN KEY (account_id) REFERENCES accounts(id), " +
+                "FOREIGN KEY (input_by) REFERENCES employees(id), " +
+                "FOREIGN KEY (approved_by) REFERENCES employees(id), " +
+                "FOREIGN KEY (original_transaction_id) REFERENCES transactions(id)" +
                 ")",
                 
                 "CREATE TABLE IF NOT EXISTS customers (" +
@@ -517,16 +577,19 @@ public class DdlForcer {
             int maxRetries = 3;
             boolean success = false;
             
+            // 테이블 이름 추출 (디버깅용)
+            String tableName = extractTableName(sql);
+            
             while (retryCount < maxRetries && !success) {
                 try {
                     // 각 테이블을 개별 트랜잭션으로 생성
                     transactionTemplate.execute(status -> {
                         try {
                             jdbcTemplate.execute(sql);
-                            log.info("✅ 테이블 생성 성공");
+                            log.info("✅ 테이블 생성 성공: {}", tableName);
                             return null;
                         } catch (Exception e) {
-                            log.warn("⚠️ 테이블 생성 중 오류 (이미 존재할 수 있음): {}", e.getMessage());
+                            log.warn("⚠️ 테이블 생성 중 오류 (이미 존재할 수 있음) - {}: {}", tableName, e.getMessage());
                             return null;
                         }
                     });
@@ -534,7 +597,7 @@ public class DdlForcer {
                 } catch (Exception e) {
                     retryCount++;
                     if (retryCount < maxRetries) {
-                        log.warn("⚠️ 테이블 생성 실패, 재시도 {}/{}: {}", retryCount, maxRetries, e.getMessage());
+                        log.warn("⚠️ 테이블 생성 실패, 재시도 {}/{} - {}: {}", retryCount, maxRetries, tableName, e.getMessage());
                         try {
                             Thread.sleep(2000); // 2초 대기
                         } catch (InterruptedException ie) {
@@ -542,12 +605,91 @@ public class DdlForcer {
                             break;
                         }
                     } else {
-                        log.error("❌ 테이블 생성 최종 실패 (재시도 {}회 후): {}", maxRetries, e.getMessage());
+                        log.error("❌ 테이블 생성 최종 실패 (재시도 {}회 후) - {}: {}", maxRetries, tableName, e.getMessage());
                     }
                 }
             }
         }
         log.info("✅ 하드코딩된 테이블 생성 완료");
+        
+        // 인덱스 생성
+        createIndexes();
+        
+        // transactions 테이블 존재 여부 확인
+        verifyTransactionsTable();
+    }
+    
+    /**
+     * transactions 테이블 존재 여부 확인
+     */
+    private void verifyTransactionsTable() {
+        try {
+            String checkSql = "SELECT COUNT(*) FROM information_schema.tables WHERE table_name = 'transactions'";
+            Integer count = jdbcTemplate.queryForObject(checkSql, Integer.class);
+            if (count != null && count > 0) {
+                log.info("✅ transactions 테이블 존재 확인됨");
+            } else {
+                log.error("❌ transactions 테이블이 존재하지 않습니다!");
+            }
+        } catch (Exception e) {
+            log.error("❌ transactions 테이블 확인 중 오류: {}", e.getMessage());
+        }
+    }
+    
+    /**
+     * SQL에서 테이블 이름 추출 (디버깅용)
+     */
+    private String extractTableName(String sql) {
+        try {
+            // CREATE TABLE IF NOT EXISTS table_name 패턴에서 테이블 이름 추출
+            int startIdx = sql.indexOf("CREATE TABLE IF NOT EXISTS ");
+            if (startIdx >= 0) {
+                startIdx += "CREATE TABLE IF NOT EXISTS ".length();
+                int endIdx = sql.indexOf(" (", startIdx);
+                if (endIdx > startIdx) {
+                    return sql.substring(startIdx, endIdx).trim();
+                }
+            }
+        } catch (Exception e) {
+            // 무시
+        }
+        return "unknown";
+    }
+    
+    /**
+     * 인덱스 생성
+     */
+    private void createIndexes() {
+        log.info("인덱스 생성 시작...");
+        
+        String[] indexSqls = {
+            "CREATE INDEX IF NOT EXISTS idx_transactions_number ON transactions(transaction_number)",
+            "CREATE INDEX IF NOT EXISTS idx_transactions_company ON transactions(company_id)",
+            "CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(transaction_date)",
+            "CREATE INDEX IF NOT EXISTS idx_transactions_type ON transactions(transaction_type)",
+            "CREATE INDEX IF NOT EXISTS idx_transactions_status ON transactions(transaction_status)",
+            "CREATE INDEX IF NOT EXISTS idx_transactions_account ON transactions(account_id)",
+            "CREATE INDEX IF NOT EXISTS idx_transactions_period ON transactions(fiscal_year, fiscal_month)"
+        };
+        
+        for (String sql : indexSqls) {
+            try {
+                transactionTemplate.execute(status -> {
+                    try {
+                        jdbcTemplate.execute(sql);
+                        log.info("✅ 인덱스 생성 성공: {}", sql);
+                        return null;
+                    } catch (Exception e) {
+                        log.warn("⚠️ 인덱스 생성 중 오류 (이미 존재할 수 있음): {}", e.getMessage());
+                        return null;
+                    }
+                });
+            } catch (Exception e) {
+                log.warn("⚠️ 인덱스 생성 실패: {}", e.getMessage());
+            }
+        }
+        
+        log.info("✅ 인덱스 생성 완료");
     }
     
     /**

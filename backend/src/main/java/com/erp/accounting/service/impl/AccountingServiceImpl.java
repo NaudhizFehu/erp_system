@@ -712,13 +712,50 @@ public class AccountingServiceImpl implements AccountingService {
     @Override
     @Transactional(readOnly = true)
     public List<TransactionDto> getTransactionsByNumber(String transactionNumber) {
-        log.info("전표 조회 - 전표번호: {}", transactionNumber);
-
-        List<Transaction> transactions = transactionRepository
-            .findByTransactionNumber(transactionNumber);
-
-        return transactions.stream()
-            .map(TransactionDto::from)
-            .collect(Collectors.toList());
+        log.info("전표 조회 시작 - 전표번호: {}", transactionNumber);
+        
+        List<Transaction> transactions;
+        try {
+            transactions = transactionRepository.findByTransactionNumber(transactionNumber);
+        } catch (Exception e) {
+            log.error("거래 조회 실패 - 전표번호: {}", transactionNumber, e);
+            throw e;
+        }
+        
+        if (transactions == null || transactions.isEmpty()) {
+            log.warn("전표 조회 결과가 비어있습니다 - 전표번호: {}", transactionNumber);
+            return new ArrayList<>();
+        }
+        
+        List<TransactionDto> result = new ArrayList<>();
+        try {
+            for (Transaction transaction : transactions) {
+                try {
+                    // company와 account가 null인지 확인
+                    if (transaction.getCompany() == null) {
+                        log.error("Transaction의 company가 null입니다 - transactionId: {}, transactionNumber: {}", 
+                            transaction.getId(), transaction.getTransactionNumber());
+                        throw new IllegalStateException("Transaction의 company는 null일 수 없습니다. transactionId: " + transaction.getId());
+                    }
+                    if (transaction.getAccount() == null) {
+                        log.error("Transaction의 account가 null입니다 - transactionId: {}, transactionNumber: {}", 
+                            transaction.getId(), transaction.getTransactionNumber());
+                        throw new IllegalStateException("Transaction의 account는 null일 수 없습니다. transactionId: " + transaction.getId());
+                    }
+                    
+                    TransactionDto dto = TransactionDto.from(transaction);
+                    result.add(dto);
+                } catch (Exception e) {
+                    log.error("TransactionDto 변환 실패 - transactionId: {}, fiscalYear: {}, fiscalMonth: {}", 
+                        transaction.getId(), transaction.getFiscalYear(), transaction.getFiscalMonth(), e);
+                    throw e;
+                }
+            }
+        } catch (Exception e) {
+            throw e;
+        }
+        
+        log.info("전표 조회 완료 - 전표번호: {}, 결과 수: {}", transactionNumber, result.size());
+        return result;
     }
 }

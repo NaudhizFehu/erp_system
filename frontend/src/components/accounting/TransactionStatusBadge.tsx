@@ -20,7 +20,9 @@ export function TransactionStatusBadge({
   className,
 }: TransactionStatusBadgeProps) {
   return (
-    <Badge className={`${TRANSACTION_STATUS_COLORS[status]} ${className || ''}`}>
+    <Badge
+      className={`${TRANSACTION_STATUS_COLORS[status]} ${className || ''}`}
+    >
       {KOREAN_LABELS.transactionStatus[status]}
     </Badge>
   )

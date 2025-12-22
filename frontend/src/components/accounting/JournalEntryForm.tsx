@@ -12,7 +12,7 @@ import { Plus, Trash2 } from 'lucide-react'
 import { useEffect } from 'react'
 import { useFieldArray, useForm } from 'react-hook-form'
 
-import { AccountSelector } from './AccountSelector'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -42,16 +42,17 @@ import {
 } from '@/components/ui/table'
 import { useAuth } from '@/contexts/AuthContext'
 import {
-  journalEntryFormSchema,
-  JournalEntryFormData,
-} from '@/schemas/journalEntrySchema'
-import {
   calculateTotals,
   createEmptyLine,
   formatCurrency,
 } from '@/lib/utils/journalEntry'
+import {
+  journalEntryFormSchema,
+  JournalEntryFormData,
+} from '@/schemas/journalEntrySchema'
 import { TransactionType, KOREAN_LABELS } from '@/types/accounting'
-import { Badge } from '@/components/ui/badge'
+
+import { AccountSelector } from './AccountSelector'
 
 interface JournalEntryFormProps {
   onSubmit: (data: JournalEntryFormData) => void
@@ -98,8 +99,9 @@ export function JournalEntryForm({
 
   // 차변/대변 합계 계산
   const lines = form.watch('lines')
-  const { totalDebit, totalCredit, balance, isBalanced } =
-    calculateTotals(lines as any)
+  const { totalDebit, totalCredit, balance, isBalanced } = calculateTotals(
+    lines as any
+  )
 
   // 행 추가
   const handleAddLine = () => {
@@ -139,7 +141,7 @@ export function JournalEntryForm({
           <CardHeader>
             <CardTitle>전표 정보</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-3">
             {/* 거래일자 */}
             <FormField
               control={form.control}
@@ -178,7 +180,7 @@ export function JournalEntryForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {Object.values(TransactionType).map((type) => (
+                      {Object.values(TransactionType).map(type => (
                         <SelectItem key={type} value={type}>
                           {KOREAN_LABELS.transactionType[type]}
                         </SelectItem>
@@ -218,7 +220,7 @@ export function JournalEntryForm({
             <CardTitle>분개 내역</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="rounded-md border overflow-x-auto">
+            <div className="overflow-x-auto rounded-md border">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -278,7 +280,7 @@ export function JournalEntryForm({
                                   min="0"
                                   step="0.01"
                                   value={debitField.value || ''}
-                                  onChange={(e) =>
+                                  onChange={e =>
                                     handleDebitChange(index, e.target.value)
                                   }
                                   disabled={isSubmitting}
@@ -303,7 +305,7 @@ export function JournalEntryForm({
                                   min="0"
                                   step="0.01"
                                   value={creditField.value || ''}
-                                  onChange={(e) =>
+                                  onChange={e =>
                                     handleCreditChange(index, e.target.value)
                                   }
                                   disabled={isSubmitting}
@@ -387,8 +389,7 @@ export function JournalEntryForm({
               disabled={isSubmitting}
               className="mt-4"
             >
-              <Plus className="h-4 w-4 mr-2" />
-              행 추가
+              <Plus className="mr-2 h-4 w-4" />행 추가
             </Button>
           </CardContent>
         </Card>
@@ -403,15 +404,8 @@ export function JournalEntryForm({
           >
             취소
           </Button>
-          <Button
-            type="submit"
-            disabled={!isBalanced || isSubmitting}
-          >
-            {isSubmitting
-              ? '처리 중...'
-              : mode === 'create'
-              ? '저장'
-              : '수정'}
+          <Button type="submit" disabled={!isBalanced || isSubmitting}>
+            {isSubmitting ? '처리 중...' : mode === 'create' ? '저장' : '수정'}
           </Button>
         </div>
 

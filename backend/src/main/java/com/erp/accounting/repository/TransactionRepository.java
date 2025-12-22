@@ -3,6 +3,7 @@ package com.erp.accounting.repository;
 import com.erp.accounting.entity.Transaction;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -24,7 +25,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
      * 전표번호로 분개 항목 조회 (복식부기 그룹)
      * 하나의 전표번호는 여러 분개 항목(Transaction)을 포함할 수 있음
      */
-    @Query("SELECT t FROM Transaction t " +
+    @Query("SELECT DISTINCT t FROM Transaction t " +
            "JOIN FETCH t.company c " +
            "JOIN FETCH t.account a " +
            "LEFT JOIN FETCH t.inputBy ib " +

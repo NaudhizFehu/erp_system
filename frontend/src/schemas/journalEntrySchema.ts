@@ -1,4 +1,5 @@
 import { z } from 'zod'
+
 import { TransactionType, TaxType, DocumentType } from '@/types/accounting'
 
 /**
@@ -33,7 +34,7 @@ export const journalEntryLineSchema = z
     documentNumber: z.string().max(50).optional(),
   })
   .refine(
-    (data) => {
+    data => {
       // 차변 또는 대변 중 정확히 하나만 > 0
       const hasDebit = data.debitAmount > 0
       const hasCredit = data.creditAmount > 0
@@ -52,7 +53,7 @@ export const journalEntryFormSchema = z
   .object({
     companyId: z.number().positive('회사를 선택해주세요'),
     transactionDate: z.string().refine(
-      (date) => {
+      date => {
         const selected = new Date(date)
         const today = new Date()
         today.setHours(23, 59, 59, 999)
@@ -70,7 +71,7 @@ export const journalEntryFormSchema = z
       .min(2, '최소 2개의 분개 항목이 필요합니다 (복식부기)'),
   })
   .refine(
-    (data) => {
+    data => {
       const totalDebit = data.lines.reduce(
         (sum, line) => sum + line.debitAmount,
         0

@@ -29,16 +29,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import {
-  useTransaction,
-  useTransactionsByNumber,
-} from '@/hooks/useAccounting'
-import { KOREAN_LABELS, TransactionStatus } from '@/types/accounting'
+import { useTransaction, useTransactionsByNumber } from '@/hooks/useAccounting'
 import {
   formatCurrency,
   formatDate,
   formatDateTime,
 } from '@/lib/utils/journalEntry'
+import { KOREAN_LABELS, TransactionStatus } from '@/types/accounting'
 
 export default function TransactionDetail() {
   const { id } = useParams<{ id: string }>()
@@ -88,7 +85,7 @@ export default function TransactionDetail() {
   }
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="container mx-auto space-y-6 py-6">
       {/* 헤더 */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -96,7 +93,7 @@ export default function TransactionDetail() {
             variant="ghost"
             onClick={() => navigate('/accounting/transactions')}
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
+            <ArrowLeft className="mr-2 h-4 w-4" />
             목록
           </Button>
           <div>
@@ -119,10 +116,10 @@ export default function TransactionDetail() {
           <CardTitle>전표 정보</CardTitle>
           <CardDescription>기본 정보 및 상태</CardDescription>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {/* 전표번호 */}
           <div className="space-y-2">
-            <Label className="text-muted-foreground flex items-center gap-2">
+            <Label className="flex items-center gap-2 text-muted-foreground">
               <FileText className="h-4 w-4" />
               전표번호
             </Label>
@@ -131,7 +128,7 @@ export default function TransactionDetail() {
 
           {/* 거래일자 */}
           <div className="space-y-2">
-            <Label className="text-muted-foreground flex items-center gap-2">
+            <Label className="flex items-center gap-2 text-muted-foreground">
               <Calendar className="h-4 w-4" />
               거래일자
             </Label>
@@ -160,7 +157,7 @@ export default function TransactionDetail() {
 
           {/* 입력자 */}
           <div className="space-y-2">
-            <Label className="text-muted-foreground flex items-center gap-2">
+            <Label className="flex items-center gap-2 text-muted-foreground">
               <User className="h-4 w-4" />
               입력자
             </Label>
@@ -172,7 +169,7 @@ export default function TransactionDetail() {
           {/* 입력일시 */}
           <div className="space-y-2">
             <Label className="text-muted-foreground">입력일시</Label>
-            <div className="font-medium text-sm">
+            <div className="text-sm font-medium">
               {formatDateTime(transaction.createdAt)}
             </div>
           </div>
@@ -181,7 +178,7 @@ export default function TransactionDetail() {
           {transaction.approvedBy && (
             <>
               <div className="space-y-2">
-                <Label className="text-muted-foreground flex items-center gap-2">
+                <Label className="flex items-center gap-2 text-muted-foreground">
                   <User className="h-4 w-4" />
                   승인자
                 </Label>
@@ -190,7 +187,7 @@ export default function TransactionDetail() {
 
               <div className="space-y-2">
                 <Label className="text-muted-foreground">승인일시</Label>
-                <div className="font-medium text-sm">
+                <div className="text-sm font-medium">
                   {transaction.approvedAt
                     ? formatDateTime(transaction.approvedAt)
                     : '-'}
@@ -203,7 +200,7 @@ export default function TransactionDetail() {
           {transaction.postedAt && (
             <div className="space-y-2">
               <Label className="text-muted-foreground">전기일시</Label>
-              <div className="font-medium text-sm">
+              <div className="text-sm font-medium">
                 {formatDateTime(transaction.postedAt)}
               </div>
             </div>
@@ -226,14 +223,14 @@ export default function TransactionDetail() {
                 <TableRow>
                   <TableHead className="w-[150px]">계정코드</TableHead>
                   <TableHead>계정과목</TableHead>
-                  <TableHead className="text-right w-[120px]">차변</TableHead>
-                  <TableHead className="text-right w-[120px]">대변</TableHead>
+                  <TableHead className="w-[120px] text-right">차변</TableHead>
+                  <TableHead className="w-[120px] text-right">대변</TableHead>
                   <TableHead className="min-w-[200px]">적요</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {journalEntries && journalEntries.length > 0 ? (
-                  journalEntries.map((entry) => (
+                  journalEntries.map(entry => (
                     <TableRow key={entry.id}>
                       <TableCell className="font-mono text-sm">
                         {entry.account.accountCode}
@@ -300,11 +297,13 @@ export default function TransactionDetail() {
           <CardContent className="space-y-2">
             <div>
               <Label className="text-muted-foreground">취소 사유</Label>
-              <div className="font-medium">{transaction.cancelReason || '-'}</div>
+              <div className="font-medium">
+                {transaction.cancelReason || '-'}
+              </div>
             </div>
             <div>
               <Label className="text-muted-foreground">취소일시</Label>
-              <div className="font-medium text-sm">
+              <div className="text-sm font-medium">
                 {transaction.cancelledAt
                   ? formatDateTime(transaction.cancelledAt)
                   : '-'}
@@ -313,7 +312,9 @@ export default function TransactionDetail() {
             {transaction.cancelledBy && (
               <div>
                 <Label className="text-muted-foreground">취소자</Label>
-                <div className="font-medium">{transaction.cancelledBy.name}</div>
+                <div className="font-medium">
+                  {transaction.cancelledBy.name}
+                </div>
               </div>
             )}
           </CardContent>
@@ -329,7 +330,7 @@ export default function TransactionDetail() {
           <CardHeader>
             <CardTitle>추가 정보</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {transaction.memo && (
               <div className="space-y-2">
                 <Label className="text-muted-foreground">메모</Label>

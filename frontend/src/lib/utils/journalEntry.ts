@@ -16,7 +16,7 @@ export function formToApiRequest(formData: {
   inputById?: number
   lines: JournalEntryLine[]
 }): TransactionCreateRequest[] {
-  return formData.lines.map((line) => ({
+  return formData.lines.map(line => ({
     transactionNumber: formData.transactionNumber || '', // 비어있으면 백엔드 자동 생성
     companyId: formData.companyId,
     transactionDate: formData.transactionDate,
@@ -61,7 +61,7 @@ export function apiToFormData(transactions: Transaction[]): {
     transactionType: first.transactionType,
     transactionNumber: first.transactionNumber,
     inputById: first.inputBy?.id,
-    lines: transactions.map((tx) => ({
+    lines: transactions.map(tx => ({
       id: tx.id.toString(),
       accountId: tx.account.id,
       account: tx.account,
