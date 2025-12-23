@@ -1,7 +1,7 @@
 # Cursor ERP System - 프로젝트 현황 보고서
 
-**작성일**: 2025-12-19
-**버전**: 1.2
+**작성일**: 2025-12-23
+**버전**: 1.5
 
 ---
 
@@ -108,6 +108,67 @@
   - 복식부기 그룹 조회 지원
   - Java 17 환경 설정 확인 및 컴파일 성공
 
+### 재무제표 조회 (Financial Statements) 완료 ✅
+
+#### Week 1 - MVP 구현 (2025-12-22)
+- **상태**: 완료
+- **구현 내용**:
+  - **UI 컴포넌트 (3개)**:
+    - ReportStatusBadge: 보고서 상태 뱃지 (DRAFT → GENERATED → REVIEWED → APPROVED → PUBLISHED)
+    - FinancialRatioCard: 재무비율 카드 (7가지 비율 타입, 건강도 기반 색상 코딩)
+    - FinancialStatementTable: 계층적 재무제표 테이블 (indentLevel, 증감 비교)
+  - **메인 페이지**:
+    - FinancialStatementPage: 재무제표 통합 조회 페이지
+    - 3개 탭: 재무상태표, 손익계산서, 현금흐름표
+    - 회계 기간 관리: fiscalYear (2020~현재) + fiscalPeriod (ANNUAL/Q1-Q4/M01-M12)
+    - 조건부 보고서 생성 버튼 및 React Query 뮤테이션
+  - **라우팅**: /accounting/financial-statements (SUPER_ADMIN, ADMIN, MANAGER, USER)
+
+#### Week 2 - 관리 기능 구현 (2025-12-22)
+- **상태**: 완료
+- **구현 내용**:
+  - **보고서 관리 페이지 (2개)**:
+    - FinancialReportListPage: 보고서 목록 조회, 검색, 필터링, 페이지네이션
+    - FinancialReportDetailPage: 보고서 상세 조회, 승인 워크플로우
+  - **API 확장**: accountingApi.getReportById() 함수 추가
+  - **라우팅 확장**: /accounting/reports, /accounting/reports/:id
+
+#### 버그 수정 및 개선 (2025-12-22)
+- **상태**: 완료
+- **구현 내용**:
+  - 타입 안정성: status → reportStatus, reportName → reportTitle, approver → approvedBy
+  - Enum 정합성: CASH_FLOW → CASH_FLOW_STATEMENT, EQUITY_CHANGE → EQUITY_STATEMENT
+  - 빌드 오류 해결: Skeleton 컴포넌트 제거 및 커스텀 로딩 스켈레톤 구현
+  - Lint 자동 수정: ESLint/Prettier 177개 포맷팅 오류 해결
+  - .gitignore 업데이트: todoDocs/, claudedocs/ 제외 추가
+
+#### Week 3+ - 고급 기능 구현 (2025-12-22)
+- **상태**: 완료
+- **구현 내용**:
+  - **TrendChart 컴포넌트** (Recharts 기반):
+    - Line/Area 차트 타입 지원
+    - 금액/비율/백분율 메트릭 자동 포맷팅 (억/만 단위)
+    - 커스텀 툴팁 및 Y축 포맷팅
+    - 색상 그라데이션 및 반응형 디자인
+  - **현금흐름표 탭**:
+    - 현금 및 현금성자산, 총자산, 순이익 요약 카드
+    - 상세 내역 테이블 및 전기 대비 비교
+  - **자본변동표 탭**:
+    - 총자본, 총자산, 순이익, 자기자본비율 요약 카드
+    - 4개 탭 구조 완성 (재무상태표, 손익계산서, 현금흐름표, 자본변동표)
+  - **트렌드 차트 통합**:
+    - 재무상태표: 재무상태 트렌드, 재무비율 트렌드 (2개 차트)
+    - 손익계산서: 손익 트렌드 (1개 차트)
+    - useFinancialTrends 훅으로 최근 12개월 데이터 표시
+  - **Export 및 인쇄 기능**:
+    - CSV 내보내기: UTF-8 BOM 한글 인코딩 지원
+    - 인쇄 기능: window.print() 활용
+    - 보고서 존재 여부 확인 및 버튼 비활성화
+  - **코드 품질**:
+    - TypeScript any 타입 제거 및 타입 안정성 강화
+    - ESLint 오류 수정 (alert → console.warn, HTML entity escaping)
+    - 빌드 시간: 4.79초, 번들 크기: 872.70 kB (gzip: 227.92 kB)
+
 ### 문서화 ✅
 - **guideDocs/ci_cd/** 디렉토리 생성:
   - `01-gitlab-cicd-overview.md`: Backend + Frontend CI/CD 통합 개요
@@ -159,7 +220,8 @@
 | **GitHub** | github (공개용, guideDocs 제외) |
 | **Main Branch** | develop |
 | **Current Branch** | develop |
-| **Latest Commit** | 1d5778d (TransactionRepository 타입 수정) |
+| **Latest Commit** | 076a602 (재무제표 고급 기능 완료 - Week 3+) |
+| **Push Status** | ✅ GitLab 및 GitHub 동기화 완료 |
 
 ---
 
@@ -167,14 +229,7 @@
 
 ### 🔴 즉시 작업 대상 (이번 주)
 
-#### 재무제표 조회 (Financial Statements)
-- 재무상태표 조회 기능
-- 손익계산서 조회 기능
-- 회계 기간 관리 기능
-
-### 🟡 단기 작업 (2주 내)
-
-#### 핵심 비즈니스 기능 개발
+#### 사용자 편의성 개선
 - 사용자 권한 관리 개선
 - 회계 데이터 내보내기 (Excel, CSV)
 - 전표 승인 워크플로우 개선
@@ -227,12 +282,7 @@
 ## 4. 향후 Roadmap
 
 ### 단기 (2주 내)
-1. **재무제표 조회 (Financial Statements)**
-   - 재무상태표 조회
-   - 손익계산서 조회
-   - 회계 기간 관리
-
-2. **핵심 비즈니스 기능 강화**
+1. **사용자 편의성 개선**
    - 사용자 권한 관리 개선
    - 회계 데이터 내보내기 (Excel, CSV)
    - 전표 승인 워크플로우 개선
@@ -324,7 +374,7 @@
 
 ---
 
-## 7. 최근 변경사항 (2025-12-10 ~ 2025-12-19)
+## 7. 최근 변경사항 (2025-12-10 ~ 2025-12-22)
 
 ### 2025-12-10
 - ✅ 회계 전표 입력 기능 완전 구현 (커밋 e238bbc)
@@ -339,7 +389,35 @@
   - Java 17 환경 설정 확인 및 컴파일 검증
 - ✅ GitHub 푸시 완료 (e238bbc → 1d5778d)
 
+### 2025-12-22
+- ✅ 재무제표 조회 기능 완전 구현 (커밋 db7d1dc)
+  - **Week 1 - MVP**:
+    - UI 컴포넌트 3개 (ReportStatusBadge, FinancialRatioCard, FinancialStatementTable)
+    - FinancialStatementPage 메인 페이지 + 라우팅
+  - **Week 2 - 관리 기능**:
+    - FinancialReportListPage, FinancialReportDetailPage 구현
+    - API 확장 및 라우팅 추가
+  - **버그 수정**:
+    - 타입 안정성 개선 (reportStatus, reportTitle, approvedBy)
+    - Enum 정합성 수정 (CASH_FLOW_STATEMENT, EQUITY_STATEMENT)
+    - 빌드/린트 오류 해결 (177개 자동 수정)
+  - 변경 파일: 22개 (신규 6개, 수정 16개)
+  - 코드: +2126줄, -146줄
+- ✅ GitLab 및 GitHub 동기화 완료
+
+- ✅ 재무제표 고급 기능 완료 (커밋 076a602)
+  - **TrendChart 컴포넌트**: Recharts 기반, Line/Area 차트, 금액/비율/백분율 포맷팅
+  - **현금흐름표 탭**: 현금 및 현금성자산, 총자산, 순이익 요약
+  - **자본변동표 탭**: 총자본, 자기자본비율 등 4개 요약 카드
+  - **트렌드 차트 통합**: 재무상태/재무비율/손익 트렌드 (최근 12개월)
+  - **Export 기능**: CSV 내보내기 (UTF-8 BOM), window.print() 인쇄
+  - **코드 품질**: TypeScript any 제거, ESLint 오류 수정
+  - 변경 파일: 2개 (신규 1개, 수정 1개)
+  - 코드: +650줄, -33줄
+  - 빌드: 4.79초, 번들: 872.70 kB (gzip: 227.92 kB)
+- ✅ GitLab 및 GitHub 동기화 완료
+
 ---
 
-**마지막 업데이트**: 2025-12-19
-**다음 검토 예정**: 2주 후 (재무제표 조회 기능 완료 시점)
+**마지막 업데이트**: 2025-12-23
+**다음 검토 예정**: 2025-12-30 (핵심 비즈니스 기능 강화 시작 시점)

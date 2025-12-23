@@ -30,6 +30,7 @@ import { UserProfilePage } from '@/pages/profile/UserProfilePage'
 import { CustomerDetail } from '@/pages/sales/CustomerDetail'
 import { CustomerList } from '@/pages/sales/CustomerList'
 import { OrderDetail } from '@/pages/sales/OrderDetail'
+import UserManagementPage from '@/pages/admin/UserManagementPage'
 
 /**
  * 메인 애플리케이션 컴포넌트
@@ -192,6 +193,18 @@ function App() {
 
                     {/* 사용자 프로필 */}
                     <Route path="/profile" element={<UserProfilePage />} />
+
+                    {/* 관리자 기능 */}
+                    <Route
+                      path="/admin/users"
+                      element={
+                        <RoleProtectedRoute
+                          requiredRoles={['SUPER_ADMIN', 'ADMIN']}
+                        >
+                          <UserManagementPage />
+                        </RoleProtectedRoute>
+                      }
+                    />
                   </Routes>
                 </Layout>
               </ProtectedRoute>
