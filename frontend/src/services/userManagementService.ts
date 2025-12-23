@@ -1,5 +1,6 @@
-import api from './api'
 import type { ApiResponse, PageResponse } from '@/types/common'
+
+import api from './api'
 
 /**
  * 사용자 역할

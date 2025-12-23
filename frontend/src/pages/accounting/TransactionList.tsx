@@ -13,6 +13,7 @@ import {
   X,
   Calendar,
   FileText,
+  Download,
 } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -62,6 +63,11 @@ import {
   useCreateJournalEntry,
 } from '@/hooks/useAccounting'
 import { useDebounce } from '@/hooks/useDebounce'
+import {
+  exportToCSV,
+  exportToExcel,
+  generateFilename,
+} from '@/lib/utils/exportData'
 import {
   formToApiRequest,
   formatCurrency,
@@ -152,6 +158,68 @@ export default function TransactionList() {
     setPage(0)
   }
 
+  // CSV 내보내기
+  const handleExportCSV = () => {
+    if (!data?.content || data.content.length === 0) {
+      alert('내보낼 데이터가 없습니다.')
+      return
+    }
+
+    const headers = [
+      { key: 'transactionNumber' as const, label: '전표번호' },
+      { key: 'transactionDate' as const, label: '거래일자' },
+      { key: 'transactionType' as const, label: '유형' },
+      { key: 'description' as const, label: '적요' },
+      { key: 'debitAmount' as const, label: '차변' },
+      { key: 'creditAmount' as const, label: '대변' },
+      { key: 'transactionStatus' as const, label: '상태' },
+    ]
+
+    const exportData = data.content.map(t => ({
+      transactionNumber: t.transactionNumber,
+      transactionDate: formatDate(t.transactionDate),
+      transactionType: KOREAN_LABELS.transactionType[t.transactionType],
+      description: t.description,
+      debitAmount: t.debitAmount > 0 ? formatCurrency(t.debitAmount) : '',
+      creditAmount: t.creditAmount > 0 ? formatCurrency(t.creditAmount) : '',
+      transactionStatus: KOREAN_LABELS.transactionStatus[t.transactionStatus],
+    }))
+
+    const filename = generateFilename('회계전표')
+    exportToCSV(exportData, filename, headers)
+  }
+
+  // Excel 내보내기
+  const handleExportExcel = () => {
+    if (!data?.content || data.content.length === 0) {
+      alert('내보낼 데이터가 없습니다.')
+      return
+    }
+
+    const headers = [
+      { key: 'transactionNumber' as const, label: '전표번호' },
+      { key: 'transactionDate' as const, label: '거래일자' },
+      { key: 'transactionType' as const, label: '유형' },
+      { key: 'description' as const, label: '적요' },
+      { key: 'debitAmount' as const, label: '차변' },
+      { key: 'creditAmount' as const, label: '대변' },
+      { key: 'transactionStatus' as const, label: '상태' },
+    ]
+
+    const exportData = data.content.map(t => ({
+      transactionNumber: t.transactionNumber,
+      transactionDate: formatDate(t.transactionDate),
+      transactionType: KOREAN_LABELS.transactionType[t.transactionType],
+      description: t.description,
+      debitAmount: t.debitAmount > 0 ? formatCurrency(t.debitAmount) : '',
+      creditAmount: t.creditAmount > 0 ? formatCurrency(t.creditAmount) : '',
+      transactionStatus: KOREAN_LABELS.transactionStatus[t.transactionStatus],
+    }))
+
+    const filename = generateFilename('회계전표')
+    exportToExcel(exportData, filename, headers)
+  }
+
   // 통계 계산
   const stats = {
     total: data?.totalElements || 0,
@@ -173,10 +241,28 @@ export default function TransactionList() {
           <h1 className="text-3xl font-bold">회계 전표</h1>
           <p className="text-muted-foreground">복식부기 전표 조회 및 관리</p>
         </div>
-        <Button onClick={() => setIsFormOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          전표 입력
-        </Button>
+        <div className="flex gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">
+                <Download className="mr-2 h-4 w-4" />
+                내보내기
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleExportCSV}>
+                CSV 파일로 내보내기
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportExcel}>
+                Excel 파일로 내보내기
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button onClick={() => setIsFormOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            전표 입력
+          </Button>
+        </div>
       </div>
 
       {/* 통계 카드 */}
