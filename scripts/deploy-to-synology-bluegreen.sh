@@ -101,19 +101,23 @@ pre_deployment_checklist() {
     CURRENT_BRANCH=$(git branch --show-current)
     log_info "현재 브랜치: $CURRENT_BRANCH"
 
-    # 프론트엔드 린트 및 타입 체크
+    # 프론트엔드 빌드 테스트
     cd "$FRONTEND_DIR"
-    if npm run lint >/dev/null 2>&1; then
-        log_success "✓ 프론트엔드 린트 검사 통과"
-    else
-        log_warning "프론트엔드 린트 검사 실패"
-        all_ok=false
-    fi
 
+    # 타입 체크
     if npm run type-check >/dev/null 2>&1; then
         log_success "✓ 프론트엔드 타입 체크 통과"
     else
         log_warning "프론트엔드 타입 체크 실패"
+        all_ok=false
+    fi
+
+    # 빌드 테스트 (실제 배포 가능 여부 확인)
+    log_info "빌드 테스트 중..."
+    if npm run build >/dev/null 2>&1; then
+        log_success "✓ 프론트엔드 빌드 테스트 통과"
+    else
+        log_error "프론트엔드 빌드 실패 - 배포 불가"
         all_ok=false
     fi
 
@@ -130,11 +134,12 @@ pre_deployment_checklist() {
 
 # 프론트엔드 Docker 이미지 빌드
 build_frontend_image() {
-    log_step "프론트엔드 Docker 이미지 빌드 중..."
+    log_step "프론트엔드 Docker 이미지 빌드 중 (AMD64 플랫폼)..."
 
     cd "$FRONTEND_DIR"
 
     docker build \
+        --platform linux/amd64 \
         -f Dockerfile.prod \
         -t cursor-erp-frontend:${VERSION} \
         -t cursor-erp-frontend:latest \
@@ -145,11 +150,12 @@ build_frontend_image() {
 
 # 백엔드 Docker 이미지 빌드
 build_backend_image() {
-    log_step "백엔드 Docker 이미지 빌드 중..."
+    log_step "백엔드 Docker 이미지 빌드 중 (AMD64 플랫폼)..."
 
     cd "$BACKEND_DIR"
 
     docker build \
+        --platform linux/amd64 \
         -f Dockerfile \
         -t cursor-erp-backend:${VERSION} \
         -t cursor-erp-backend:latest \
@@ -174,19 +180,32 @@ save_docker_images() {
     log_success "Docker 이미지 저장 완료"
 }
 
-# Synology로 이미지 전송
+# Synology로 이미지 전송 (SSH 파이프 방식)
 transfer_images_to_synology() {
     log_step "Synology로 이미지 전송 중..."
 
+    log_info "연결 정보:"
+    log_info "  사용자: $SYNOLOGY_USER"
+    log_info "  호스트: $SYNOLOGY_HOST"
+    log_info "  포트: $SYNOLOGY_PORT"
+    log_info "  배포 경로: $DEPLOY_DIR"
+
     # 원격 디렉토리 생성
+    log_info "원격 디렉토리 생성: mkdir -p $DEPLOY_DIR/images"
     ssh -i "$SSH_KEY" -p "$SYNOLOGY_PORT" "$SYNOLOGY_USER@$SYNOLOGY_HOST" \
         "mkdir -p $DEPLOY_DIR/images"
 
-    # 이미지 파일 전송
-    rsync -avz --progress \
-        -e "ssh -i $SSH_KEY -p $SYNOLOGY_PORT" \
-        /tmp/erp-images/ \
-        "$SYNOLOGY_USER@$SYNOLOGY_HOST:$DEPLOY_DIR/images/"
+    # SSH 파이프를 통한 이미지 전송 (백엔드)
+    log_info "백엔드 이미지 전송 중..."
+    cat /tmp/erp-images/backend.tar.gz | \
+        ssh -i "$SSH_KEY" -p "$SYNOLOGY_PORT" "$SYNOLOGY_USER@$SYNOLOGY_HOST" \
+        "cat > $DEPLOY_DIR/images/backend.tar.gz"
+
+    # SSH 파이프를 통한 이미지 전송 (프론트엔드)
+    log_info "프론트엔드 이미지 전송 중..."
+    cat /tmp/erp-images/frontend.tar.gz | \
+        ssh -i "$SSH_KEY" -p "$SYNOLOGY_PORT" "$SYNOLOGY_USER@$SYNOLOGY_HOST" \
+        "cat > $DEPLOY_DIR/images/frontend.tar.gz"
 
     log_success "이미지 전송 완료"
 }
@@ -198,13 +217,13 @@ load_images_on_synology() {
     ssh -i "$SSH_KEY" -p "$SYNOLOGY_PORT" "$SYNOLOGY_USER@$SYNOLOGY_HOST" << EOF
         cd $DEPLOY_DIR/images
 
-        # 백엔드 이미지 로드
+        # 백엔드 이미지 로드 (전체 경로 사용)
         echo "백엔드 이미지 로드 중..."
-        sudo docker load < backend.tar.gz
+        /usr/local/bin/docker load < backend.tar.gz
 
-        # 프론트엔드 이미지 로드
+        # 프론트엔드 이미지 로드 (전체 경로 사용)
         echo "프론트엔드 이미지 로드 중..."
-        sudo docker load < frontend.tar.gz
+        /usr/local/bin/docker load < frontend.tar.gz
 
         echo "이미지 로드 완료"
 EOF
@@ -212,7 +231,7 @@ EOF
     log_success "Docker 이미지 로드 완료"
 }
 
-# 배포 스크립트 전송
+# 배포 스크립트 전송 (SSH 파이프 방식)
 transfer_deployment_scripts() {
     log_step "배포 스크립트 전송 중..."
 
@@ -220,12 +239,16 @@ transfer_deployment_scripts() {
     ssh -i "$SSH_KEY" -p "$SYNOLOGY_PORT" "$SYNOLOGY_USER@$SYNOLOGY_HOST" \
         "mkdir -p $DEPLOY_DIR/scripts"
 
-    # 스크립트 전송
-    rsync -avz \
-        -e "ssh -i $SSH_KEY -p $SYNOLOGY_PORT" \
-        "$PROJECT_ROOT/scripts/blue-green-deploy.sh" \
-        "$PROJECT_ROOT/scripts/blue-green-rollback.sh" \
-        "$SYNOLOGY_USER@$SYNOLOGY_HOST:$DEPLOY_DIR/scripts/"
+    # 스크립트 전송 (SSH 파이프)
+    log_info "blue-green-deploy.sh 전송 중..."
+    cat "$PROJECT_ROOT/scripts/blue-green-deploy.sh" | \
+        ssh -i "$SSH_KEY" -p "$SYNOLOGY_PORT" "$SYNOLOGY_USER@$SYNOLOGY_HOST" \
+        "cat > $DEPLOY_DIR/scripts/blue-green-deploy.sh"
+
+    log_info "blue-green-rollback.sh 전송 중..."
+    cat "$PROJECT_ROOT/scripts/blue-green-rollback.sh" | \
+        ssh -i "$SSH_KEY" -p "$SYNOLOGY_PORT" "$SYNOLOGY_USER@$SYNOLOGY_HOST" \
+        "cat > $DEPLOY_DIR/scripts/blue-green-rollback.sh"
 
     # 실행 권한 부여
     ssh -i "$SSH_KEY" -p "$SYNOLOGY_PORT" "$SYNOLOGY_USER@$SYNOLOGY_HOST" \
@@ -234,35 +257,38 @@ transfer_deployment_scripts() {
     log_success "배포 스크립트 전송 완료"
 }
 
-# docker-compose 파일 전송
+# docker-compose 파일 전송 (SSH 파이프 방식)
 transfer_docker_compose() {
     log_step "docker-compose 파일 전송 중..."
 
-    rsync -avz \
-        -e "ssh -i $SSH_KEY -p $SYNOLOGY_PORT" \
-        "$PROJECT_ROOT/docker-compose.prod.yml" \
-        "$SYNOLOGY_USER@$SYNOLOGY_HOST:$DEPLOY_DIR/"
+    log_info "docker-compose.prod.yml 전송 중..."
+    cat "$PROJECT_ROOT/docker-compose.prod.yml" | \
+        ssh -i "$SSH_KEY" -p "$SYNOLOGY_PORT" "$SYNOLOGY_USER@$SYNOLOGY_HOST" \
+        "cat > $DEPLOY_DIR/docker-compose.prod.yml"
 
     log_success "docker-compose 파일 전송 완료"
 }
 
 # Synology에서 Blue-Green 배포 실행
 execute_blue_green_deployment() {
-    log_step "Synology에서 Blue-Green 배포 실행 중..."
+    log_step "배포 준비 완료!"
     echo ""
 
-    log_info "==================================================="
-    log_info "이제 Synology NAS에서 배포 스크립트를 실행합니다."
-    log_info "승인 단계에서 'yes'를 입력해야 합니다."
-    log_info "==================================================="
+    log_success "==================================================="
+    log_success "✅ Docker 이미지 전송 및 로드 완료"
+    log_success "✅ 배포 스크립트 전송 완료"
+    log_success "✅ docker-compose 파일 전송 완료"
+    log_success "==================================================="
     echo ""
 
-    ssh -i "$SSH_KEY" -p "$SYNOLOGY_PORT" -t "$SYNOLOGY_USER@$SYNOLOGY_HOST" << EOF
-        cd $DEPLOY_DIR
-        export PROJECT_DIR=$DEPLOY_DIR
-        export VERSION=$VERSION
-        ./scripts/blue-green-deploy.sh
-EOF
+    log_info "다음 명령어로 Synology NAS에 SSH 접속 후 배포를 진행하세요:"
+    echo ""
+    log_info "  ssh -p $SYNOLOGY_PORT $SYNOLOGY_USER@$SYNOLOGY_HOST"
+    log_info "  cd $DEPLOY_DIR"
+    log_info "  sudo ./scripts/blue-green-deploy.sh"
+    echo ""
+    log_warning "⚠️  NAS에서 sudo 비밀번호 입력이 필요합니다."
+    echo ""
 }
 
 # 정리

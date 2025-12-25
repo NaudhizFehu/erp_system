@@ -107,13 +107,13 @@ check_docker_images() {
     local backend_image="cursor-erp-backend:${VERSION:-latest}"
     local frontend_image="cursor-erp-frontend:${VERSION:-latest}"
 
-    if ! sudo docker images | grep -q "cursor-erp-backend"; then
+    if ! sudo /usr/local/bin/docker images | grep -q "cursor-erp-backend"; then
         log_error "백엔드 이미지를 찾을 수 없습니다: $backend_image"
         log_info "이미지를 먼저 빌드하거나 전송하세요."
         exit 1
     fi
 
-    if ! sudo docker images | grep -q "cursor-erp-frontend"; then
+    if ! sudo /usr/local/bin/docker images | grep -q "cursor-erp-frontend"; then
         log_error "프론트엔드 이미지를 찾을 수 없습니다: $frontend_image"
         log_info "이미지를 먼저 빌드하거나 전송하세요."
         exit 1
@@ -132,10 +132,10 @@ deploy_to_target_environment() {
 
     if [ "$target_env" == "green" ]; then
         # Green 환경 활성화
-        sudo docker-compose -f "$DOCKER_COMPOSE_FILE" --profile green up -d backend-green frontend-green
+        sudo /usr/local/bin/docker-compose -f "$DOCKER_COMPOSE_FILE" --profile green up -d backend-green frontend-green
     else
         # Blue 환경 재시작
-        sudo docker-compose -f "$DOCKER_COMPOSE_FILE" up -d backend-blue frontend-blue
+        sudo /usr/local/bin/docker-compose -f "$DOCKER_COMPOSE_FILE" up -d backend-blue frontend-blue
     fi
 
     log_success "[$target_env] 환경 배포 완료"
@@ -230,7 +230,7 @@ check_previous_environment_status() {
     log_info "[$previous_env] 환경 상태 확인 중..."
 
     if [ "$previous_env" == "blue" ]; then
-        if sudo docker ps | grep -q "erp-backend-blue"; then
+        if sudo /usr/local/bin/docker ps | grep -q "erp-backend-blue"; then
             log_success "[$previous_env] 환경이 실행 중입니다 (롤백 가능)"
             return 0
         else
@@ -238,7 +238,7 @@ check_previous_environment_status() {
             return 1
         fi
     else
-        if sudo docker ps | grep -q "erp-backend-green"; then
+        if sudo /usr/local/bin/docker ps | grep -q "erp-backend-green"; then
             log_success "[$previous_env] 환경이 실행 중입니다 (롤백 가능)"
             return 0
         else
@@ -293,7 +293,7 @@ main() {
     if ! health_check "$TARGET_ENV"; then
         log_error "배포 실패: Health Check 실패"
         log_info "[$TARGET_ENV] 환경 로그를 확인하세요:"
-        log_info "  sudo docker-compose -f $DOCKER_COMPOSE_FILE logs backend-$TARGET_ENV"
+        log_info "  sudo /usr/local/bin/docker-compose -f $DOCKER_COMPOSE_FILE logs backend-$TARGET_ENV"
         exit 1
     fi
     echo ""
@@ -344,7 +344,7 @@ main() {
     log_info "  1. 서비스 모니터링 (로그, 성능, 에러)"
     log_info "  2. 문제 발생 시 즉시 롤백: ./scripts/blue-green-rollback.sh"
     log_info "  3. 안정화 확인 후 이전 환경 중지 (선택):"
-    log_info "     sudo docker-compose -f $DOCKER_COMPOSE_FILE stop backend-$ACTIVE_ENV frontend-$ACTIVE_ENV"
+    log_info "     sudo /usr/local/bin/docker-compose -f $DOCKER_COMPOSE_FILE stop backend-$ACTIVE_ENV frontend-$ACTIVE_ENV"
     echo ""
 }
 

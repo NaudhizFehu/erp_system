@@ -1,9 +1,13 @@
 version: '3.8'
 
 services:
-  # 백엔드 서비스
-  backend:
-    container_name: erp-backend
+  # ========================================
+  # Blue 환경 (기본 활성)
+  # ========================================
+
+  # Blue 백엔드
+  backend-blue:
+    container_name: erp-backend-blue
     image: cursor-erp-backend:${VERSION:-latest}
     ports:
       - "8991:8991"
@@ -12,6 +16,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://fehu.kr:5432/ecursor_erp_system
       - SPRING_DATASOURCE_USERNAME=cursor_erp_system
       - SPRING_DATASOURCE_PASSWORD=cursor_erp_system
+      - DEPLOYMENT_ENV=blue
     restart: unless-stopped
     networks:
       - erp-network
@@ -19,15 +24,22 @@ services:
       - "com.docker.compose.project=cursor-erp-system"
       - "project.name=cursor-erp-system"
       - "service.type=backend"
+      - "deployment.env=blue"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8991/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
-  # 프론트엔드 서비스 (Nginx)
-  frontend:
-    container_name: erp-frontend
+  # Blue 프론트엔드
+  frontend-blue:
+    container_name: erp-frontend-blue
     image: cursor-erp-frontend:${VERSION:-latest}
     ports:
       - "8990:80"
     depends_on:
-      - backend
+      - backend-blue
     restart: unless-stopped
     networks:
       - erp-network
@@ -35,6 +47,71 @@ services:
       - "com.docker.compose.project=cursor-erp-system"
       - "project.name=cursor-erp-system"
       - "service.type=frontend"
+      - "deployment.env=blue"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # ========================================
+  # Green 환경 (배포 시 활성화)
+  # ========================================
+
+  # Green 백엔드
+  backend-green:
+    container_name: erp-backend-green
+    image: cursor-erp-backend:${VERSION:-latest}
+    ports:
+      - "8993:8991"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://fehu.kr:5432/ecursor_erp_system
+      - SPRING_DATASOURCE_USERNAME=cursor_erp_system
+      - SPRING_DATASOURCE_PASSWORD=cursor_erp_system
+      - DEPLOYMENT_ENV=green
+    restart: unless-stopped
+    networks:
+      - erp-network
+    labels:
+      - "com.docker.compose.project=cursor-erp-system"
+      - "project.name=cursor-erp-system"
+      - "service.type=backend"
+      - "deployment.env=green"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8991/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    profiles:
+      - green
+
+  # Green 프론트엔드
+  frontend-green:
+    container_name: erp-frontend-green
+    image: cursor-erp-frontend:${VERSION:-latest}
+    ports:
+      - "8992:80"
+    depends_on:
+      - backend-green
+    restart: unless-stopped
+    networks:
+      - erp-network
+    labels:
+      - "com.docker.compose.project=cursor-erp-system"
+      - "project.name=cursor-erp-system"
+      - "service.type=frontend"
+      - "deployment.env=green"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    profiles:
+      - green
 
 networks:
   erp-network:
