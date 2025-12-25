@@ -38,6 +38,8 @@ services:
     image: cursor-erp-frontend:${VERSION:-latest}
     ports:
       - "8990:80"
+    environment:
+      - BACKEND_HOST=backend-blue
     depends_on:
       - backend-blue
     restart: unless-stopped
@@ -94,6 +96,8 @@ services:
     image: cursor-erp-frontend:${VERSION:-latest}
     ports:
       - "8992:80"
+    environment:
+      - BACKEND_HOST=backend-green
     depends_on:
       - backend-green
     restart: unless-stopped
