@@ -271,23 +271,30 @@ transfer_docker_compose() {
 
 # Synology에서 Blue-Green 배포 실행
 execute_blue_green_deployment() {
-    log_step "배포 준비 완료!"
+    log_step "Synology NAS에서 Blue-Green 배포 실행 중..."
     echo ""
 
-    log_success "==================================================="
-    log_success "✅ Docker 이미지 전송 및 로드 완료"
-    log_success "✅ 배포 스크립트 전송 완료"
-    log_success "✅ docker-compose 파일 전송 완료"
-    log_success "==================================================="
+    log_info "NAS에 SSH 접속하여 배포 스크립트 실행..."
     echo ""
 
-    log_info "다음 명령어로 Synology NAS에 SSH 접속 후 배포를 진행하세요:"
+    # NAS에서 배포 스크립트 직접 실행
+    # -t 플래그로 pseudo-terminal 할당하여 sudo 비밀번호 입력 가능하게 함
+    ssh -t -i "$SSH_KEY" -p "$SYNOLOGY_PORT" "$SYNOLOGY_USER@$SYNOLOGY_HOST" \
+        "cd $DEPLOY_DIR && sudo bash scripts/blue-green-deploy.sh"
+
+    local exit_code=$?
+
     echo ""
-    log_info "  ssh -p $SYNOLOGY_PORT $SYNOLOGY_USER@$SYNOLOGY_HOST"
-    log_info "  cd $DEPLOY_DIR"
-    log_info "  sudo ./scripts/blue-green-deploy.sh"
-    echo ""
-    log_warning "⚠️  NAS에서 sudo 비밀번호 입력이 필요합니다."
+    if [ $exit_code -eq 0 ]; then
+        log_success "==================================================="
+        log_success "✅ Blue-Green 배포 완료!"
+        log_success "==================================================="
+    else
+        log_error "==================================================="
+        log_error "❌ 배포 실패 (Exit Code: $exit_code)"
+        log_error "==================================================="
+        return 1
+    fi
     echo ""
 }
 

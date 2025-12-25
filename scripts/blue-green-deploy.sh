@@ -292,8 +292,20 @@ main() {
     # 6. Health Check
     if ! health_check "$TARGET_ENV"; then
         log_error "배포 실패: Health Check 실패"
-        log_info "[$TARGET_ENV] 환경 로그를 확인하세요:"
-        log_info "  sudo /usr/local/bin/docker-compose -f $DOCKER_COMPOSE_FILE logs backend-$TARGET_ENV"
+        echo ""
+        log_info "=== 컨테이너 로그 확인 중 ==="
+        echo ""
+
+        # 백엔드 로그 출력 (최근 50줄)
+        log_info "백엔드 컨테이너 로그 (최근 50줄):"
+        sudo /usr/local/bin/docker-compose -f $DOCKER_COMPOSE_FILE logs --tail=50 backend-$TARGET_ENV || true
+
+        echo ""
+        log_info "프론트엔드 컨테이너 로그 (최근 50줄):"
+        sudo /usr/local/bin/docker-compose -f $DOCKER_COMPOSE_FILE logs --tail=50 frontend-$TARGET_ENV || true
+
+        echo ""
+        log_error "위 로그를 확인하여 문제를 해결한 후 다시 배포하세요."
         exit 1
     fi
     echo ""
