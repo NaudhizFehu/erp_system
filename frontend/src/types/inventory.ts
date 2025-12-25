@@ -3,8 +3,6 @@
  * 백엔드 DTO와 매칭되는 인터페이스들을 정의합니다
  */
 
-import { ApiResponse, PageResponse } from './common'
-
 /**
  * 상품 유형 열거형
  */

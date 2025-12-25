@@ -19,7 +19,7 @@ import {
   Mail,
   ArrowUpDown,
 } from 'lucide-react'
-import React, { useState } from 'react'
+import { useState } from 'react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -39,11 +39,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import type { CustomerSummary } from '@/types/sales'
 import {
   CustomerTypeLabels,
   CustomerStatusLabels,
   CustomerGradeLabels,
+  type CustomerSummary,
 } from '@/types/sales'
 import { formatCurrency } from '@/utils/format'
 

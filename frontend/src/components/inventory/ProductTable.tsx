@@ -12,7 +12,6 @@ import {
   AlertTriangle,
   CheckCircle,
   XCircle,
-  BarChart3,
   Settings,
 } from 'lucide-react'
 import { useState } from 'react'
@@ -42,7 +41,6 @@ import {
   Product,
   ProductStatus,
   ProductType,
-  StockStatus,
   KOREAN_LABELS,
 } from '../../types/inventory'
 import { formatCurrency, formatNumber, formatDate } from '../../utils/format'
@@ -95,12 +93,12 @@ function StockStatusBadge({
   isLowStock,
   isOutOfStock,
   isOverStock,
-  quantity,
+  _quantity,
 }: {
   isLowStock: boolean
   isOutOfStock: boolean
   isOverStock: boolean
-  quantity: number
+  _quantity: number
 }) {
   if (isOutOfStock) {
     return (
@@ -213,7 +211,7 @@ function ProductTable({
   // 전체 선택 상태
   const isAllSelected =
     products.length > 0 && selectedProducts.length === products.length
-  const isPartiallySelected =
+  const _isPartiallySelected =
     selectedProducts.length > 0 && selectedProducts.length < products.length
 
   if (isLoading) {
@@ -351,7 +349,7 @@ function ProductTable({
                   isLowStock={product.isLowStock}
                   isOutOfStock={product.isOutOfStock}
                   isOverStock={product.isOverStock}
-                  quantity={product.totalStock}
+                  _quantity={product.totalStock}
                 />
               </TableCell>
 

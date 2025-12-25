@@ -6,9 +6,7 @@
 import {
   Package,
   TrendingUp,
-  TrendingDown,
   AlertTriangle,
-  CheckCircle,
   XCircle,
   ArrowUpRight,
   ArrowDownRight,
@@ -17,7 +15,6 @@ import {
   Activity,
   RefreshCw,
 } from 'lucide-react'
-import { useState, useEffect } from 'react'
 import {
   BarChart,
   Bar,
@@ -29,13 +26,10 @@ import {
   PieChart,
   Pie,
   Cell,
-  LineChart,
-  Line,
   Area,
   AreaChart,
 } from 'recharts'
 
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -46,7 +40,6 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
-import { Separator } from '@/components/ui/separator'
 
 import {
   useInventoryStats,
@@ -58,7 +51,6 @@ import {
   useOutOfStockProducts,
   useReorderNeededProducts,
 } from '../../hooks/useInventory'
-import { KOREAN_LABELS } from '../../types/inventory'
 import { formatCurrency, formatNumber, formatDate } from '../../utils/format'
 import { LoadingSpinner } from '../common/LoadingSpinner'
 
@@ -223,8 +215,6 @@ const CHART_COLORS = [
 ]
 
 function InventoryDashboard({ companyId }: InventoryDashboardProps) {
-  const [refreshKey, setRefreshKey] = useState(0)
-
   // 데이터 페칭
   const { data: inventoryStats, isLoading: isLoadingInventoryStats } =
     useInventoryStats(companyId)
@@ -232,12 +222,8 @@ function InventoryDashboard({ companyId }: InventoryDashboardProps) {
     useProductStats(companyId)
   const { data: inventoryAlerts, isLoading: isLoadingAlerts } =
     useInventoryAlerts(companyId)
-  const { data: warehouseUtilization, isLoading: isLoadingWarehouse } =
-    useWarehouseUtilization(companyId)
-  const { data: inventoryTrend, isLoading: isLoadingTrend } = useInventoryTrend(
-    companyId,
-    30
-  )
+  const { data: warehouseUtilization } = useWarehouseUtilization(companyId)
+  const { data: inventoryTrend } = useInventoryTrend(companyId, 30)
   const { data: lowStockProducts } = useLowStockProducts(companyId)
   const { data: outOfStockProducts } = useOutOfStockProducts(companyId)
   const { data: reorderNeededProducts } = useReorderNeededProducts(companyId)
@@ -248,7 +234,7 @@ function InventoryDashboard({ companyId }: InventoryDashboardProps) {
 
   // 새로고침 핸들러
   const handleRefresh = () => {
-    setRefreshKey(prev => prev + 1)
+    window.location.reload()
   }
 
   // 데이터 가공

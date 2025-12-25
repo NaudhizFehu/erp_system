@@ -35,8 +35,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { hrUtils } from '@/services/hrApi'
-import type { Employee } from '@/types/hr'
-import { KOREAN_LABELS } from '@/types/hr'
+import { KOREAN_LABELS, type Employee } from '@/types/hr'
 
 interface EmployeeTableProps {
   employees: Employee[]

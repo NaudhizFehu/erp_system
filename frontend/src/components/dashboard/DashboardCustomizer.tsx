@@ -11,21 +11,17 @@ import {
 } from '@hello-pangea/dnd'
 import {
   Settings,
-  Eye,
-  EyeOff,
   Move,
-  Palette,
   Layout,
   Grid3X3,
   Maximize2,
-  Minimize2,
   RotateCcw,
   Save,
   X,
   Plus,
   Trash2,
 } from 'lucide-react'
-import React, { useState } from 'react'
+import { useState } from 'react'
 import toast from 'react-hot-toast'
 
 import { Badge } from '@/components/ui/badge'
@@ -75,12 +71,12 @@ const WidgetConfigCard = ({
   widget,
   onUpdate,
   onRemove,
-  userRole,
+  _userRole,
 }: {
   widget: WidgetConfig
   onUpdate: (id: string, updates: Partial<WidgetConfig>) => void
   onRemove: (id: string) => void
-  userRole: string
+  _userRole?: string
 }) => {
   const getWidgetIcon = (type: WidgetType) => {
     switch (type) {
@@ -488,7 +484,7 @@ function DashboardCustomizer({
                           draggableId={widget.id}
                           index={index}
                         >
-                          {(provided, snapshot) => (
+                          {provided => (
                             <div
                               ref={provided.innerRef}
                               {...provided.draggableProps}
@@ -497,7 +493,7 @@ function DashboardCustomizer({
                                 widget={widget}
                                 onUpdate={updateWidget}
                                 onRemove={removeWidget}
-                                userRole={userRole}
+                                _userRole={userRole}
                               />
                             </div>
                           )}
@@ -546,7 +542,7 @@ function DashboardCustomizer({
                       {localConfig.widgets
                         .filter(w => w.isVisible)
                         .slice(0, 6)
-                        .map((widget, index) => (
+                        .map(widget => (
                           <div
                             key={widget.id}
                             className="flex items-center justify-center rounded border bg-white text-xs font-medium"

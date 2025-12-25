@@ -16,6 +16,7 @@ import {
   AlertCircle,
 } from 'lucide-react'
 import { useState } from 'react'
+import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
 
 import { Button } from '@/components/ui/button'
@@ -27,7 +28,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useAuth } from '@/contexts/AuthContext'
@@ -35,7 +35,6 @@ import {
   useApproveTransaction,
   usePostTransaction,
   useCancelTransaction,
-  useUpdateTransaction,
 } from '@/hooks/useAccounting'
 import { Transaction, TransactionStatus } from '@/types/accounting'
 
@@ -76,11 +75,11 @@ export function TransactionActions({
         approverId: user.id,
       })
 
-      alert('전표가 승인되었습니다.')
+      toast.success('전표가 승인되었습니다.')
       setApproveDialogOpen(false)
       onActionComplete()
     } catch (error) {
-      alert(
+      toast.error(
         '승인 실패: ' +
           (error instanceof Error
             ? error.message
@@ -94,11 +93,11 @@ export function TransactionActions({
     try {
       await postMutation.mutateAsync(transactionId)
 
-      alert('전표가 전기되어 계정 잔액에 반영되었습니다.')
+      toast.success('전표가 전기되어 계정 잔액에 반영되었습니다.')
       setPostDialogOpen(false)
       onActionComplete()
     } catch (error) {
-      alert(
+      toast.error(
         '전기 실패: ' +
           (error instanceof Error
             ? error.message
@@ -110,7 +109,7 @@ export function TransactionActions({
   // 취소 처리
   const handleCancel = async () => {
     if (!user || !cancelReason.trim()) {
-      alert('취소 사유를 입력해주세요.')
+      toast.error('취소 사유를 입력해주세요.')
       return
     }
 
@@ -121,12 +120,12 @@ export function TransactionActions({
         cancelById: user.id,
       })
 
-      alert('전표가 취소되었습니다.')
+      toast.success('전표가 취소되었습니다.')
       setCancelDialogOpen(false)
       setCancelReason('')
       onActionComplete()
     } catch (error) {
-      alert(
+      toast.error(
         '취소 실패: ' +
           (error instanceof Error
             ? error.message

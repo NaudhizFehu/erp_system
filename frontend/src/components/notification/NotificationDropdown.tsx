@@ -1,5 +1,5 @@
 import { Bell, Check, X } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { Badge } from '@/components/ui/badge'
@@ -26,11 +26,10 @@ import {
 function NotificationDropdown() {
   const navigate = useNavigate()
   const { isAuthenticated } = useAuth()
-  const { unreadCount, refreshNotifications, markAsRead, markAllAsRead } =
-    useNotifications()
+  const { unreadCount, markAsRead, markAllAsRead } = useNotifications()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [loading, setLoading] = useState(false)
-  const [open, setOpen] = useState(false)
+  const [_open, setOpen] = useState(false)
 
   // 로그인하지 않은 경우 컴포넌트 렌더링하지 않음
   if (!isAuthenticated) {

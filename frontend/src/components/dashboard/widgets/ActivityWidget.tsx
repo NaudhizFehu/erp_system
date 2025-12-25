@@ -18,11 +18,9 @@ import {
   MoreHorizontal,
   ExternalLink,
   Clock,
-  Filter,
 } from 'lucide-react'
-import React, { useState } from 'react'
+import { useState } from 'react'
 
-import { Avatar, AvatarFallback, AvatarInitials } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'

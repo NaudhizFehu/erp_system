@@ -13,7 +13,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useAuth } from '@/contexts/AuthContext'
-import { useNotifications } from '@/contexts/NotificationContext'
 
 /**
  * 헤더 컴포넌트
@@ -21,7 +20,6 @@ import { useNotifications } from '@/contexts/NotificationContext'
  */
 function Header() {
   const { user, logout } = useAuth()
-  const { unreadCount } = useNotifications()
   const navigate = useNavigate()
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">

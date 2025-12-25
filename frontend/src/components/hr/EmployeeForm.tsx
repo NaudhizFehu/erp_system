@@ -36,24 +36,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCheckEmployeeNumber, useCheckEmail } from '@/hooks/useEmployees'
 import { cn } from '@/lib/utils'
-import type {
-  Employee,
-  EmployeeCreateRequest,
-  EmployeeUpdateRequest,
-  Company,
-  Department,
-  Position,
-} from '@/types/hr'
 import {
   Gender,
   EmploymentStatus,
   EmploymentType,
   KOREAN_LABELS,
+  type Employee,
+  type EmployeeCreateRequest,
+  type EmployeeUpdateRequest,
+  type Company,
+  type Department,
+  type Position,
 } from '@/types/hr'
 
 import { EmployeeNumberHelper } from './EmployeeNumberHelper'

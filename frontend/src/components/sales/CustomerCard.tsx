@@ -6,10 +6,8 @@
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import {
-  Building2,
   Phone,
   Mail,
-  MapPin,
   User,
   MoreHorizontal,
   Edit,
@@ -21,7 +19,6 @@ import {
   AlertTriangle,
   TrendingUp,
 } from 'lucide-react'
-import React from 'react'
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -34,11 +31,11 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
-import type { CustomerSummary } from '@/types/sales'
 import {
   CustomerTypeLabels,
   CustomerStatusLabels,
   CustomerGradeLabels,
+  type CustomerSummary,
 } from '@/types/sales'
 import { formatCurrency } from '@/utils/format'
 

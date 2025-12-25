@@ -45,7 +45,7 @@ interface OverviewWidgetProps {
 interface MetricCardProps {
   title: string
   value: number | string
-  previousValue?: number
+  _previousValue?: number
   growthRate?: number
   icon: React.ReactNode
   color: string
@@ -58,7 +58,7 @@ interface MetricCardProps {
 const MetricCard = ({
   title,
   value,
-  previousValue,
+  _previousValue,
   growthRate,
   icon,
   color,

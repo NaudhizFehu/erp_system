@@ -5,20 +5,14 @@
 
 import {
   TrendingUp,
-  TrendingDown,
   DollarSign,
-  PieChart,
-  BarChart3,
   FileText,
   AlertTriangle,
   CheckCircle,
-  Calendar,
   Calculator,
 } from 'lucide-react'
 import {
   ResponsiveContainer,
-  LineChart,
-  Line,
   AreaChart,
   Area,
   XAxis,
@@ -67,8 +61,7 @@ export function AccountingDashboard({
   // 데이터 조회
   const { data: latestReports, isLoading: isLoadingReports } =
     useLatestFinancialStatements(companyId)
-  const { data: financialTrends, isLoading: isLoadingTrends } =
-    useFinancialTrends(companyId, 12)
+  const { isLoading: isLoadingTrends } = useFinancialTrends(companyId, 12)
   const { data: financialRatios, isLoading: isLoadingRatios } =
     useFinancialRatioAnalysis(companyId, currentYear)
   const { data: transactionStats, isLoading: isLoadingStats } =

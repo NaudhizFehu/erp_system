@@ -9,9 +9,7 @@ import {
   Barcode,
   DollarSign,
   Warehouse,
-  AlertTriangle,
   Info,
-  ImageIcon,
   Tag,
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
