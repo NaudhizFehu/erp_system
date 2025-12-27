@@ -181,6 +181,7 @@ public class DdlForcer {
                 "password_changed_at TIMESTAMP, " +
                 "company_id BIGINT, " +
                 "department_id BIGINT, " +
+                "employee_id BIGINT, " +
                 "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, " +
                 "updated_at TIMESTAMP, " +
                 "created_by BIGINT, " +
@@ -189,7 +190,8 @@ public class DdlForcer {
                 "deleted_at TIMESTAMP, " +
                 "deleted_by BIGINT, " +
                 "FOREIGN KEY (company_id) REFERENCES companies(id), " +
-                "FOREIGN KEY (department_id) REFERENCES departments(id)" +
+                "FOREIGN KEY (department_id) REFERENCES departments(id), " +
+                "FOREIGN KEY (employee_id) REFERENCES employees(id)" +
                 ")",
                 
                 "CREATE TABLE IF NOT EXISTS positions (" +

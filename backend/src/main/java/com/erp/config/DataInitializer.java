@@ -63,21 +63,21 @@ public class DataInitializer {
         try {
             // 잠시 대기하여 DDL 강제 실행이 완료될 시간을 줍니다
             Thread.sleep(5000);
-            
+
             // 회사 데이터 생성
             createCompany();
-            
+
             // 부서 데이터 생성
             createDepartments();
-            
+
             // 직급 데이터 생성
             createPositions();
-            
-            // 사용자 데이터 생성
-            createUsers();
-            
-            // 직원 데이터 생성
+
+            // 직원 데이터 먼저 생성 (User보다 먼저 생성되어야 employee_id 매핑 가능)
             createEmployees();
+
+            // 사용자 데이터 생성 (직원 생성 후 employee_id 매핑)
+            createUsers();
             
             // 상품 카테고리 및 상품 데이터 생성
             createProductCategories();
@@ -455,7 +455,7 @@ public class DataInitializer {
                 Company defCompany = companyRepository.findByCompanyCode("DEF_CORP")
                     .orElseThrow(() -> new RuntimeException("DEF코퍼레이션을 찾을 수 없습니다"));
 
-                log.info("사용자 생성 시작 - 3개 회사별 사용자 생성");
+                log.info("사용자 생성 시작 - 3개 회사별 사용자 생성 (직원과 매핑)");
 
                 // 부서 조회
                 Department abcHrDept = departmentRepository.findByDepartmentCode("ABC_HR")
@@ -475,42 +475,63 @@ public class DataInitializer {
                 Position abcDeputyPosition = positionRepository.findByPositionCode("ABC_DEPUTY")
                     .orElseThrow(() -> new RuntimeException("ABC 대리 직급을 찾을 수 없습니다"));
 
+                // 각 회사의 직원 조회 (첫 3명)
+                List<Employee> abcEmployees = employeeRepository.findByCompanyId(abcCompany.getId());
+                List<Employee> xyzEmployees = employeeRepository.findByCompanyId(xyzCompany.getId());
+                List<Employee> defEmployees = employeeRepository.findByCompanyId(defCompany.getId());
+
                 // 사용자 생성
                 List<User> users = new ArrayList<>();
 
-                // 시스템 관리자 (SUPER_ADMIN) - 회사 소속 없음
-                users.add(createUser("superadmin", "super123", "super@erp-system.com", "시스템관리자", "02-0000-0000", 
-                    User.UserRole.SUPER_ADMIN, null, null, "시스템관리자"));
+                // 시스템 관리자 (SUPER_ADMIN) - 회사 소속 없음, employee_id = null
+                users.add(createUserWithEmployee("superadmin", "super123", "super@erp-system.com", "시스템관리자", "02-0000-0000",
+                    User.UserRole.SUPER_ADMIN, null, null, "시스템관리자", null));
 
-                // ABC기업 사용자들
-                users.add(createUser("admin", "admin123", "admin@abc.com", "관리자", "02-1234-5678", 
-                    User.UserRole.ADMIN, abcCompany, abcHrDept, abcCeoPosition.getName()));
-                users.add(createUser("manager", "manager123", "manager@abc.com", "개발팀매니저", "02-3456-7890", 
-                    User.UserRole.MANAGER, abcCompany, abcDevDept, abcManagerPosition.getName()));
-                users.add(createUser("hr_manager", "hr123", "hr_manager@abc.com", "인사팀매니저", "02-3456-7891", 
-                    User.UserRole.MANAGER, abcCompany, abcHrDept, abcManagerPosition.getName()));
-                users.add(createUser("user", "user123", "user@abc.com", "일반사용자", "02-2345-6789", 
-                    User.UserRole.USER, abcCompany, abcDevDept, abcDeputyPosition.getName()));
+                // ABC기업 사용자들 (각 회사의 첫 3명 직원과 매핑)
+                users.add(createUserWithEmployee("admin", "admin123", "admin@abc.com", "관리자", "02-1234-5678",
+                    User.UserRole.ADMIN, abcCompany, abcHrDept, abcCeoPosition.getName(),
+                    abcEmployees.size() > 0 ? abcEmployees.get(0).getId() : null));
+                users.add(createUserWithEmployee("manager", "manager123", "manager@abc.com", "개발팀매니저", "02-3456-7890",
+                    User.UserRole.MANAGER, abcCompany, abcDevDept, abcManagerPosition.getName(),
+                    abcEmployees.size() > 1 ? abcEmployees.get(1).getId() : null));
+                users.add(createUserWithEmployee("hr_manager", "hr123", "hr_manager@abc.com", "인사팀매니저", "02-3456-7891",
+                    User.UserRole.MANAGER, abcCompany, abcHrDept, abcManagerPosition.getName(),
+                    abcEmployees.size() > 2 ? abcEmployees.get(2).getId() : null));
+                users.add(createUserWithEmployee("user", "user123", "user@abc.com", "일반사용자", "02-2345-6789",
+                    User.UserRole.USER, abcCompany, abcDevDept, abcDeputyPosition.getName(),
+                    abcEmployees.size() > 3 ? abcEmployees.get(3).getId() : null));
 
-                // XYZ그룹 사용자들
-                users.add(createUser("xyz_admin", "xyz123", "admin@xyz.com", "XYZ관리자", "031-234-5678", 
-                    User.UserRole.ADMIN, xyzCompany, xyzHrDept, "대표이사"));
-                users.add(createUser("xyz_manager", "xyz123", "manager@xyz.com", "XYZ인사팀매니저", "031-234-5679", 
-                    User.UserRole.MANAGER, xyzCompany, xyzHrDept, "부장"));
+                // XYZ그룹 사용자들 (각 회사의 첫 2명 직원과 매핑)
+                users.add(createUserWithEmployee("xyz_admin", "xyz123", "admin@xyz.com", "XYZ관리자", "031-234-5678",
+                    User.UserRole.ADMIN, xyzCompany, xyzHrDept, "대표이사",
+                    xyzEmployees.size() > 0 ? xyzEmployees.get(0).getId() : null));
+                users.add(createUserWithEmployee("xyz_manager", "xyz123", "manager@xyz.com", "XYZ인사팀매니저", "031-234-5679",
+                    User.UserRole.MANAGER, xyzCompany, xyzHrDept, "부장",
+                    xyzEmployees.size() > 1 ? xyzEmployees.get(1).getId() : null));
 
-                // DEF코퍼레이션 사용자들
-                users.add(createUser("def_admin", "def123", "admin@def.com", "DEF관리자", "02-345-6789", 
-                    User.UserRole.ADMIN, defCompany, defHrDept, "대표이사"));
-                users.add(createUser("def_user", "def123", "user@def.com", "DEF사용자", "02-345-6790", 
-                    User.UserRole.USER, defCompany, defHrDept, "사원"));
+                // DEF코퍼레이션 사용자들 (각 회사의 첫 2명 직원과 매핑)
+                users.add(createUserWithEmployee("def_admin", "def123", "admin@def.com", "DEF관리자", "02-345-6789",
+                    User.UserRole.ADMIN, defCompany, defHrDept, "대표이사",
+                    defEmployees.size() > 0 ? defEmployees.get(0).getId() : null));
+                users.add(createUserWithEmployee("def_user", "def123", "user@def.com", "DEF사용자", "02-345-6790",
+                    User.UserRole.USER, defCompany, defHrDept, "사원",
+                    defEmployees.size() > 1 ? defEmployees.get(1).getId() : null));
 
                 userRepository.saveAll(users);
 
-                log.info("✅ 로그인 계정 정보 (총 {}개):", users.size());
-                log.info("   시스템: superadmin/super123 (SUPER_ADMIN)");
-                log.info("   ABC기업: admin/admin123, manager/manager123, hr_manager/hr123, user/user123");
-                log.info("   XYZ그룹: xyz_admin/xyz123, xyz_manager/xyz123");
-                log.info("   DEF코퍼레이션: def_admin/def123, def_user/def123");
+                log.info("✅ 로그인 계정 정보 (총 {}개, employee_id 매핑 포함):", users.size());
+                log.info("   시스템: superadmin/super123 (SUPER_ADMIN, employee_id=NULL)");
+                log.info("   ABC기업: admin/admin123 (employee_id={}), manager/manager123 (employee_id={}), hr_manager/hr123 (employee_id={}), user/user123 (employee_id={})",
+                    abcEmployees.size() > 0 ? abcEmployees.get(0).getId() : "NULL",
+                    abcEmployees.size() > 1 ? abcEmployees.get(1).getId() : "NULL",
+                    abcEmployees.size() > 2 ? abcEmployees.get(2).getId() : "NULL",
+                    abcEmployees.size() > 3 ? abcEmployees.get(3).getId() : "NULL");
+                log.info("   XYZ그룹: xyz_admin/xyz123 (employee_id={}), xyz_manager/xyz123 (employee_id={})",
+                    xyzEmployees.size() > 0 ? xyzEmployees.get(0).getId() : "NULL",
+                    xyzEmployees.size() > 1 ? xyzEmployees.get(1).getId() : "NULL");
+                log.info("   DEF코퍼레이션: def_admin/def123 (employee_id={}), def_user/def123 (employee_id={})",
+                    defEmployees.size() > 0 ? defEmployees.get(0).getId() : "NULL",
+                    defEmployees.size() > 1 ? defEmployees.get(1).getId() : "NULL");
                 
             } catch (Exception e) {
                 log.error("사용자 생성 중 오류 발생: {}", e.getMessage(), e);
@@ -524,7 +545,7 @@ public class DataInitializer {
     /**
      * 사용자 생성 헬퍼 메서드
      */
-    private User createUser(String username, String password, String email, String fullName, String phone, 
+    private User createUser(String username, String password, String email, String fullName, String phone,
                            User.UserRole role, Company company, Department department, String position) {
         User user = new User();
         user.setUsername(username);
@@ -539,6 +560,32 @@ public class DataInitializer {
         user.setCompany(company);
         user.setDepartment(department);
         user.setPosition(position);
+        user.setPasswordChangedAt(LocalDateTime.now());
+        user.setCreatedBy(1L);
+        user.setUpdatedBy(1L);
+        user.setIsDeleted(false);
+        return user;
+    }
+
+    /**
+     * 사용자 생성 헬퍼 메서드 (employee_id 포함)
+     */
+    private User createUserWithEmployee(String username, String password, String email, String fullName, String phone,
+                                       User.UserRole role, Company company, Department department, String position, Long employeeId) {
+        User user = new User();
+        user.setUsername(username);
+        user.setPassword(passwordEncoder.encode(password));
+        user.setEmail(email);
+        user.setFullName(fullName);
+        user.setPhone(phone);
+        user.setRole(role);
+        user.setIsActive(true);
+        user.setIsLocked(false);
+        user.setIsPasswordExpired(false);
+        user.setCompany(company);
+        user.setDepartment(department);
+        user.setPosition(position);
+        user.setEmployeeId(employeeId);  // employee_id 설정
         user.setPasswordChangedAt(LocalDateTime.now());
         user.setCreatedBy(1L);
         user.setUpdatedBy(1L);
