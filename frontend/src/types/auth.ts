@@ -27,7 +27,7 @@ export interface UserInfo {
   department?: DepartmentInfo
   position?: string
   company?: CompanyInfo
-  employeeId?: number | null  // 연결된 직원 ID (SUPER_ADMIN은 null)
+  employeeId?: number | null // 연결된 직원 ID (SUPER_ADMIN은 null)
   lastLoginAt?: string
 }
 
