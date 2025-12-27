@@ -1,6 +1,6 @@
 # 백엔드 Production Dockerfile
 # Multi-stage build로 변경
-FROM maven:3.9-eclipse-temurin-17-alpine AS build
+FROM maven:3.9-eclipse-temurin-17 AS build
 
 # 작업 디렉토리 설정
 WORKDIR /app
@@ -14,7 +14,7 @@ RUN mvn clean package -DskipTests && \
     ls -la /app/target/
 
 # 실행 단계
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:17-jre
 
 # 작업 디렉토리 설정
 WORKDIR /app
@@ -26,4 +26,4 @@ COPY --from=build /app/target/*.war app.war
 EXPOSE 8991
 
 # Spring Boot WAR 파일 실행
-ENTRYPOINT ["java", "-jar", "-Dspring.profiles.active=prod", "app.war"]
+ENTRYPOINT ["java", "-jar", "-Dspring.profiles.active=prod", "-Dlogging.level.root=INFO", "-Dlogging.level.org.springframework=INFO", "-Dlogging.level.com.erp=DEBUG", "app.war"]

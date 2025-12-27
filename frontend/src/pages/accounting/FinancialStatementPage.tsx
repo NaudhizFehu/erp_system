@@ -55,7 +55,6 @@ export default function FinancialStatementPage() {
   const { data: latestReports, isLoading: isLoadingLatest } =
     useLatestFinancialStatements(companyId)
 
-
   // 트렌드 데이터 조회 (최근 12개월)
   const { data: trendData } = useFinancialTrends(companyId, 12)
 
@@ -474,7 +473,8 @@ export default function FinancialStatementPage() {
                   재무상태표가 없습니다
                 </h3>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  상단의 &quot;보고서 생성&quot; 버튼을 클릭하여 재무상태표를 생성하세요
+                  상단의 &quot;보고서 생성&quot; 버튼을 클릭하여 재무상태표를
+                  생성하세요
                 </p>
               </CardContent>
             </Card>
@@ -553,7 +553,8 @@ export default function FinancialStatementPage() {
                   손익계산서가 없습니다
                 </h3>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  상단의 &quot;보고서 생성&quot; 버튼을 클릭하여 손익계산서를 생성하세요
+                  상단의 &quot;보고서 생성&quot; 버튼을 클릭하여 손익계산서를
+                  생성하세요
                 </p>
               </CardContent>
             </Card>

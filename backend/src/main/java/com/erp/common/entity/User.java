@@ -121,6 +121,14 @@ public class User extends BaseEntity {
     private Department department;
 
     /**
+     * 연결된 직원 ID
+     * SUPER_ADMIN은 null (시스템 관리자는 직원이 아님)
+     * ADMIN, MANAGER, USER는 Employee와 1:1 매핑
+     */
+    @Column(name = "employee_id")
+    private Long employeeId;
+
+    /**
      * 마지막 로그인 일시
      */
     @Column(name = "last_login_at")

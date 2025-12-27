@@ -18,9 +18,6 @@ export function MyEmployeeProfile() {
   const { user } = useAuth()
   const [employeeId, setEmployeeId] = useState<number | null>(null)
 
-  // TODO: User 엔티티에 employeeId 필드가 추가되면 이것을 사용
-  // 현재는 user?.employeeId가 null이므로 임시로 처리
-
   const { data: employee, isLoading, error } = useEmployee(employeeId || 0)
 
   useEffect(() => {
@@ -30,10 +27,20 @@ export function MyEmployeeProfile() {
       return
     }
 
-    // TODO: 실제로는 user.employeeId를 사용해야 함
-    // 현재는 임시로 1번 직원을 조회하도록 설정
-    // 백엔드 UserPrincipal.getEmployeeId()가 구현되면 연동 필요
-    setEmployeeId(1)
+    // SUPER_ADMIN은 직원 정보가 없음 (시스템 관리자)
+    if (user.role === 'SUPER_ADMIN') {
+      toast.error('시스템 관리자는 직원 정보가 없습니다')
+      navigate('/')
+      return
+    }
+
+    // User 엔티티의 employeeId 사용
+    if (user.employeeId) {
+      setEmployeeId(user.employeeId)
+    } else {
+      toast.error('직원 정보가 연결되지 않았습니다. 관리자에게 문의하세요.')
+      navigate('/')
+    }
   }, [user, navigate])
 
   if (isLoading) {

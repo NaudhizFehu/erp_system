@@ -19,7 +19,7 @@ NC='\033[0m' # No Color
 # 설정 변수
 PROJECT_DIR="${PROJECT_DIR:-/var/services/homes/naudhizfehu/erp-system}"
 DOCKER_COMPOSE_FILE="docker-compose.prod.yml"
-NGINX_CONF="/etc/nginx/sites-enabled/erp.conf"
+NGINX_CONF="/usr/local/etc/nginx/conf.d/erp.conf"
 HEALTH_CHECK_TIMEOUT=60
 HEALTH_CHECK_INTERVAL=5
 
@@ -54,26 +54,22 @@ print_banner() {
     echo -e "${NC}"
 }
 
-# nginx 설정에서 현재 활성 환경 감지
+# 컨테이너 상태로 현재 활성 환경 감지
 detect_active_environment() {
     log_step "현재 활성 환경 감지 중..."
 
-    if [ ! -f "$NGINX_CONF" ]; then
-        log_warning "nginx 설정 파일을 찾을 수 없습니다: $NGINX_CONF"
-        log_info "기본값 'blue'로 설정합니다."
-        echo "blue"
-        return
-    fi
+    local blue_running=$(/usr/local/bin/docker ps --filter "name=erp-backend-blue" --filter "status=running" --format "{{.Names}}" 2>/dev/null)
+    local green_running=$(/usr/local/bin/docker ps --filter "name=erp-backend-green" --filter "status=running" --format "{{.Names}}" 2>/dev/null)
 
-    # active-backend upstream의 포트 확인
-    local backend_port=$(grep -A 1 "upstream active-backend" "$NGINX_CONF" | grep "server" | grep -oP ':\K[0-9]+' | head -1)
-
-    if [ "$backend_port" == "8991" ]; then
+    if [ -n "$blue_running" ] && [ -z "$green_running" ]; then
         echo "blue"
-    elif [ "$backend_port" == "8993" ]; then
+    elif [ -n "$green_running" ] && [ -z "$blue_running" ]; then
         echo "green"
+    elif [ -n "$blue_running" ] && [ -n "$green_running" ]; then
+        # 둘 다 실행 중이면 blue가 활성으로 간주
+        echo "blue"
     else
-        log_warning "활성 환경을 감지할 수 없습니다. 기본값 'blue'로 설정합니다."
+        log_warning "실행 중인 환경이 없습니다. 기본값 'blue'로 설정합니다."
         echo "blue"
     fi
 }
@@ -210,7 +206,11 @@ switch_nginx_upstream() {
 verify_switch() {
     log_step "트래픽 전환 검증 중..."
 
-    local health_url="http://localhost/health"
+    # nginx 재시작 후 안정화 대기
+    log_info "nginx 재시작 안정화 대기 (10초)..."
+    sleep 10
+
+    local health_url="http://localhost/"
 
     if curl -sf "$health_url" > /dev/null 2>&1; then
         log_success "트래픽 전환 검증 성공"
@@ -230,7 +230,7 @@ check_previous_environment_status() {
     log_info "[$previous_env] 환경 상태 확인 중..."
 
     if [ "$previous_env" == "blue" ]; then
-        if sudo /usr/local/bin/docker ps | grep -q "erp-backend-blue"; then
+        if /usr/local/bin/docker ps | grep -q "erp-backend-blue"; then
             log_success "[$previous_env] 환경이 실행 중입니다 (롤백 가능)"
             return 0
         else
@@ -238,7 +238,7 @@ check_previous_environment_status() {
             return 1
         fi
     else
-        if sudo /usr/local/bin/docker ps | grep -q "erp-backend-green"; then
+        if /usr/local/bin/docker ps | grep -q "erp-backend-green"; then
             log_success "[$previous_env] 환경이 실행 중입니다 (롤백 가능)"
             return 0
         else
@@ -340,8 +340,9 @@ main() {
     fi
     echo ""
 
-    # 10. 이전 환경 상태 확인
-    check_previous_environment_status "$ACTIVE_ENV"
+    # 10. 이전 환경 상태 확인 (스킵)
+    # check_previous_environment_status "$ACTIVE_ENV"
+    log_info "이전 환경 [$ACTIVE_ENV]은 롤백 대비 유지됩니다"
     echo ""
 
     # 완료

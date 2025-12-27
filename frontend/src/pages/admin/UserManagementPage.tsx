@@ -3,8 +3,9 @@
  * ADMIN 이상 권한 필요
  */
 
-import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
+
 import {
   userManagementService,
   type UserDto,
@@ -62,13 +63,8 @@ export default function UserManagementPage() {
 
   // 계정 활성화/비활성화
   const toggleActiveMutation = useMutation({
-    mutationFn: ({
-      userId,
-      isActive,
-    }: {
-      userId: number
-      isActive: boolean
-    }) => userManagementService.toggleUserActiveStatus(userId, isActive),
+    mutationFn: ({ userId, isActive }: { userId: number; isActive: boolean }) =>
+      userManagementService.toggleUserActiveStatus(userId, isActive),
     onSuccess: () => {
       alert('계정 상태가 변경되었습니다')
       queryClient.invalidateQueries({ queryKey: ['users'] })
@@ -80,13 +76,8 @@ export default function UserManagementPage() {
 
   // 계정 잠금/잠금해제
   const toggleLockMutation = useMutation({
-    mutationFn: ({
-      userId,
-      isLocked,
-    }: {
-      userId: number
-      isLocked: boolean
-    }) => userManagementService.toggleUserLockStatus(userId, isLocked),
+    mutationFn: ({ userId, isLocked }: { userId: number; isLocked: boolean }) =>
+      userManagementService.toggleUserLockStatus(userId, isLocked),
     onSuccess: () => {
       alert('계정 잠금 상태가 변경되었습니다')
       queryClient.invalidateQueries({ queryKey: ['users'] })
@@ -106,9 +97,7 @@ export default function UserManagementPage() {
 
   const handleToggleActive = (userId: number, currentStatus: boolean) => {
     if (
-      confirm(
-        `계정을 ${currentStatus ? '비활성화' : '활성화'}하시겠습니까?`
-      )
+      confirm(`계정을 ${currentStatus ? '비활성화' : '활성화'}하시겠습니까?`)
     ) {
       toggleActiveMutation.mutate({ userId, isActive: !currentStatus })
     }
@@ -136,7 +125,7 @@ export default function UserManagementPage() {
             type="text"
             name="search"
             placeholder="사용자명 또는 실명으로 검색"
-            className="flex-1 max-w-md rounded border border-gray-300 px-3 py-2"
+            className="max-w-md flex-1 rounded border border-gray-300 px-3 py-2"
           />
           <button
             type="submit"
@@ -160,7 +149,7 @@ export default function UserManagementPage() {
 
       {/* 테이블 */}
       {isLoading ? (
-        <div className="text-center py-8">로딩 중...</div>
+        <div className="py-8 text-center">로딩 중...</div>
       ) : (
         <>
           <div className="overflow-x-auto">
@@ -263,7 +252,7 @@ export default function UserManagementPage() {
             </div>
             <div className="flex gap-2">
               <button
-                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                onClick={() => setPage(p => Math.max(0, p - 1))}
                 disabled={page === 0}
                 className="rounded border border-gray-300 px-4 py-2 disabled:opacity-50"
               >
@@ -273,7 +262,7 @@ export default function UserManagementPage() {
                 {page + 1} / {usersData?.data?.totalPages || 1}
               </span>
               <button
-                onClick={() => setPage((p) => p + 1)}
+                onClick={() => setPage(p => p + 1)}
                 disabled={
                   page >= (usersData?.data?.totalPages || 1) - 1 ||
                   !usersData?.data?.content?.length

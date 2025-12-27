@@ -32,7 +32,7 @@ COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 
 # 포트 노출
-EXPOSE 80
+EXPOSE 8990
 
 # Entrypoint 스크립트 실행
 ENTRYPOINT ["/docker-entrypoint.sh"]

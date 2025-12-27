@@ -30,6 +30,7 @@ public record UserProfileDto(
         String position,
         String role,
         Boolean isActive,
+        Long employeeId,  // 연결된 직원 ID (SUPER_ADMIN은 null)
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
@@ -45,6 +46,7 @@ public record UserProfileDto(
                 user.getPosition(),
                 user.getRole() != null ? user.getRole().toString() : null,
                 user.getIsActive(),
+                user.getEmployeeId(),
                 user.getCreatedAt(),
                 user.getUpdatedAt()
         );

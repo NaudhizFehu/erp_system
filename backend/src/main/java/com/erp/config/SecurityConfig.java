@@ -92,6 +92,14 @@ public class SecurityConfig {
             "http://localhost:3000",    // React 개발 서버
             "http://localhost:5173",    // Vite 개발 서버
             "http://localhost:9960",    // Vite 개발 서버 (새 포트)
+            "http://fehu.kr:8990",      // Blue 프론트엔드
+            "http://fehu.kr:8992",      // Green 프론트엔드
+            "https://fehu.kr:8990",     // Blue 프론트엔드 (HTTPS)
+            "https://fehu.kr:8992",     // Green 프론트엔드 (HTTPS)
+            "http://erp.fehu.kr",       // ERP 도메인
+            "https://erp.fehu.kr",      // ERP 도메인 (HTTPS)
+            "http://192.168.0.30:8990", // Blue 직접 IP 접근
+            "http://192.168.0.30:8992", // Green 직접 IP 접근
             "https://erp.company.com",  // 운영 도메인
             "https://*.company.com"     // 서브도메인
         ));

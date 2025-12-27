@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/select'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCompanies, useRecentEmployeesByCompany } from '@/hooks/useEmployees'
-import type { Company, Employee } from '@/types/hr'
+import type { Employee } from '@/types/hr'
 
 interface EmployeeNumberHelperProps {
   open: boolean
