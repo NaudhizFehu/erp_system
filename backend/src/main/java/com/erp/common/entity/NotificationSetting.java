@@ -1,5 +1,6 @@
 package com.erp.common.entity;
 
+import com.erp.hr.entity.Employee;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -12,9 +13,9 @@ import lombok.AllArgsConstructor;
  * 역할별 알림 수신 설정을 관리합니다
  */
 @Entity
-@Table(name = "notification_settings", 
+@Table(name = "notification_settings",
     uniqueConstraints = {
-        @UniqueConstraint(name = "uk_notification_settings", 
+        @UniqueConstraint(name = "uk_notification_settings",
             columnNames = {"company_id", "role", "scope"})
     },
     indexes = {
@@ -41,7 +42,7 @@ public class NotificationSetting extends BaseEntity {
     @NotNull(message = "대상 역할은 필수입니다")
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false, length = 20)
-    private User.UserRole role;
+    private Employee.UserRole role;
 
     /**
      * 알림 범위

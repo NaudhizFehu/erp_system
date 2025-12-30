@@ -160,12 +160,6 @@ public class Company extends BaseEntity {
     private List<com.erp.hr.entity.Employee> employees;
 
     /**
-     * 회사 소속 사용자들
-     */
-    @OneToMany(mappedBy = "company", fetch = FetchType.LAZY)
-    private List<User> users;
-
-    /**
      * 회사 상태 열거형
      */
     public enum CompanyStatus {

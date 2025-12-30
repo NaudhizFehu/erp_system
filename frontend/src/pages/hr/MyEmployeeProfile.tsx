@@ -15,33 +15,32 @@ import { useEmployee } from '@/hooks/useEmployees'
 
 export function MyEmployeeProfile() {
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { currentUser } = useAuth()
   const [employeeId, setEmployeeId] = useState<number | null>(null)
 
-  const { data: employee, isLoading, error } = useEmployee(employeeId || 0)
+  const { data: employeeData, isLoading, error } = useEmployee(employeeId || 0)
 
   useEffect(() => {
-    if (!user) {
+    if (!currentUser) {
       toast.error('사용자 정보를 불러올 수 없습니다')
       navigate('/')
       return
     }
 
-    // SUPER_ADMIN은 직원 정보가 없음 (시스템 관리자)
-    if (user.role === 'SUPER_ADMIN') {
-      toast.error('시스템 관리자는 직원 정보가 없습니다')
-      navigate('/')
-      return
-    }
+    console.log('MyEmployeeProfile - currentUser:', currentUser)
+    console.log('MyEmployeeProfile - currentUser.id:', currentUser.id)
 
-    // User 엔티티의 employeeId 사용
-    if (user.employeeId) {
-      setEmployeeId(user.employeeId)
+    // Employee ID 사용 (SUPER_ADMIN 포함 모든 권한)
+    // id가 0일 수 있으므로 !== undefined로 체크
+    if (currentUser.id !== undefined && currentUser.id !== null) {
+      console.log('MyEmployeeProfile - employeeId 설정:', currentUser.id)
+      setEmployeeId(currentUser.id)
     } else {
+      console.error('MyEmployeeProfile - currentUser.id가 없습니다')
       toast.error('직원 정보가 연결되지 않았습니다. 관리자에게 문의하세요.')
       navigate('/')
     }
-  }, [user, navigate])
+  }, [currentUser, navigate])
 
   if (isLoading) {
     return (
@@ -51,7 +50,7 @@ export function MyEmployeeProfile() {
     )
   }
 
-  if (error || !employee) {
+  if (error || !currentUser) {
     return (
       <div className="container mx-auto py-8">
         <Card>
@@ -93,33 +92,35 @@ export function MyEmployeeProfile() {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
               <p className="text-sm text-muted-foreground">사번</p>
-              <p className="text-lg font-medium">{employee.employeeNumber}</p>
+              <p className="text-lg font-medium">
+                {currentUser.employeeNumber}
+              </p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">이름</p>
-              <p className="text-lg font-medium">{employee.name}</p>
+              <p className="text-lg font-medium">{currentUser.name}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">이메일</p>
-              <p className="text-lg">{employee.email}</p>
+              <p className="text-lg">{currentUser.email}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">전화번호</p>
-              <p className="text-lg">{employee.phone || '-'}</p>
+              <p className="text-lg">{currentUser.phone || '-'}</p>
             </div>
-            {employee.birthDate && (
+            {currentUser.birthDate && (
               <div>
                 <p className="text-sm text-muted-foreground">생년월일</p>
                 <p className="text-lg">
-                  {new Date(employee.birthDate).toLocaleDateString('ko-KR')}
+                  {new Date(currentUser.birthDate).toLocaleDateString('ko-KR')}
                 </p>
               </div>
             )}
-            {employee.gender && (
+            {currentUser.gender && (
               <div>
                 <p className="text-sm text-muted-foreground">성별</p>
                 <p className="text-lg">
-                  {employee.gender === 'MALE' ? '남성' : '여성'}
+                  {currentUser.gender === 'MALE' ? '남성' : '여성'}
                 </p>
               </div>
             )}
@@ -134,40 +135,58 @@ export function MyEmployeeProfile() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div>
-              <p className="text-sm text-muted-foreground">회사</p>
-              <p className="text-lg font-medium">{employee.company.name}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">부서</p>
-              <p className="text-lg font-medium">{employee.department.name}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">직급</p>
-              <p className="text-lg font-medium">{employee.position.name}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">입사일</p>
-              <p className="text-lg">
-                {new Date(employee.hireDate).toLocaleDateString('ko-KR')}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">재직 상태</p>
-              <p className="text-lg">
-                {employee.employmentStatus === 'ACTIVE' ? '재직' : '퇴직'}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">근속년수</p>
-              <p className="text-lg">{employee.yearsOfService}년</p>
-            </div>
+            {currentUser.company && (
+              <div>
+                <p className="text-sm text-muted-foreground">회사</p>
+                <p className="text-lg font-medium">{currentUser.company.name}</p>
+              </div>
+            )}
+            {currentUser.department && (
+              <div>
+                <p className="text-sm text-muted-foreground">부서</p>
+                <p className="text-lg font-medium">
+                  {currentUser.department.name}
+                </p>
+              </div>
+            )}
+            {currentUser.position && (
+              <div>
+                <p className="text-sm text-muted-foreground">직급</p>
+                <p className="text-lg font-medium">
+                  {typeof currentUser.position === 'string'
+                    ? currentUser.position
+                    : currentUser.position?.name}
+                </p>
+              </div>
+            )}
+            {currentUser.hireDate && (
+              <div>
+                <p className="text-sm text-muted-foreground">입사일</p>
+                <p className="text-lg">
+                  {new Date(currentUser.hireDate).toLocaleDateString('ko-KR')}
+                </p>
+              </div>
+            )}
+            {currentUser.employmentStatus && (
+              <div>
+                <p className="text-sm text-muted-foreground">재직 상태</p>
+                <p className="text-lg">
+                  {currentUser.employmentStatus === 'ACTIVE' ? '재직' : '퇴직'}
+                </p>
+              </div>
+            )}
+            {currentUser.yearsOfService !== undefined && (
+              <div>
+                <p className="text-sm text-muted-foreground">근속년수</p>
+                <p className="text-lg">{currentUser.yearsOfService}년</p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
 
       {/* 계좌 정보 */}
-      {(employee.bankName || employee.accountNumber) && (
+      {(currentUser.bankName || currentUser.accountNumber) && (
         <Card>
           <CardHeader>
             <CardTitle>계좌 정보</CardTitle>
@@ -176,15 +195,15 @@ export function MyEmployeeProfile() {
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
                 <p className="text-sm text-muted-foreground">은행</p>
-                <p className="text-lg">{employee.bankName || '-'}</p>
+                <p className="text-lg">{currentUser.bankName || '-'}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">계좌번호</p>
-                <p className="text-lg">{employee.accountNumber || '-'}</p>
+                <p className="text-lg">{currentUser.accountNumber || '-'}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">예금주</p>
-                <p className="text-lg">{employee.accountHolder || '-'}</p>
+                <p className="text-lg">{currentUser.accountHolder || '-'}</p>
               </div>
             </div>
           </CardContent>
@@ -192,13 +211,13 @@ export function MyEmployeeProfile() {
       )}
 
       {/* 비고 */}
-      {employee.memo && (
+      {currentUser.memo && (
         <Card>
           <CardHeader>
             <CardTitle>비고</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="whitespace-pre-wrap text-sm">{employee.memo}</p>
+            <p className="whitespace-pre-wrap text-sm">{currentUser.memo}</p>
           </CardContent>
         </Card>
       )}

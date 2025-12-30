@@ -257,11 +257,11 @@ export function useEmployeeCountsByStatus() {
  * 직원 통계 훅
  */
 export function useEmployeeStatistics() {
-  const { user } = useAuth()
+  const { currentUser } = useAuth()
 
   // HR 통계 조회 권한 체크 (ADMIN, MANAGER, USER 모두 허용)
   const hasHrStatsPermission =
-    user?.role && ['ADMIN', 'MANAGER', 'USER'].includes(user.role)
+    currentUser?.role && ['ADMIN', 'MANAGER', 'USER'].includes(currentUser.role)
 
   const positionStats = useQuery({
     queryKey: [...EMPLOYEE_QUERY_KEYS.statistics(), 'position'],
@@ -317,29 +317,33 @@ export function useEmployeeStatistics() {
  * HR 권한 체크 훅
  */
 export function useHrPermissions() {
-  const { user } = useAuth()
+  const { currentUser } = useAuth()
 
   return {
     // 조회 권한 (모든 사용자)
     canView:
-      user?.role &&
-      ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'USER'].includes(user.role),
+      currentUser?.role &&
+      ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'USER'].includes(currentUser.role),
 
     // 수정 권한 (SUPER_ADMIN, MANAGER, ADMIN)
     canEdit:
-      user?.role && ['SUPER_ADMIN', 'ADMIN', 'MANAGER'].includes(user.role),
+      currentUser?.role &&
+      ['SUPER_ADMIN', 'ADMIN', 'MANAGER'].includes(currentUser.role),
 
     // 관리 권한 (SUPER_ADMIN, ADMIN, MANAGER) - 내보내기/가져오기 포함
     canManage:
-      user?.role && ['SUPER_ADMIN', 'ADMIN', 'MANAGER'].includes(user.role),
+      currentUser?.role &&
+      ['SUPER_ADMIN', 'ADMIN', 'MANAGER'].includes(currentUser.role),
 
     // 직원 등록 권한 (SUPER_ADMIN, ADMIN, MANAGER)
     canCreate:
-      user?.role && ['SUPER_ADMIN', 'ADMIN', 'MANAGER'].includes(user.role),
+      currentUser?.role &&
+      ['SUPER_ADMIN', 'ADMIN', 'MANAGER'].includes(currentUser.role),
 
     // 직원 삭제 권한 (SUPER_ADMIN, ADMIN, MANAGER) - MANAGER도 직원 관리 가능
     canDelete:
-      user?.role && ['SUPER_ADMIN', 'ADMIN', 'MANAGER'].includes(user.role),
+      currentUser?.role &&
+      ['SUPER_ADMIN', 'ADMIN', 'MANAGER'].includes(currentUser.role),
   }
 }
 
@@ -378,7 +382,7 @@ export function useUpdateEmployee() {
     }: {
       id: number
       employee: EmployeeUpdateRequest
-    }) => employeeApi.updateEmployee(id, employee),
+    }) => employeeApi.updateCurrentUser(id, employee),
     onSuccess: (data, variables) => {
       // 특정 직원 쿼리 업데이트
       queryClient.setQueryData(EMPLOYEE_QUERY_KEYS.detail(variables.id), data)

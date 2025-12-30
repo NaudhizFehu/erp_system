@@ -1,7 +1,6 @@
 package com.erp.sales.service.impl;
 
 import com.erp.common.entity.Company;
-import com.erp.common.entity.User;
 import com.erp.common.service.NotificationService;
 import com.erp.sales.entity.Customer;
 import com.erp.sales.entity.Order;
@@ -92,17 +91,17 @@ public class OrderServiceImpl implements OrderService {
 
         // 주문 생성 알림 발송 (관리자에게)
         try {
-            // 임시로 사용자 ID 1 (admin)에게 알림 발송
+            // 임시로 직원 ID 1 (admin)에게 알림 발송
             // 실제로는 SecurityContext에서 현재 사용자 정보를 가져와야 함
-            User adminUser = new User();
-            adminUser.setId(1L);
-            
+            com.erp.hr.entity.Employee adminEmployee = new com.erp.hr.entity.Employee();
+            adminEmployee.setId(1L);
+
             String title = "새로운 주문 생성";
-            String message = String.format("고객 '%s'님이 새로운 주문을 생성했습니다. (주문번호: %s)", 
+            String message = String.format("고객 '%s'님이 새로운 주문을 생성했습니다. (주문번호: %s)",
                     customer.getCustomerName(), savedOrder.getOrderNumber());
             String actionUrl = "/orders/" + savedOrder.getId();
-            
-            notificationService.createOrderNotification(adminUser, title, message, actionUrl);
+
+            notificationService.createOrderNotification(adminEmployee, title, message, actionUrl);
             log.info("주문 생성 알림 발송 완료: orderId={}", savedOrder.getId());
         } catch (Exception e) {
             log.error("주문 생성 알림 발송 실패: orderId={}, error={}", savedOrder.getId(), e.getMessage());

@@ -85,8 +85,8 @@ class LoginIntegrationTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.accessToken").exists())
                 .andExpect(jsonPath("$.data.refreshToken").exists())
-                .andExpect(jsonPath("$.data.user.username").value("admin"))
-                .andExpect(jsonPath("$.data.user.role").value("ADMIN"))
+                .andExpect(jsonPath("$.data.employee.username").value("admin"))
+                .andExpect(jsonPath("$.data.employee.role").value("ADMIN"))
                 .andReturn();
 
         System.out.println("=== Admin 실제 로그인 API 결과 ===");
@@ -128,8 +128,8 @@ class LoginIntegrationTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.accessToken").exists())
                 .andExpect(jsonPath("$.data.refreshToken").exists())
-                .andExpect(jsonPath("$.data.user.username").value("user"))
-                .andExpect(jsonPath("$.data.user.role").value("USER"))
+                .andExpect(jsonPath("$.data.employee.username").value("user"))
+                .andExpect(jsonPath("$.data.employee.role").value("USER"))
                 .andReturn();
 
         System.out.println("=== User 실제 로그인 API 결과 ===");

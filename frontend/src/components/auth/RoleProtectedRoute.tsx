@@ -21,10 +21,10 @@ export function RoleProtectedRoute({
   children,
   requiredRoles,
 }: RoleProtectedRouteProps) {
-  const { user } = useAuth()
+  const { currentUser } = useAuth()
 
   // 권한 체크
-  if (user?.role && !requiredRoles.includes(user.role as any)) {
+  if (currentUser?.role && !requiredRoles.includes(currentUser.role as any)) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
         <div className="text-center">

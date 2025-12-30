@@ -147,7 +147,7 @@ export function EmployeeManagement() {
     : useEmployees(searchParamsObj)
 
   // 현재 사용자 정보 가져오기
-  const { user } = useAuth()
+  const { currentUser } = useAuth()
 
   // 통계용 데이터
   const { data: statusCounts } = useEmployeeCountsByStatus()
@@ -166,7 +166,7 @@ export function EmployeeManagement() {
 
   // 뮤테이션 훅들
   const createEmployeeMutation = useCreateEmployee()
-  const updateEmployeeMutation = useUpdateEmployee()
+  const updateCurrentUserMutation = useUpdateEmployee()
   const deleteEmployeeMutation = useDeleteEmployee()
   const terminateEmployeeMutation = useTerminateEmployee()
   const exportMutation = useExportEmployees()
@@ -248,7 +248,7 @@ export function EmployeeManagement() {
       if (formMode === 'create') {
         await createEmployeeMutation.mutateAsync(data as EmployeeCreateRequest)
       } else if (selectedEmployee) {
-        await updateEmployeeMutation.mutateAsync({
+        await updateCurrentUserMutation.mutateAsync({
           id: selectedEmployee.id,
           employee: data as EmployeeUpdateRequest,
         })
@@ -299,7 +299,9 @@ export function EmployeeManagement() {
     exportMutation.mutate({
       format: selectedFormat,
       companyId:
-        user?.role === 'SUPER_ADMIN' ? selectedCompanyForExport : undefined,
+        currentUser?.role === 'SUPER_ADMIN'
+          ? selectedCompanyForExport
+          : undefined,
     })
     setShowExportDialog(false)
   }
@@ -316,8 +318,8 @@ export function EmployeeManagement() {
     if (!file) return
 
     // SUPER_ADMIN은 회사 선택 필수
-    let targetCompanyId = user?.company?.id
-    if (user?.role === 'SUPER_ADMIN') {
+    let targetCompanyId = currentUser?.company?.id
+    if (currentUser?.role === 'SUPER_ADMIN') {
       if (!selectedCompanyForImport) {
         toast.error('가져올 회사를 선택해주세요')
         return
@@ -644,7 +646,7 @@ export function EmployeeManagement() {
             onCancel={() => setShowForm(false)}
             loading={
               createEmployeeMutation.isPending ||
-              updateEmployeeMutation.isPending
+              updateCurrentUserMutation.isPending
             }
             mode={formMode}
           />
@@ -730,7 +732,7 @@ export function EmployeeManagement() {
             </div>
 
             {/* SUPER_ADMIN만 회사 선택 */}
-            {user?.role === 'SUPER_ADMIN' && (
+            {currentUser?.role === 'SUPER_ADMIN' && (
               <div>
                 <label className="mb-2 block text-sm font-medium">
                   회사 선택
@@ -807,7 +809,7 @@ export function EmployeeManagement() {
             </div>
 
             {/* SUPER_ADMIN은 회사 선택 필수 */}
-            {user?.role === 'SUPER_ADMIN' && (
+            {currentUser?.role === 'SUPER_ADMIN' && (
               <div>
                 <label className="mb-2 block text-sm font-medium">
                   가져올 회사 <span className="text-red-500">*</span>

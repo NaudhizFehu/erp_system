@@ -19,7 +19,7 @@ import { useAuth } from '@/contexts/AuthContext'
  * 상단 네비게이션 바를 제공합니다
  */
 function Header() {
-  const { user, logout } = useAuth()
+  const { employee, logout } = useAuth()
   const navigate = useNavigate()
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -32,7 +32,7 @@ function Header() {
         {/* 우측 액션 영역 */}
         <div className="flex flex-shrink-0 items-center space-x-4">
           {/* 알림 (로그인된 경우에만 표시) */}
-          {user && <NotificationDropdown />}
+          {employee && <NotificationDropdown />}
 
           {/* 사용자 프로필 드롭다운 */}
           <DropdownMenu>
@@ -40,7 +40,7 @@ function Header() {
               <Button variant="ghost" className="flex items-center space-x-2">
                 <User className="h-5 w-5" />
                 <span className="text-sm font-medium">
-                  {user?.fullName || '사용자'}
+                  {employee?.name || '사용자'}
                 </span>
               </Button>
             </DropdownMenuTrigger>
@@ -48,10 +48,10 @@ function Header() {
               <DropdownMenuLabel>
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium leading-none">
-                    {user?.fullName}
+                    {employee?.name}
                   </p>
                   <p className="text-xs leading-none text-muted-foreground">
-                    {user?.email}
+                    {employee?.email}
                   </p>
                 </div>
               </DropdownMenuLabel>

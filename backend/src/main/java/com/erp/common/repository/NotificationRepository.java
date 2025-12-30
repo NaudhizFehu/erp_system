@@ -21,49 +21,49 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     /**
      * 사용자별 알림 목록 조회 (최신순)
      */
-    @Query("SELECT n FROM Notification n WHERE n.user.id = :userId AND n.isDeleted = false ORDER BY n.createdAt DESC")
+    @Query("SELECT n FROM Notification n WHERE n.employee.id = :userId AND n.isDeleted = false ORDER BY n.createdAt DESC")
     Page<Notification> findByUserIdOrderByCreatedAtDesc(@Param("userId") Long userId, Pageable pageable);
 
     /**
      * 사용자별 읽지 않은 알림 개수 조회
      */
-    @Query("SELECT COUNT(n) FROM Notification n WHERE n.user.id = :userId AND n.isRead = false AND n.isDeleted = false")
+    @Query("SELECT COUNT(n) FROM Notification n WHERE n.employee.id = :userId AND n.isRead = false AND n.isDeleted = false")
     long countUnreadByUserId(@Param("userId") Long userId);
 
     /**
      * 사용자별 읽지 않은 알림 목록 조회
      */
-    @Query("SELECT n FROM Notification n WHERE n.user.id = :userId AND n.isRead = false AND n.isDeleted = false ORDER BY n.createdAt DESC")
+    @Query("SELECT n FROM Notification n WHERE n.employee.id = :userId AND n.isRead = false AND n.isDeleted = false ORDER BY n.createdAt DESC")
     List<Notification> findUnreadByUserId(@Param("userId") Long userId);
 
     /**
      * 사용자별 특정 타입의 알림 조회
      */
-    @Query("SELECT n FROM Notification n WHERE n.user.id = :userId AND n.type = :type AND n.isDeleted = false ORDER BY n.createdAt DESC")
+    @Query("SELECT n FROM Notification n WHERE n.employee.id = :userId AND n.type = :type AND n.isDeleted = false ORDER BY n.createdAt DESC")
     List<Notification> findByUserIdAndType(@Param("userId") Long userId, @Param("type") Notification.NotificationType type);
 
     /**
      * 사용자별 최근 알림 조회 (지정된 개수만큼)
      */
-    @Query("SELECT n FROM Notification n WHERE n.user.id = :userId AND n.isDeleted = false ORDER BY n.createdAt DESC")
+    @Query("SELECT n FROM Notification n WHERE n.employee.id = :userId AND n.isDeleted = false ORDER BY n.createdAt DESC")
     List<Notification> findRecentByUserId(@Param("userId") Long userId, Pageable pageable);
 
     /**
      * 사용자별 최근 3일 이내 알림 조회 (읽은/읽지 않은 모든 알림)
      */
-    @Query("SELECT n FROM Notification n WHERE n.user.id = :userId AND n.isDeleted = false AND n.createdAt >= :threeDaysAgo ORDER BY n.createdAt DESC")
+    @Query("SELECT n FROM Notification n WHERE n.employee.id = :userId AND n.isDeleted = false AND n.createdAt >= :threeDaysAgo ORDER BY n.createdAt DESC")
     List<Notification> findRecentNotificationsByUserId(@Param("userId") Long userId, @Param("threeDaysAgo") java.time.LocalDateTime threeDaysAgo);
 
     /**
      * 사용자별 최근 2주 이내 알림 조회 (읽은/읽지 않은 모든 알림)
      */
-    @Query("SELECT n FROM Notification n WHERE n.user.id = :userId AND n.isDeleted = false AND n.createdAt >= :twoWeeksAgo ORDER BY n.createdAt DESC")
+    @Query("SELECT n FROM Notification n WHERE n.employee.id = :userId AND n.isDeleted = false AND n.createdAt >= :twoWeeksAgo ORDER BY n.createdAt DESC")
     List<Notification> findNotificationsByUserIdAndDateRange(@Param("userId") Long userId, @Param("twoWeeksAgo") java.time.LocalDateTime twoWeeksAgo);
 
     /**
      * 사용자별 모든 알림 조회 (삭제되지 않은 것만)
      */
-    @Query("SELECT n FROM Notification n WHERE n.user.id = :userId AND n.isDeleted = false ORDER BY n.createdAt DESC")
+    @Query("SELECT n FROM Notification n WHERE n.employee.id = :userId AND n.isDeleted = false ORDER BY n.createdAt DESC")
     List<Notification> findByUserId(@Param("userId") Long userId);
 
     /**
@@ -73,7 +73,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
         SELECT n FROM Notification n 
         WHERE n.isDeleted = false 
         AND (
-            (n.scope = 'USER' AND n.user.id = :userId)
+            (n.scope = 'USER' AND n.employee.id = :userId)
             OR (n.scope = 'SYSTEM')
             OR (n.scope = 'COMPANY' AND n.company.id = :companyId)
             OR (n.scope = 'DEPARTMENT' AND n.department.id = :departmentId)

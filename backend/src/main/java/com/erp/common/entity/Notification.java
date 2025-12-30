@@ -1,6 +1,7 @@
 package com.erp.common.entity;
 
 import com.erp.hr.entity.Department;
+import com.erp.hr.entity.Employee;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -18,7 +19,7 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "notifications", indexes = {
-    @Index(name = "idx_notifications_user_id", columnList = "user_id"),
+    @Index(name = "idx_notifications_employee_id", columnList = "employee_id"),
     @Index(name = "idx_notifications_is_read", columnList = "is_read"),
     @Index(name = "idx_notifications_created_at", columnList = "created_at"),
     @Index(name = "idx_notifications_scope", columnList = "scope"),
@@ -32,12 +33,12 @@ import java.time.LocalDateTime;
 public class Notification extends BaseEntity {
 
     /**
-     * 알림을 받을 사용자
+     * 알림을 받을 직원
      */
-    @NotNull(message = "사용자는 필수입니다")
+    @NotNull(message = "직원은 필수입니다")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "employee_id", nullable = false)
+    private Employee employee;
 
     /**
      * 알림 제목

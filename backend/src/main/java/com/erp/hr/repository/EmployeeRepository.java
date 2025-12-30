@@ -40,6 +40,16 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     Optional<Employee> findByEmployeeNumber(@Param("employeeNumber") String employeeNumber);
 
     /**
+     * 사용자명으로 직원 조회 (로그인용)
+     */
+    @Query("SELECT e FROM Employee e " +
+           "LEFT JOIN FETCH e.company c " +
+           "LEFT JOIN FETCH e.department d " +
+           "LEFT JOIN FETCH e.position p " +
+           "WHERE e.username = :username")
+    Optional<Employee> findByUsername(@Param("username") String username);
+
+    /**
      * 이메일로 직원 조회
      */
     @Query("SELECT e FROM Employee e " +

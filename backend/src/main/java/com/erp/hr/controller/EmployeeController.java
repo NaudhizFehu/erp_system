@@ -211,6 +211,25 @@ public class EmployeeController {
     }
 
     /**
+     * 현재 로그인한 사용자의 직원 정보 조회
+     */
+    @GetMapping("/me")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<EmployeeDto>> getMyEmployeeInfo(
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        try {
+            log.info("내 직원 정보 조회 요청: 사용자 {}", userPrincipal.getUsername());
+
+            Long employeeId = userPrincipal.getId();
+            EmployeeDto employee = employeeService.getEmployee(employeeId);
+            return ResponseEntity.ok(ApiResponse.success(employee));
+        } catch (Exception e) {
+            log.error("내 직원 정보 조회 실패: 사용자 {}, 오류: {}", userPrincipal.getUsername(), e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    /**
      * 직원 정보 조회 (ID)
      */
     @GetMapping("/{id}")
@@ -220,17 +239,17 @@ public class EmployeeController {
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
         try {
             log.info("직원 조회 요청: ID {}, 사용자: {}", id, userPrincipal.getUsername());
-            
+
             // USER 권한이면 본인 직원 정보만 조회 가능
             if (userPrincipal.hasRole("ROLE_USER")) {
                 Long userEmployeeId = userPrincipal.getEmployeeId();
-                
+
                 // employeeId가 없으면 본인 직원 정보 조회 불가
                 if (userEmployeeId == null) {
                     return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(ApiResponse.error("직원 정보가 연결되어 있지 않습니다"));
                 }
-                
+
                 // 본인이 아닌 다른 직원 정보 조회 시도 시 거부
                 if (!id.equals(userEmployeeId)) {
                     return ResponseEntity.status(HttpStatus.FORBIDDEN)
@@ -238,7 +257,7 @@ public class EmployeeController {
                 }
             }
             // SUPER_ADMIN, ADMIN, MANAGER는 권한 범위 내 모든 직원 조회 가능
-            
+
             EmployeeDto employee = employeeService.getEmployee(id);
             return ResponseEntity.ok(ApiResponse.success(employee));
         } catch (Exception e) {

@@ -2,7 +2,7 @@ package com.erp.common.repository;
 
 import com.erp.common.entity.NotificationScope;
 import com.erp.common.entity.NotificationSetting;
-import com.erp.common.entity.User;
+import com.erp.hr.entity.Employee;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,13 +22,13 @@ public interface NotificationSettingRepository extends JpaRepository<Notificatio
      * 회사별 역할별 알림 설정 조회
      */
     @Query("SELECT ns FROM NotificationSetting ns WHERE ns.company.id = :companyId AND ns.role = :role AND ns.isDeleted = false")
-    List<NotificationSetting> findByCompanyIdAndRole(@Param("companyId") Long companyId, @Param("role") User.UserRole role);
+    List<NotificationSetting> findByCompanyIdAndRole(@Param("companyId") Long companyId, @Param("role") Employee.UserRole role);
 
     /**
      * 시스템 전체 기본 설정 조회
      */
     @Query("SELECT ns FROM NotificationSetting ns WHERE ns.company IS NULL AND ns.role = :role AND ns.isDeleted = false")
-    List<NotificationSetting> findSystemDefaultByRole(@Param("role") User.UserRole role);
+    List<NotificationSetting> findSystemDefaultByRole(@Param("role") Employee.UserRole role);
 
     /**
      * 특정 설정 조회
@@ -36,7 +36,7 @@ public interface NotificationSettingRepository extends JpaRepository<Notificatio
     @Query("SELECT ns FROM NotificationSetting ns WHERE ns.company.id = :companyId AND ns.role = :role AND ns.scope = :scope AND ns.isDeleted = false")
     Optional<NotificationSetting> findByCompanyAndRoleAndScope(
         @Param("companyId") Long companyId,
-        @Param("role") User.UserRole role,
+        @Param("role") Employee.UserRole role,
         @Param("scope") NotificationScope scope
     );
 
@@ -45,7 +45,7 @@ public interface NotificationSettingRepository extends JpaRepository<Notificatio
      */
     @Query("SELECT ns FROM NotificationSetting ns WHERE ns.company IS NULL AND ns.role = :role AND ns.scope = :scope AND ns.isDeleted = false")
     Optional<NotificationSetting> findSystemDefaultByRoleAndScope(
-        @Param("role") User.UserRole role,
+        @Param("role") Employee.UserRole role,
         @Param("scope") NotificationScope scope
     );
 

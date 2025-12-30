@@ -68,18 +68,18 @@ export function JournalEntryForm({
   mode = 'create',
   initialData,
 }: JournalEntryFormProps) {
-  const { user } = useAuth()
+  const { currentUser } = useAuth()
 
   // 오늘 날짜 (최대 허용 날짜)
   const today = new Date().toISOString().split('T')[0]
 
   // 기본값 설정
   const defaultValues: JournalEntryFormData = initialData || {
-    companyId: user?.company?.id || 0,
+    companyId: currentUser?.company?.id || 0,
     transactionDate: today,
     transactionType: TransactionType.JOURNAL,
     transactionNumber: '',
-    inputById: user?.id,
+    inputById: currentUser?.id,
     lines: [createEmptyLine(), createEmptyLine()], // 최소 2행
   }
 

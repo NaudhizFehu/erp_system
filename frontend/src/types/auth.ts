@@ -13,22 +13,43 @@ export interface LoginResponse {
   refreshToken: string
   tokenType: string
   expiresIn: number
-  user: UserInfo
+  employee: EmployeeInfo
 }
 
-export interface UserInfo {
+export interface EmployeeInfo {
   id: number
   username: string
   email: string
-  fullName: string
+  name: string
   role: string
-  phone?: string
   phoneNumber?: string
+  phone?: string
+  mobile?: string
+  fullName?: string
   department?: DepartmentInfo
-  position?: string
+  position?: PositionInfo | string
   company?: CompanyInfo
-  employeeId?: number | null // 연결된 직원 ID (SUPER_ADMIN은 null)
+  employeeNumber: string
+  employeeId?: number
   lastLoginAt?: string
+  birthDate?: string
+  gender?: string
+  hireDate?: string
+  employmentStatus?: string
+  yearsOfService?: number
+  bankName?: string
+  accountNumber?: string
+  accountHolder?: string
+  memo?: string
+  isActive?: boolean
+  createdAt?: string
+  updatedAt?: string
+}
+
+export interface PositionInfo {
+  id: number
+  name: string
+  level?: number
 }
 
 export interface CompanyInfo {
@@ -45,7 +66,7 @@ export interface DepartmentInfo {
 
 export interface AuthState {
   isAuthenticated: boolean
-  user: UserInfo | null
+  employee: EmployeeInfo | null
   accessToken: string | null
   refreshToken: string | null
   isLoading: boolean

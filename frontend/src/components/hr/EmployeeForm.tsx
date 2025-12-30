@@ -177,7 +177,7 @@ export function EmployeeForm({
   loading = false,
   mode = 'create',
 }: EmployeeFormProps) {
-  const { user } = useAuth()
+  const { currentUser } = useAuth()
   const isEditMode = mode === 'edit'
   const [showEmployeeNumberHelper, setShowEmployeeNumberHelper] =
     useState(false)
@@ -190,13 +190,14 @@ export function EmployeeForm({
   // 사번 필드 읽기 전용 조건
   // ADMIN/MANAGER: 읽기 전용 (사번확인도우미만 사용 가능)
   // SUPER_ADMIN: 직접 입력 가능
-  const isEmployeeNumberReadOnly = user?.role !== 'SUPER_ADMIN' && !isEditMode
+  const isEmployeeNumberReadOnly =
+    currentUser?.role !== 'SUPER_ADMIN' && !isEditMode
 
   // 회사 필드 비활성화 조건
   // SUPER_ADMIN: 항상 변경 가능
   // ADMIN/MANAGER: 사번확인도우미 사용 시 변경 불가
   const isCompanyDisabled =
-    user?.role !== 'SUPER_ADMIN' && isEmployeeNumberFromHelper
+    currentUser?.role !== 'SUPER_ADMIN' && isEmployeeNumberFromHelper
 
   // 폼 초기화
   const form = useForm<EmployeeFormData>({
@@ -325,7 +326,7 @@ export function EmployeeForm({
                           // 사번이 수정되면 회사 고정 해제 (SUPER_ADMIN만)
                           if (
                             isEmployeeNumberFromHelper &&
-                            user?.role === 'SUPER_ADMIN'
+                            currentUser?.role === 'SUPER_ADMIN'
                           ) {
                             setIsEmployeeNumberFromHelper(false)
                             setSelectedCompanyFromHelper(null)
@@ -353,7 +354,7 @@ export function EmployeeForm({
                   )}
                   {isEmployeeNumberFromHelper && selectedCompanyFromHelper && (
                     <FormDescription className="text-blue-600">
-                      {user?.role === 'SUPER_ADMIN'
+                      {currentUser?.role === 'SUPER_ADMIN'
                         ? '사번확인도우미로 입력된 사번입니다. 회사가 자동 선택되었습니다.'
                         : '사번확인도우미로 입력된 사번입니다. 회사가 자동 선택되어 변경할 수 없습니다.'}
                     </FormDescription>

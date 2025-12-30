@@ -384,12 +384,12 @@ export const employeeApi = {
   /**
    * 직원 정보 수정
    */
-  updateEmployee: async (
+  updateCurrentUser: async (
     id: number,
     employee: EmployeeUpdateRequest
   ): Promise<Employee> => {
     if (USE_MOCK_API) {
-      return mockEmployeeApi.updateEmployee(id, employee)
+      return mockEmployeeApi.updateCurrentUser(id, employee)
     }
 
     const { data } = await api.put<ApiResponse<Employee>>(

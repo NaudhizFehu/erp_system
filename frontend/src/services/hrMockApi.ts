@@ -246,7 +246,7 @@ export const mockEmployeeApi = {
   /**
    * 직원 정보 수정
    */
-  updateEmployee: async (
+  updateCurrentUser: async (
     id: number,
     employee: EmployeeUpdateRequest
   ): Promise<Employee> => {

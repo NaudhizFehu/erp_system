@@ -2,7 +2,7 @@ package com.erp.inventory.entity;
 
 import com.erp.common.entity.BaseEntity;
 import com.erp.common.entity.Company;
-import com.erp.common.entity.User;
+import com.erp.hr.entity.Employee;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
@@ -334,7 +334,7 @@ public class StockMovement extends BaseEntity {
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "processed_by_id", foreignKey = @ForeignKey(name = "fk_stock_movement_processed_by"))
-    private User processedBy;
+    private Employee processedBy;
 
     /**
      * 처리 일시
@@ -347,7 +347,7 @@ public class StockMovement extends BaseEntity {
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "approved_by_id", foreignKey = @ForeignKey(name = "fk_stock_movement_approved_by"))
-    private User approvedBy;
+    private Employee approvedBy;
 
     /**
      * 승인 일시
@@ -439,7 +439,7 @@ public class StockMovement extends BaseEntity {
     /**
      * 승인 처리
      */
-    public void approve(User approver) {
+    public void approve(Employee approver) {
         if (movementStatus != MovementStatus.PENDING) {
             throw new IllegalStateException("승인 대기 상태가 아닙니다");
         }
@@ -452,7 +452,7 @@ public class StockMovement extends BaseEntity {
     /**
      * 처리 완료
      */
-    public void process(User processor) {
+    public void process(Employee processor) {
         if (movementStatus != MovementStatus.APPROVED && movementStatus != MovementStatus.PENDING) {
             throw new IllegalStateException("처리할 수 없는 상태입니다");
         }

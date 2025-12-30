@@ -1,12 +1,11 @@
 package com.erp.common.controller;
 
-import com.erp.common.constants.ErrorCode;
 import com.erp.common.dto.ApiResponse;
 import com.erp.common.dto.auth.*;
-import com.erp.common.dto.UserProfileUpdateDto;
-import com.erp.common.entity.User;
+import com.erp.hr.entity.Employee;
+import com.erp.common.constants.ErrorCode;
 import com.erp.common.exception.BusinessException;
-import com.erp.common.repository.UserRepository;
+import com.erp.hr.repository.EmployeeRepository;
 import com.erp.hr.repository.DepartmentRepository;
 import com.erp.common.security.CustomUserDetailsService;
 import com.erp.common.security.JwtAuthenticationFilter;
@@ -49,7 +48,7 @@ import java.time.LocalDateTime;
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
-    private final UserRepository userRepository;
+    private final EmployeeRepository employeeRepository;
     private final DepartmentRepository departmentRepository;
     private final CustomUserDetailsService userDetailsService;
     private final JwtUtils jwtUtils;
@@ -201,22 +200,22 @@ public class AuthController {
             
             // UserPrincipal 추출
             UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-            User user = userPrincipal.getUser();
-            
+            Employee employee = userPrincipal.getEmployee();
+
             // JWT 토큰 생성
             String accessToken = jwtUtils.generateJwtToken(authentication);
-            String refreshToken = jwtUtils.generateRefreshToken(user);
+            String refreshToken = jwtUtils.generateRefreshToken(employee);
             
             // 토큰 만료 시간 계산
             long expiresIn = jwtUtils.getTokenRemainingTime(accessToken);
-            
+
             // 마지막 로그인 시간 업데이트
-            userDetailsService.updateLastLoginTime(user.getId());
-            
+            userDetailsService.updateLastLoginTime(employee.getId());
+
             // 응답 생성
-            LoginResponse loginResponse = LoginResponse.of(accessToken, refreshToken, expiresIn, user);
-            
-            log.info("로그인 성공: userId={}, username={}", user.getId(), user.getUsername());
+            LoginResponse loginResponse = LoginResponse.of(accessToken, refreshToken, expiresIn, employee);
+
+            log.info("로그인 성공: employeeId={}, username={}", employee.getId(), employee.getUsername());
             
             return ResponseEntity.ok(ApiResponse.success("로그인이 완료되었습니다", loginResponse));
             
@@ -248,24 +247,24 @@ public class AuthController {
                 throw ExceptionUtils.invalidToken();
             }
             
-            // 토큰에서 사용자 ID 추출
-            Long userId = jwtUtils.getUserIdFromJwtToken(refreshToken);
-            
-            // 사용자 정보 로드
-            UserPrincipal userPrincipal = (UserPrincipal) userDetailsService.loadUserById(userId);
-            User user = userPrincipal.getUser();
-            
+            // 토큰에서 직원 ID 추출
+            Long employeeId = jwtUtils.getEmployeeIdFromJwtToken(refreshToken);
+
+            // 직원 정보 로드
+            UserPrincipal userPrincipal = (UserPrincipal) userDetailsService.loadUserById(employeeId);
+            Employee employee = userPrincipal.getEmployee();
+
             // 새로운 토큰 생성
-            String newAccessToken = jwtUtils.generateTokenFromUser(user);
-            String newRefreshToken = jwtUtils.generateRefreshToken(user);
-            
+            String newAccessToken = jwtUtils.generateTokenFromEmployee(employee);
+            String newRefreshToken = jwtUtils.generateRefreshToken(employee);
+
             // 토큰 만료 시간 계산
             long expiresIn = jwtUtils.getTokenRemainingTime(newAccessToken);
-            
+
             // 응답 생성
-            LoginResponse loginResponse = LoginResponse.of(newAccessToken, newRefreshToken, expiresIn, user);
-            
-            log.debug("토큰 갱신 완료: userId={}", userId);
+            LoginResponse loginResponse = LoginResponse.of(newAccessToken, newRefreshToken, expiresIn, employee);
+
+            log.debug("토큰 갱신 완료: employeeId={}", employeeId);
             
             return ResponseEntity.ok(ApiResponse.success("토큰이 갱신되었습니다", loginResponse));
             
@@ -330,25 +329,25 @@ public class AuthController {
             if (currentUser == null) {
                 throw ExceptionUtils.unauthorized();
             }
-            
-            User user = userRepository.findById(currentUser.getId())
+
+            Employee employee = employeeRepository.findById(currentUser.getId())
                 .orElseThrow(() -> ExceptionUtils.userNotFound(currentUser.getId()));
-            
+
             // 현재 비밀번호 검증
-            if (!passwordEncoder.matches(changePasswordRequest.currentPassword(), user.getPassword())) {
-                log.warn("비밀번호 변경 실패 - 현재 비밀번호 불일치: userId={}", user.getId());
+            if (!passwordEncoder.matches(changePasswordRequest.currentPassword(), employee.getPassword())) {
+                log.warn("비밀번호 변경 실패 - 현재 비밀번호 불일치: employeeId={}", employee.getId());
                 throw new BusinessException(ErrorCode.INVALID_PASSWORD, "현재 비밀번호가 올바르지 않습니다");
             }
-            
+
             // 새 비밀번호 암호화
             String encodedNewPassword = passwordEncoder.encode(changePasswordRequest.newPassword());
-            
+
             // 비밀번호 업데이트
-            user.setPassword(encodedNewPassword);
-            user.setPasswordChangedAt(LocalDateTime.now());
-            userRepository.save(user);
-            
-            log.info("비밀번호 변경 완료: userId={}", user.getId());
+            employee.setPassword(encodedNewPassword);
+            employee.setPasswordChangedAt(LocalDateTime.now());
+            employeeRepository.save(employee);
+
+            log.info("비밀번호 변경 완료: employeeId={}", employee.getId());
             
             return ResponseEntity.ok(ApiResponse.success("비밀번호가 성공적으로 변경되었습니다"));
             
@@ -367,64 +366,62 @@ public class AuthController {
      * @return 업데이트 결과
      */
     @PutMapping("/profile")
-    public ResponseEntity<ApiResponse<LoginResponse.UserInfo>> updateProfile(@Valid @RequestBody UserProfileUpdateDto profileUpdate) {
-        log.info("사용자 프로필 업데이트 요청");
-        
+    public ResponseEntity<ApiResponse<LoginResponse.EmployeeInfo>> updateProfile(@Valid @RequestBody com.erp.hr.dto.EmployeeUpdateDto profileUpdate) {
+        log.info("직원 프로필 업데이트 요청");
+
         try {
             // 현재 사용자 정보 가져오기
             UserPrincipal currentUser = JwtAuthenticationFilter.getCurrentUser();
             if (currentUser == null) {
                 throw ExceptionUtils.unauthorized();
             }
-            
-            // 최신 사용자 정보 조회
-            User user = userRepository.findByIdWithCompanyAndDepartment(currentUser.getId())
+
+            // 최신 직원 정보 조회
+            Employee employee = employeeRepository.findById(currentUser.getId())
                 .orElseThrow(() -> ExceptionUtils.userNotFound(currentUser.getId()));
-            
+
             // 프로필 정보 업데이트
-            if (profileUpdate.fullName() != null && !profileUpdate.fullName().trim().isEmpty()) {
-                user.setFullName(profileUpdate.fullName().trim());
+            if (profileUpdate.name() != null && !profileUpdate.name().trim().isEmpty()) {
+                employee.setName(profileUpdate.name().trim());
             }
-            
+
             if (profileUpdate.email() != null && !profileUpdate.email().trim().isEmpty()) {
                 // 이메일 중복 확인 (본인 제외)
-                if (userRepository.existsByEmailAndIdNot(profileUpdate.email(), user.getId())) {
+                if (employeeRepository.existsByEmailAndIdNot(profileUpdate.email(), employee.getId())) {
                     throw new BusinessException(ErrorCode.DUPLICATE_EMAIL, "이미 사용 중인 이메일입니다");
                 }
-                user.setEmail(profileUpdate.email().trim());
+                employee.setEmail(profileUpdate.email().trim());
             }
-            
+
             if (profileUpdate.phone() != null && !profileUpdate.phone().trim().isEmpty()) {
                 String normalizedPhone = normalizePhoneNumber(profileUpdate.phone().trim());
-                log.info("유선전화번호 업데이트: {} -> {} (정규화: {})", user.getPhone(), profileUpdate.phone().trim(), normalizedPhone);
-                user.setPhone(normalizedPhone);
+                log.info("전화번호 업데이트: {} -> {} (정규화: {})", employee.getPhone(), profileUpdate.phone().trim(), normalizedPhone);
+                employee.setPhone(normalizedPhone);
             }
-            
-            if (profileUpdate.phoneNumber() != null && !profileUpdate.phoneNumber().trim().isEmpty()) {
-                String normalizedPhoneNumber = normalizePhoneNumber(profileUpdate.phoneNumber().trim());
-                log.info("전화번호 업데이트: {} -> {} (정규화: {})", user.getPhoneNumber(), profileUpdate.phoneNumber().trim(), normalizedPhoneNumber);
-                user.setPhoneNumber(normalizedPhoneNumber);
+
+            if (profileUpdate.mobile() != null && !profileUpdate.mobile().trim().isEmpty()) {
+                String normalizedMobile = normalizePhoneNumber(profileUpdate.mobile().trim());
+                log.info("휴대폰번호 업데이트: {} -> {} (정규화: {})", employee.getMobile(), profileUpdate.mobile().trim(), normalizedMobile);
+                employee.setMobile(normalizedMobile);
             }
-            
-            // 부서 정보 업데이트 (부서명으로 검색)
-            if (profileUpdate.department() != null && !profileUpdate.department().trim().isEmpty()) {
-                departmentRepository.findByName(profileUpdate.department().trim())
-                    .ifPresent(user::setDepartment);
+
+            // 부서 정보 업데이트
+            if (profileUpdate.departmentId() != null) {
+                departmentRepository.findById(profileUpdate.departmentId())
+                    .ifPresent(employee::setDepartment);
             }
-            
-            // 직책 정보 업데이트
-            if (profileUpdate.position() != null && !profileUpdate.position().trim().isEmpty()) {
-                user.setPosition(profileUpdate.position().trim());
-            }
-            
-            // 사용자 정보 저장
-            User savedUser = userRepository.save(user);
-            
-            log.info("사용자 프로필 업데이트 완료: userId={}", savedUser.getId());
-            
-            // 업데이트된 사용자 정보 반환
-            LoginResponse.UserInfo userInfo = LoginResponse.UserInfo.from(savedUser);
-            return ResponseEntity.ok(ApiResponse.success("프로필이 성공적으로 업데이트되었습니다", userInfo));
+
+            // 직급 정보는 Position 엔티티를 통해 관리되므로 간단한 문자열 업데이트는 불가
+            // 필요시 PositionRepository를 통해 처리해야 함
+
+            // 직원 정보 저장
+            Employee savedEmployee = employeeRepository.save(employee);
+
+            log.info("직원 프로필 업데이트 완료: employeeId={}", savedEmployee.getId());
+
+            // 업데이트된 직원 정보 반환
+            LoginResponse.EmployeeInfo employeeInfo = LoginResponse.EmployeeInfo.from(savedEmployee);
+            return ResponseEntity.ok(ApiResponse.success("프로필이 성공적으로 업데이트되었습니다", employeeInfo));
             
         } catch (BusinessException e) {
             throw e;
@@ -496,14 +493,14 @@ public class AuthController {
     }
 
     /**
-     * 현재 사용자 정보 조회
-     * 
-     * @return 현재 사용자 정보
+     * 현재 직원 정보 조회
+     *
+     * @return 현재 직원 정보
      */
     @GetMapping("/me")
-    public ResponseEntity<ApiResponse<LoginResponse.UserInfo>> getCurrentUser() {
-        log.info("현재 사용자 정보 조회 요청");
-        
+    public ResponseEntity<ApiResponse<LoginResponse.EmployeeInfo>> getCurrentUser() {
+        log.info("현재 직원 정보 조회 요청");
+
         try {
             // 현재 사용자 정보 가져오기
             UserPrincipal currentUser = JwtAuthenticationFilter.getCurrentUser();
@@ -511,45 +508,45 @@ public class AuthController {
                 log.warn("인증되지 않은 사용자가 /me 엔드포인트에 접근 시도");
                 throw ExceptionUtils.unauthorized();
             }
-            
-            // 최신 사용자 정보 조회 (회사 및 부서 정보 포함)
-            User user = userRepository.findByIdWithCompanyAndDepartment(currentUser.getId())
+
+            // 최신 직원 정보 조회
+            Employee employee = employeeRepository.findById(currentUser.getId())
                 .orElseThrow(() -> ExceptionUtils.userNotFound(currentUser.getId()));
             
             // DepartmentInfo 생성 과정 상세 로그
-            if (user.getDepartment() != null) {
-                log.info("Department 엔티티 정보: id={}, name={}, departmentCode={}", 
-                        user.getDepartment().getId(), 
-                        user.getDepartment().getName(), 
-                        user.getDepartment().getDepartmentCode());
-                
+            if (employee.getDepartment() != null) {
+                log.info("Department 엔티티 정보: id={}, name={}, departmentCode={}",
+                        employee.getDepartment().getId(),
+                        employee.getDepartment().getName(),
+                        employee.getDepartment().getDepartmentCode());
+
                 // DepartmentInfo.from() 호출 전후 로그
                 try {
-                    LoginResponse.DepartmentInfo deptInfo = LoginResponse.DepartmentInfo.from(user.getDepartment());
-                    log.info("DepartmentInfo 생성 성공: id={}, name={}, departmentCode={}", 
+                    LoginResponse.DepartmentInfo deptInfo = LoginResponse.DepartmentInfo.from(employee.getDepartment());
+                    log.info("DepartmentInfo 생성 성공: id={}, name={}, departmentCode={}",
                             deptInfo.id(), deptInfo.name(), deptInfo.departmentCode());
                 } catch (Exception e) {
                     log.error("DepartmentInfo 생성 실패: {}", e.getMessage(), e);
                 }
             } else {
-                log.info("사용자의 department가 null입니다");
+                log.info("직원의 department가 null입니다");
             }
-            
-            // 사용자 정보 응답 생성
-            LoginResponse.UserInfo userInfo = LoginResponse.UserInfo.from(user);
-            
-            log.info("사용자 정보 조회 성공: userId={}, username={}, department={}, position={}", 
-                    user.getId(), user.getUsername(), 
-                    user.getDepartment() != null ? user.getDepartment().getName() : "null",
-                    user.getPosition());
-            
-            // 반환할 UserInfo 상세 로그
-            log.info("반환할 UserInfo: id={}, username={}, email={}, fullName={}, role={}, position={}, department={}", 
-                    userInfo.id(), userInfo.username(), userInfo.email(), userInfo.fullName(), 
-                    userInfo.role(), userInfo.position(),
-                    userInfo.department() != null ? userInfo.department().name() : "null");
-            
-            return ResponseEntity.ok(ApiResponse.success("사용자 정보 조회 완료", userInfo));
+
+            // 직원 정보 응답 생성
+            LoginResponse.EmployeeInfo employeeInfo = LoginResponse.EmployeeInfo.from(employee);
+
+            log.info("직원 정보 조회 성공: employeeId={}, username={}, department={}, position={}",
+                    employee.getId(), employee.getUsername(),
+                    employee.getDepartment() != null ? employee.getDepartment().getName() : "null",
+                    employee.getPosition() != null ? employee.getPosition().getName() : "null");
+
+            // 반환할 EmployeeInfo 상세 로그
+            log.info("반환할 EmployeeInfo: id={}, username={}, email={}, name={}, role={}, department={}",
+                    employeeInfo.id(), employeeInfo.username(), employeeInfo.email(), employeeInfo.name(),
+                    employeeInfo.role(),
+                    employeeInfo.department() != null ? employeeInfo.department().name() : "null");
+
+            return ResponseEntity.ok(ApiResponse.success("직원 정보 조회 완료", employeeInfo));
             
         } catch (BusinessException e) {
             throw e;
@@ -583,12 +580,12 @@ public class AuthController {
             boolean isValid = jwtUtils.validateJwtToken(token);
             
             if (isValid) {
-                Long userId = jwtUtils.getUserIdFromJwtToken(token);
+                Long employeeId = jwtUtils.getEmployeeIdFromJwtToken(token);
                 String username = jwtUtils.getUsernameFromJwtToken(token);
                 Long remainingTime = jwtUtils.getTokenRemainingTime(token);
-                
-                return ResponseEntity.ok(ApiResponse.success("토큰 유효성 검증 완료", 
-                    new TokenValidationResponse(true, "유효한 토큰입니다", remainingTime, userId)));
+
+                return ResponseEntity.ok(ApiResponse.success("토큰 유효성 검증 완료",
+                    new TokenValidationResponse(true, "유효한 토큰입니다", remainingTime, employeeId)));
             } else {
                 return ResponseEntity.ok(ApiResponse.success("토큰 유효성 검증 완료", 
                     new TokenValidationResponse(false, "유효하지 않은 토큰입니다", null, null)));
@@ -613,83 +610,83 @@ public class AuthController {
 
     /**
      * 계정 잠금 해제 (관리자 전용)
-     * 
-     * @param userId 사용자 ID
+     *
+     * @param employeeId 직원 ID
      * @return 잠금 해제 결과
      */
-    @PutMapping("/unlock/{userId}")
-    public ResponseEntity<ApiResponse<Void>> unlockAccount(@PathVariable Long userId) {
-        log.info("계정 잠금 해제 요청: userId={}", userId);
-        
+    @PutMapping("/unlock/{employeeId}")
+    public ResponseEntity<ApiResponse<Void>> unlockAccount(@PathVariable Long employeeId) {
+        log.info("계정 잠금 해제 요청: employeeId={}", employeeId);
+
         try {
             // 현재 사용자가 관리자인지 확인
             UserPrincipal currentUser = JwtAuthenticationFilter.getCurrentUser();
-            if (currentUser == null || !currentUser.isAdmin()) {
+            if (currentUser == null || currentUser.getRole() != Employee.UserRole.ADMIN) {
                 throw ExceptionUtils.adminRequired();
             }
-            
-            // 대상 사용자 조회
-            User user = userRepository.findById(userId)
-                .orElseThrow(() -> ExceptionUtils.userNotFound(userId));
-            
+
+            // 대상 직원 조회
+            Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> ExceptionUtils.userNotFound(employeeId));
+
             // 계정 잠금 해제
-            user.setIsLocked(false);
-            userRepository.save(user);
-            
-            log.info("계정 잠금 해제 완료: userId={}, adminId={}", userId, currentUser.getId());
+            employee.setIsLocked(false);
+            employeeRepository.save(employee);
+
+            log.info("계정 잠금 해제 완료: employeeId={}, adminId={}", employeeId, currentUser.getId());
             
             return ResponseEntity.ok(ApiResponse.success("계정 잠금이 해제되었습니다"));
             
         } catch (BusinessException e) {
             throw e;
         } catch (Exception e) {
-            log.error("계정 잠금 해제 중 오류 발생: userId={}", userId, e);
+            log.error("계정 잠금 해제 중 오류 발생: employeeId={}", employeeId, e);
             throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, "계정 잠금 해제 중 오류가 발생했습니다");
         }
     }
 
     /**
-     * 사용자 활성화/비활성화 (관리자 또는 HR팀 매니저 전용)
-     * 
-     * @param userId 사용자 ID
+     * 직원 활성화/비활성화 (관리자 전용)
+     *
+     * @param employeeId 직원 ID
      * @param isActive 활성화 여부
      * @return 변경 결과
      */
-    @PutMapping("/activate/{userId}")
-    public ResponseEntity<ApiResponse<Void>> activateUser(@PathVariable Long userId, 
+    @PutMapping("/activate/{employeeId}")
+    public ResponseEntity<ApiResponse<Void>> activateUser(@PathVariable Long employeeId,
                                                          @RequestParam boolean isActive) {
-        log.info("사용자 활성화 상태 변경 요청: userId={}, isActive={}", userId, isActive);
-        
+        log.info("직원 활성화 상태 변경 요청: employeeId={}, isActive={}", employeeId, isActive);
+
         try {
-            // 현재 사용자가 관리자 또는 HR팀 매니저인지 확인
+            // 현재 사용자가 관리자인지 확인
             UserPrincipal currentUser = JwtAuthenticationFilter.getCurrentUser();
-            if (currentUser == null || !currentUser.hasUserManagementPermission()) {
-                throw new BusinessException(ErrorCode.INSUFFICIENT_PERMISSION, "사용자 계정을 관리할 권한이 없습니다");
+            if (currentUser == null || currentUser.getRole() != Employee.UserRole.ADMIN) {
+                throw new BusinessException(ErrorCode.INSUFFICIENT_PERMISSION, "직원 계정을 관리할 권한이 없습니다");
             }
-            
-            // 대상 사용자 조회
-            User user = userRepository.findById(userId)
-                .orElseThrow(() -> ExceptionUtils.userNotFound(userId));
-            
+
+            // 대상 직원 조회
+            Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> ExceptionUtils.userNotFound(employeeId));
+
             // 자기 자신은 비활성화할 수 없음
-            if (user.getId().equals(currentUser.getId()) && !isActive) {
+            if (employee.getId().equals(currentUser.getId()) && !isActive) {
                 throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "자기 자신을 비활성화할 수 없습니다");
             }
-            
+
             // 활성화 상태 변경
-            user.setIsActive(isActive);
-            userRepository.save(user);
-            
+            employee.setIsActive(isActive);
+            employeeRepository.save(employee);
+
             String action = isActive ? "활성화" : "비활성화";
-            log.info("사용자 {} 완료: userId={}, adminId={}", action, userId, currentUser.getId());
-            
-            return ResponseEntity.ok(ApiResponse.success("사용자가 " + action + "되었습니다"));
-            
+            log.info("직원 {} 완료: employeeId={}, adminId={}", action, employeeId, currentUser.getId());
+
+            return ResponseEntity.ok(ApiResponse.success("직원이 " + action + "되었습니다"));
+
         } catch (BusinessException e) {
             throw e;
         } catch (Exception e) {
-            log.error("사용자 활성화 상태 변경 중 오류 발생: userId={}", userId, e);
-            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, "사용자 활성화 상태 변경 중 오류가 발생했습니다");
+            log.error("직원 활성화 상태 변경 중 오류 발생: employeeId={}", employeeId, e);
+            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, "직원 활성화 상태 변경 중 오류가 발생했습니다");
         }
     }
 
@@ -700,33 +697,33 @@ public class AuthController {
     @GetMapping("/debug/admin-info")
     public ResponseEntity<ApiResponse<Object>> getAdminInfo() {
         log.info("디버깅: admin 계정 정보 확인 요청");
-        
+
         try {
             // admin 계정 조회
-            var adminUser = userRepository.findByUsernameWithCompanyAndDepartment("admin");
-            
-            if (adminUser.isPresent()) {
-                User user = adminUser.get();
+            var adminEmployee = employeeRepository.findByUsername("admin");
+
+            if (adminEmployee.isPresent()) {
+                Employee employee = adminEmployee.get();
                 var adminInfo = new java.util.HashMap<String, Object>();
-                adminInfo.put("id", user.getId());
-                adminInfo.put("username", user.getUsername());
-                adminInfo.put("email", user.getEmail());
-                adminInfo.put("fullName", user.getFullName());
-                adminInfo.put("role", user.getRole());
-                adminInfo.put("isActive", user.getIsActive());
-                adminInfo.put("isLocked", user.getIsLocked());
-                adminInfo.put("isDeleted", user.getIsDeleted());
-                adminInfo.put("isPasswordExpired", user.getIsPasswordExpired());
-                adminInfo.put("companyId", user.getCompany() != null ? user.getCompany().getId() : null);
-                adminInfo.put("companyName", user.getCompany() != null ? user.getCompany().getName() : null);
-                adminInfo.put("departmentId", user.getDepartment() != null ? user.getDepartment().getId() : null);
-                adminInfo.put("departmentName", user.getDepartment() != null ? user.getDepartment().getName() : null);
-                adminInfo.put("createdAt", user.getCreatedAt());
-                adminInfo.put("lastLoginAt", user.getLastLoginAt());
-                
+                adminInfo.put("id", employee.getId());
+                adminInfo.put("username", employee.getUsername());
+                adminInfo.put("email", employee.getEmail());
+                adminInfo.put("name", employee.getName());
+                adminInfo.put("role", employee.getRole());
+                adminInfo.put("isActive", employee.getIsActive());
+                adminInfo.put("isLocked", employee.getIsLocked());
+                adminInfo.put("isDeleted", employee.getIsDeleted());
+                adminInfo.put("isPasswordExpired", employee.getIsPasswordExpired());
+                adminInfo.put("companyId", employee.getCompany() != null ? employee.getCompany().getId() : null);
+                adminInfo.put("companyName", employee.getCompany() != null ? employee.getCompany().getName() : null);
+                adminInfo.put("departmentId", employee.getDepartment() != null ? employee.getDepartment().getId() : null);
+                adminInfo.put("departmentName", employee.getDepartment() != null ? employee.getDepartment().getName() : null);
+                adminInfo.put("createdAt", employee.getCreatedAt());
+                adminInfo.put("lastLoginAt", employee.getLastLoginAt());
+
                 // 비밀번호 검증 테스트
-                boolean adminPasswordMatches = passwordEncoder.matches("admin123", user.getPassword());
-                boolean userPasswordMatches = passwordEncoder.matches("user123", user.getPassword());
+                boolean adminPasswordMatches = passwordEncoder.matches("admin123", employee.getPassword());
+                boolean userPasswordMatches = passwordEncoder.matches("user123", employee.getPassword());
                 adminInfo.put("adminPasswordMatches", adminPasswordMatches);
                 adminInfo.put("userPasswordMatches", userPasswordMatches);
                 
@@ -750,27 +747,27 @@ public class AuthController {
     @PostMapping("/debug/test-login")
     public ResponseEntity<ApiResponse<Object>> testLogin(@RequestBody LoginRequest loginRequest) {
         log.info("디버깅: 로그인 테스트 요청 - username: {}", loginRequest.usernameOrEmail());
-        
+
         try {
-            // 1. 사용자 조회 테스트
-            var user = userRepository.findByUsernameWithCompanyAndDepartment(loginRequest.usernameOrEmail());
-            if (user.isEmpty()) {
-                return ResponseEntity.ok(ApiResponse.success("사용자를 찾을 수 없습니다", null));
+            // 1. 직원 조회 테스트
+            var employee = employeeRepository.findByUsername(loginRequest.usernameOrEmail());
+            if (employee.isEmpty()) {
+                return ResponseEntity.ok(ApiResponse.success("직원을 찾을 수 없습니다", null));
             }
-            
-            User foundUser = user.get();
-            log.info("✅ 사용자 조회 성공: {}", foundUser.getUsername());
-            
+
+            Employee foundEmployee = employee.get();
+            log.info("✅ 직원 조회 성공: {}", foundEmployee.getUsername());
+
             // 2. 비밀번호 검증 테스트
-            boolean passwordMatches = passwordEncoder.matches(loginRequest.password(), foundUser.getPassword());
+            boolean passwordMatches = passwordEncoder.matches(loginRequest.password(), foundEmployee.getPassword());
             log.info("🔐 비밀번호 검증 결과: {}", passwordMatches);
-            
+
             // 3. 계정 상태 확인
             var statusInfo = new java.util.HashMap<String, Object>();
-            statusInfo.put("isActive", foundUser.getIsActive());
-            statusInfo.put("isLocked", foundUser.getIsLocked());
-            statusInfo.put("isDeleted", foundUser.getIsDeleted());
-            statusInfo.put("isPasswordExpired", foundUser.getIsPasswordExpired());
+            statusInfo.put("isActive", foundEmployee.getIsActive());
+            statusInfo.put("isLocked", foundEmployee.getIsLocked());
+            statusInfo.put("isDeleted", foundEmployee.getIsDeleted());
+            statusInfo.put("isPasswordExpired", foundEmployee.getIsPasswordExpired());
             statusInfo.put("passwordMatches", passwordMatches);
             
             // 4. 인증 테스트

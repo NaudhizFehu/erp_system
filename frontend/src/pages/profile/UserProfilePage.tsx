@@ -30,7 +30,7 @@ import {
  */
 function UserProfilePage() {
   const navigate = useNavigate()
-  const { user, updateUser } = useAuth()
+  const { currentUser, updateCurrentUser } = useAuth()
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -68,40 +68,53 @@ function UserProfilePage() {
   })
 
   // 관리자 권한 확인
-  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN'
+  const isAdmin =
+    currentUser?.role === 'ADMIN' || currentUser?.role === 'SUPER_ADMIN'
 
   /**
    * 폼 데이터 초기화
    */
   useEffect(() => {
-    if (user) {
-      console.log('UserProfilePage useEffect에서 user 정보:', user)
+    if (currentUser) {
       console.log(
-        'UserProfilePage useEffect에서 user 정보 상세:',
-        JSON.stringify(user, null, 2)
+        'UserProfilePage useEffect에서 currentUser 정보:',
+        currentUser
       )
-      console.log('UserProfilePage useEffect department 필드:', user.department)
+      console.log(
+        'UserProfilePage useEffect에서 currentUser 정보 상세:',
+        JSON.stringify(currentUser, null, 2)
+      )
+      console.log(
+        'UserProfilePage useEffect department 필드:',
+        currentUser.department
+      )
       console.log(
         'UserProfilePage useEffect department?.name:',
-        user.department?.name
+        currentUser.department?.name
       )
-      console.log('UserProfilePage useEffect position 필드:', user.position)
+      console.log(
+        'UserProfilePage useEffect position 필드:',
+        currentUser.position
+      )
       setFormData({
-        username: user.username || '',
-        fullName: user.fullName || '',
-        email: user.email || '',
-        phone: user.phone || '',
-        phoneNumber: user.phoneNumber || '',
-        departmentId: user.department?.id?.toString() || '',
-        departmentName: user.department?.name || '',
+        username: currentUser.username || '',
+        fullName: currentUser.name || '',
+        email: currentUser.email || '',
+        phone: currentUser.phone || '',
+        phoneNumber: currentUser.phoneNumber || '',
+        departmentId: currentUser.department?.id?.toString() || '',
+        departmentName: currentUser.department?.name || '',
         positionId: '', // position은 문자열로 저장되므로 ID는 별도 관리 필요
-        positionName: user.position || '', // user.position 필드 사용
+        positionName:
+          typeof currentUser.position === 'string'
+            ? currentUser.position
+            : currentUser.position?.name || '', // currentUser.position 필드 사용
         currentPassword: '',
         newPassword: '',
         confirmPassword: '',
       })
     }
-  }, [user])
+  }, [currentUser])
 
   /**
    * 부서 및 직급 데이터 로드 (관리자만)
@@ -122,17 +135,23 @@ function UserProfilePage() {
         setPositions(posData)
 
         // 현재 사용자의 부서/직급에 맞는 ID 설정
-        if (user) {
+        if (currentUser) {
           setFormData(prev => {
             const selectedDept = deptData.find(
-              dept => dept.name === user.department?.name
+              dept => dept.name === currentUser.department?.name
             )
-            const selectedPos = posData.find(pos => pos.name === user.position)
+            const selectedPos = posData.find(
+              pos =>
+                pos.name ===
+                (typeof currentUser.position === 'string'
+                  ? currentUser.position
+                  : currentUser.position?.name)
+            )
 
             console.log('드롭다운 로딩 후 ID 설정:')
-            console.log('사용자 부서명:', user.department?.name)
+            console.log('사용자 부서명:', currentUser.department?.name)
             console.log('선택된 부서:', selectedDept)
-            console.log('사용자 직급:', user.position)
+            console.log('사용자 직급:', currentUser.position)
             console.log('선택된 직급:', selectedPos)
 
             return {
@@ -155,7 +174,7 @@ function UserProfilePage() {
     }
 
     loadDropdownData()
-  }, [isAdmin, user])
+  }, [isAdmin, currentUser])
 
   /**
    * 폼 데이터 업데이트
@@ -216,13 +235,16 @@ function UserProfilePage() {
     }
 
     // 부서 검증 (SUPER_ADMIN은 제외)
-    if (user?.role !== 'SUPER_ADMIN' && !formData.departmentName?.trim()) {
+    if (
+      currentUser?.role !== 'SUPER_ADMIN' &&
+      !formData.departmentName?.trim()
+    ) {
       errors.departmentName = '부서는 필수입니다.'
       hasErrors = true
     }
 
     // 직급 검증 (SUPER_ADMIN은 제외)
-    if (user?.role !== 'SUPER_ADMIN' && !formData.positionName?.trim()) {
+    if (currentUser?.role !== 'SUPER_ADMIN' && !formData.positionName?.trim()) {
       errors.positionName = '직급은 필수입니다.'
       hasErrors = true
     }
@@ -288,17 +310,20 @@ function UserProfilePage() {
       setSaving(true)
       setFieldErrors({}) // 필드별 에러 상태 초기화
 
-      // 프로필 정보 업데이트 (부서/직급은 필수값)
+      // 프로필 정보 업데이트
       const profileData: UpdateUserProfileRequest = {
         fullName: formData.fullName?.trim() || '',
         email: formData.email?.trim() || '',
         phone: formData.phone?.trim() || undefined,
         phoneNumber: formData.phoneNumber?.trim() || undefined,
-        department: formData.departmentName?.trim() || '', // 필수값으로 처리
-        position: formData.positionName?.trim() || '', // 필수값으로 처리
+        // SUPER_ADMIN이 아닌 경우만 부서/직급 포함
+        ...(currentUser?.role !== 'SUPER_ADMIN' && {
+          department: formData.departmentName?.trim() || '',
+          position: formData.positionName?.trim() || '',
+        }),
       }
 
-      // 빈 문자열인 선택적 필드들을 제거 (부서/직급은 필수값이므로 제거하지 않음)
+      // 빈 문자열인 선택적 필드들을 제거
       Object.keys(profileData).forEach(key => {
         const value = profileData[key as keyof UpdateUserProfileRequest]
         if (
@@ -349,6 +374,8 @@ function UserProfilePage() {
       // 전역 상태 업데이트 - department 객체를 올바르게 구성
       const updatedUserWithDepartment = {
         ...updatedUser,
+        name: updatedUser.fullName || '',
+        employeeNumber: currentUser?.employeeNumber || '',
         role: (updatedUser as any).role || 'USER',
         department: selectedDepartment
           ? {
@@ -358,7 +385,7 @@ function UserProfilePage() {
             }
           : null,
       }
-      updateUser(updatedUserWithDepartment)
+      updateCurrentUser(updatedUserWithDepartment as any)
 
       // 비밀번호 변경이 요청된 경우
       if (formData.newPassword && formData.currentPassword) {
@@ -385,7 +412,7 @@ function UserProfilePage() {
     )
   }
 
-  if (!user) {
+  if (!currentUser) {
     return (
       <div className="container mx-auto px-4 py-8">
         <Card>
@@ -551,90 +578,94 @@ function UserProfilePage() {
           </CardContent>
         </Card>
 
-        {/* 직무 정보 */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Building className="h-5 w-5" />
-              직무 정보
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="department">
-                부서 <span className="text-red-500">*</span>
-              </Label>
-              {isAdmin ? (
-                <Select
-                  value={formData.departmentId}
-                  onValueChange={handleDepartmentSelect}
-                >
-                  <SelectTrigger
-                    className={
-                      fieldErrors.departmentName ? 'border-red-500' : ''
-                    }
+        {/* 직무 정보 - SUPER_ADMIN이 아닌 경우만 표시 */}
+        {currentUser?.role !== 'SUPER_ADMIN' && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building className="h-5 w-5" />
+                직무 정보
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="department">
+                  부서 <span className="text-red-500">*</span>
+                </Label>
+                {isAdmin ? (
+                  <Select
+                    value={formData.departmentId}
+                    onValueChange={handleDepartmentSelect}
                   >
-                    <SelectValue placeholder="부서를 선택하세요" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {departments.map(dept => (
-                      <SelectItem key={dept.id} value={dept.id.toString()}>
-                        {dept.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <Input
-                  value={formData.departmentName}
-                  disabled
-                  className={`bg-muted ${fieldErrors.departmentName ? 'border-red-500' : ''}`}
-                />
-              )}
-              {fieldErrors.departmentName && (
-                <p className="text-sm text-red-500">
-                  {fieldErrors.departmentName}
-                </p>
-              )}
-            </div>
+                    <SelectTrigger
+                      className={
+                        fieldErrors.departmentName ? 'border-red-500' : ''
+                      }
+                    >
+                      <SelectValue placeholder="부서를 선택하세요" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {departments.map(dept => (
+                        <SelectItem key={dept.id} value={dept.id.toString()}>
+                          {dept.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input
+                    value={formData.departmentName}
+                    disabled
+                    className={`bg-muted ${fieldErrors.departmentName ? 'border-red-500' : ''}`}
+                  />
+                )}
+                {fieldErrors.departmentName && (
+                  <p className="text-sm text-red-500">
+                    {fieldErrors.departmentName}
+                  </p>
+                )}
+              </div>
 
-            <div>
-              <Label htmlFor="position">
-                직급 <span className="text-red-500">*</span>
-              </Label>
-              {isAdmin ? (
-                <Select
-                  value={formData.positionId}
-                  onValueChange={handlePositionSelect}
-                >
-                  <SelectTrigger
-                    className={fieldErrors.positionName ? 'border-red-500' : ''}
+              <div>
+                <Label htmlFor="position">
+                  직급 <span className="text-red-500">*</span>
+                </Label>
+                {isAdmin ? (
+                  <Select
+                    value={formData.positionId}
+                    onValueChange={handlePositionSelect}
                   >
-                    <SelectValue placeholder="직급을 선택하세요" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {positions.map(pos => (
-                      <SelectItem key={pos.id} value={pos.id.toString()}>
-                        {pos.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <Input
-                  value={formData.positionName}
-                  disabled
-                  className={`bg-muted ${fieldErrors.positionName ? 'border-red-500' : ''}`}
-                />
-              )}
-              {fieldErrors.positionName && (
-                <p className="text-sm text-red-500">
-                  {fieldErrors.positionName}
-                </p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                    <SelectTrigger
+                      className={
+                        fieldErrors.positionName ? 'border-red-500' : ''
+                      }
+                    >
+                      <SelectValue placeholder="직급을 선택하세요" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {positions.map(pos => (
+                        <SelectItem key={pos.id} value={pos.id.toString()}>
+                          {pos.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input
+                    value={formData.positionName}
+                    disabled
+                    className={`bg-muted ${fieldErrors.positionName ? 'border-red-500' : ''}`}
+                  />
+                )}
+                {fieldErrors.positionName && (
+                  <p className="text-sm text-red-500">
+                    {fieldErrors.positionName}
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* 비밀번호 변경 */}

@@ -37,7 +37,7 @@ export function EmployeeNumberHelper({
   onOpenChange,
   onSelectEmployeeNumber,
 }: EmployeeNumberHelperProps) {
-  const { user } = useAuth()
+  const { currentUser } = useAuth()
   const [selectedCompanyId, setSelectedCompanyId] = useState<number | null>(
     null
   )
@@ -51,23 +51,25 @@ export function EmployeeNumberHelper({
 
   // 권한별 회사 목록 필터링
   const filteredCompanies = useMemo(() => {
-    if (!user) return []
+    if (!currentUser) return []
 
     // SUPER_ADMIN: 모든 회사
-    if (user.role === 'SUPER_ADMIN') {
+    if (currentUser.role === 'SUPER_ADMIN') {
       return allCompanies
     }
 
     // ADMIN, MANAGER: 자신의 회사만
-    if (user.role === 'ADMIN' || user.role === 'MANAGER') {
-      if (user.company) {
-        return allCompanies.filter(company => company.id === user.company?.id)
+    if (currentUser.role === 'ADMIN' || currentUser.role === 'MANAGER') {
+      if (currentUser.company) {
+        return allCompanies.filter(
+          company => company.id === currentUser.company?.id
+        )
       }
       return []
     }
 
     return []
-  }, [user, allCompanies])
+  }, [currentUser, allCompanies])
 
   // 회사가 1개인 경우 자동 선택
   useEffect(() => {

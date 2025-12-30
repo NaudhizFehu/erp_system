@@ -2,7 +2,7 @@ package com.erp.common.service;
 
 import com.erp.common.dto.NotificationDto;
 import com.erp.common.entity.Notification;
-import com.erp.common.entity.User;
+import com.erp.hr.entity.Employee;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -62,22 +62,22 @@ public interface NotificationService {
     /**
      * 새로운 알림 생성
      */
-    NotificationDto createNotification(User user, String title, String message, 
+    NotificationDto createNotification(Employee employee, String title, String message,
                                      Notification.NotificationType type, String actionUrl);
 
     /**
-     * 시스템 알림 생성 (모든 사용자에게)
+     * 시스템 알림 생성 (모든 직원에게)
      */
-    void createSystemNotification(String title, String message, 
+    void createSystemNotification(String title, String message,
                                 Notification.NotificationType type, String actionUrl);
 
     /**
      * 주문 관련 알림 생성
      */
-    void createOrderNotification(User user, String title, String message, String actionUrl);
+    void createOrderNotification(Employee employee, String title, String message, String actionUrl);
 
     /**
      * 재고 관련 알림 생성
      */
-    void createInventoryNotification(User user, String title, String message, String actionUrl);
+    void createInventoryNotification(Employee employee, String title, String message, String actionUrl);
 }

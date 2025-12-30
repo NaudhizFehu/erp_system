@@ -310,11 +310,11 @@ public interface StockMovementRepository extends JpaRepository<StockMovement, Lo
     /**
      * 처리자별 이동 수 조회
      */
-    @Query("SELECT u.fullName, COUNT(sm) FROM StockMovement sm JOIN sm.processedBy u " +
+    @Query("SELECT u.name, COUNT(sm) FROM StockMovement sm JOIN sm.processedBy u " +
            "WHERE sm.company.id = :companyId " +
            "AND sm.movementDate BETWEEN :startDate AND :endDate " +
            "AND sm.movementStatus = 'PROCESSED' " +
-           "GROUP BY u.id, u.fullName " +
+           "GROUP BY u.id, u.name " +
            "ORDER BY COUNT(sm) DESC")
     List<Object[]> getMovementCountByProcessor(@Param("companyId") Long companyId,
                                               @Param("startDate") LocalDateTime startDate,

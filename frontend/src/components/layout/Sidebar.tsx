@@ -18,11 +18,12 @@ import { cn } from '@/lib/utils'
  */
 function Sidebar() {
   const location = useLocation()
-  const { user } = useAuth()
+  const { currentUser } = useAuth()
 
   // 권한 체크
   const canManageHR =
-    user?.role && ['SUPER_ADMIN', 'ADMIN', 'MANAGER'].includes(user.role)
+    currentUser?.role &&
+    ['SUPER_ADMIN', 'ADMIN', 'MANAGER'].includes(currentUser.role)
 
   const menuItems = [
     {
@@ -85,15 +86,15 @@ function Sidebar() {
   ]
 
   return (
-    <div className="fixed inset-y-0 left-0 z-50 w-64 border-r bg-card">
+    <div className="fixed inset-y-0 left-0 z-50 w-64 border-r bg-card flex flex-col">
       {/* 로고 영역 */}
-      <div className="flex h-16 items-center border-b px-6">
+      <div className="flex h-16 items-center border-b px-6 flex-shrink-0">
         <Building2 className="h-8 w-8 text-primary" />
         <h1 className="ml-3 text-xl font-bold text-foreground">ERP 시스템</h1>
       </div>
 
       {/* 네비게이션 메뉴 */}
-      <nav className="flex-1 space-y-1 p-4">
+      <nav className="flex-1 space-y-1 p-4 overflow-y-auto">
         {menuItems.map(item => (
           <div key={item.title}>
             {item.href ? (

@@ -97,7 +97,7 @@ function EmployeeForm() {
       console.log('폼 데이터:', data)
       // TODO: API 호출 로직 구현
       // if (isEdit) {
-      //   await updateEmployee(id, data)
+      //   await updateCurrentUser(id, data)
       // } else {
       //   await createEmployee(data)
       // }

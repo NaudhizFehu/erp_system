@@ -137,7 +137,7 @@ class EmployeeService {
   /**
    * 직원 수정
    */
-  async updateEmployee(
+  async updateCurrentUser(
     id: number,
     employee: Partial<Employee>
   ): Promise<Employee> {

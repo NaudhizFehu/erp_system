@@ -145,7 +145,7 @@ export function AccountForm({
   isSubmitting,
   mode,
 }: AccountFormProps) {
-  const { user } = useAuth()
+  const { currentUser } = useAuth()
   const [openParentAccountSelect, setOpenParentAccountSelect] = useState(false)
 
   // 폼 초기화
@@ -177,12 +177,12 @@ export function AccountForm({
   const accountCode = form.watch('accountCode')
 
   // 계정과목 트리 조회
-  const { data: accountTree } = useAccountTree(user?.company?.id)
+  const { data: accountTree } = useAccountTree(currentUser?.company?.id)
 
   // 계정코드 중복 확인
   const { data: codeCheckData } = useCheckAccountCode(
     accountCode,
-    user?.company?.id,
+    currentUser?.company?.id,
     account?.id
   )
 
@@ -225,7 +225,7 @@ export function AccountForm({
     // companyId 추가
     const submitData = {
       ...values,
-      companyId: user?.company?.id || 0,
+      companyId: currentUser?.company?.id || 0,
     }
 
     onSubmit(submitData)

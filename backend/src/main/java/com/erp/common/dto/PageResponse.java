@@ -8,10 +8,10 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 
 /**
- * �t� Q� DTO
- * �t� �� pt0 �]� T�pt0| �hi��
+ * 페이지네이션 응답 DTO
+ * 페이지네이션 처리된 데이터를 반환할 때 사용합니다
  *
- * @param <T> XP  ��
+ * @param <T> 컨텐츠 타입
  */
 @Data
 @Builder
@@ -20,37 +20,37 @@ import java.util.List;
 public class PageResponse<T> {
 
     /**
-     * �t� XP  �]
+     * 페이지 컨텐츠 목록
      */
     private List<T> content;
 
     /**
-     * � �t� �8 (0�0 ܑ)
+     * 현재 페이지 번호 (0부터 시작)
      */
     private int page;
 
     /**
-     * �t� l0
+     * 페이지 크기
      */
     private int size;
 
     /**
-     * � �� 
+     * 전체 요소 수
      */
     private long totalElements;
 
     /**
-     * � �t� 
+     * 전체 페이지 수
      */
     private int totalPages;
 
     /**
-     * � �t� �
+     * 첫 페이지 여부
      */
     private boolean first;
 
     /**
-     * ��� �t� �
+     * 마지막 페이지 여부
      */
     private boolean last;
 }

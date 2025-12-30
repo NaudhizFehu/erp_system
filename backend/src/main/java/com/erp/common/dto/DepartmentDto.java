@@ -1,6 +1,7 @@
 package com.erp.common.dto;
 
 import com.erp.hr.entity.Department;
+import com.erp.hr.dto.EmployeeDto;
 import java.time.LocalDateTime;
 import java.math.BigDecimal;
 import java.util.List;
@@ -18,7 +19,7 @@ public record DepartmentDto(
         CompanyDto company,
         DepartmentDto parentDepartment,
         List<DepartmentDto> subDepartments,
-        UserDto manager,
+        EmployeeDto manager,
         Integer level,
         Integer sortOrder,
         Department.DepartmentType departmentType,

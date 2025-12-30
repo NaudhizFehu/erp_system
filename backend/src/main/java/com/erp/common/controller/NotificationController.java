@@ -219,12 +219,12 @@ public class NotificationController {
             Long userId = getCurrentUserId(authentication);
             log.info("테스트 알림 생성: userId={}, type={}", userId, request.type());
             
-            // 임시로 admin 사용자 객체 생성
-            com.erp.common.entity.User user = new com.erp.common.entity.User();
-            user.setId(userId);
-            
+            // 임시로 admin 직원 객체 생성
+            com.erp.hr.entity.Employee employee = new com.erp.hr.entity.Employee();
+            employee.setId(userId);
+
             NotificationDto notification = notificationService.createNotification(
-                user,
+                employee,
                 request.title(),
                 request.message(),
                 request.type(),

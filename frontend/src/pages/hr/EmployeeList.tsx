@@ -13,7 +13,7 @@ import { Employee, EmploymentStatus } from '@/types/hr'
  */
 function EmployeeList() {
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { currentUser } = useAuth()
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<EmploymentStatus | ''>('')
 
@@ -88,9 +88,9 @@ function EmployeeList() {
             직원 정보를 조회하고 관리할 수 있습니다
           </p>
         </div>
-        {(user?.role === 'SUPER_ADMIN' ||
-          user?.role === 'ADMIN' ||
-          user?.role === 'MANAGER') && (
+        {(currentUser?.role === 'SUPER_ADMIN' ||
+          currentUser?.role === 'ADMIN' ||
+          currentUser?.role === 'MANAGER') && (
           <Link to="/hr/employees/new" className="btn btn-primary">
             <Plus className="mr-2 h-4 w-4" />
             직원 등록

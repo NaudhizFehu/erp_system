@@ -1,6 +1,6 @@
 package com.erp.common.security;
 
-import com.erp.common.entity.User;
+import com.erp.hr.entity.Employee;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
@@ -40,62 +40,62 @@ public class JwtUtils {
 
     /**
      * JWT 토큰 생성
-     * 
+     *
      * @param authentication Spring Security Authentication 객체
      * @return JWT 토큰 문자열
      */
     public String generateJwtToken(Authentication authentication) {
         UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-        return generateTokenFromUser(userPrincipal.getUser(), jwtExpirationMs);
+        return generateTokenFromEmployee(userPrincipal.getEmployee(), jwtExpirationMs);
     }
 
     /**
-     * 사용자 정보로 JWT 토큰 생성
-     * 
-     * @param user 사용자 엔티티
+     * 직원 정보로 JWT 토큰 생성
+     *
+     * @param employee 직원 엔티티
      * @return JWT 토큰 문자열
      */
-    public String generateTokenFromUser(User user) {
-        return generateTokenFromUser(user, jwtExpirationMs);
+    public String generateTokenFromEmployee(Employee employee) {
+        return generateTokenFromEmployee(employee, jwtExpirationMs);
     }
 
     /**
-     * 사용자 정보와 만료시간으로 JWT 토큰 생성
-     * 
-     * @param user 사용자 엔티티
+     * 직원 정보와 만료시간으로 JWT 토큰 생성
+     *
+     * @param employee 직원 엔티티
      * @param expirationMs 만료시간 (밀리초)
      * @return JWT 토큰 문자열
      */
-    private String generateTokenFromUser(User user, int expirationMs) {
+    private String generateTokenFromEmployee(Employee employee, int expirationMs) {
         Date expiryDate = new Date(System.currentTimeMillis() + expirationMs);
-        
+
         return Jwts.builder()
-                .subject(user.getUsername())
+                .subject(employee.getUsername())
                 .issuedAt(new Date())
                 .expiration(expiryDate)
-                .claim("userId", user.getId())
-                .claim("email", user.getEmail())
-                .claim("fullName", user.getFullName())
-                .claim("role", user.getRole().name())
-                .claim("companyId", user.getCompany() != null ? user.getCompany().getId() : null)
-                .claim("departmentId", user.getDepartment() != null ? user.getDepartment().getId() : null)
+                .claim("employeeId", employee.getId())
+                .claim("email", employee.getEmail())
+                .claim("name", employee.getName())
+                .claim("role", employee.getRole() != null ? employee.getRole().name() : "USER")
+                .claim("companyId", employee.getCompany() != null ? employee.getCompany().getId() : null)
+                .claim("departmentId", employee.getDepartment() != null ? employee.getDepartment().getId() : null)
                 .signWith(getSigningKey())
                 .compact();
     }
 
     /**
      * Refresh 토큰 생성
-     * 
-     * @param user 사용자 엔티티
+     *
+     * @param employee 직원 엔티티
      * @return Refresh 토큰 문자열
      */
-    public String generateRefreshToken(User user) {
-        return generateTokenFromUser(user, refreshTokenExpirationMs);
+    public String generateRefreshToken(Employee employee) {
+        return generateTokenFromEmployee(employee, refreshTokenExpirationMs);
     }
 
     /**
      * JWT 토큰에서 사용자명 추출
-     * 
+     *
      * @param token JWT 토큰
      * @return 사용자명
      */
@@ -109,24 +109,35 @@ public class JwtUtils {
     }
 
     /**
-     * JWT 토큰에서 사용자 ID 추출
-     * 
+     * JWT 토큰에서 직원 ID 추출
+     *
      * @param token JWT 토큰
-     * @return 사용자 ID
+     * @return 직원 ID
      */
-    public Long getUserIdFromJwtToken(String token) {
+    public Long getEmployeeIdFromJwtToken(String token) {
         Claims claims = Jwts.parser()
                 .verifyWith(getSigningKey())
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
-        
-        return claims.get("userId", Long.class);
+
+        return claims.get("employeeId", Long.class);
+    }
+
+    /**
+     * JWT 토큰에서 사용자 ID 추출 (하위 호환성)
+     *
+     * @param token JWT 토큰
+     * @return 직원 ID
+     */
+    @Deprecated
+    public Long getUserIdFromJwtToken(String token) {
+        return getEmployeeIdFromJwtToken(token);
     }
 
     /**
      * JWT 토큰에서 사용자 역할 추출
-     * 
+     *
      * @param token JWT 토큰
      * @return 사용자 역할
      */
@@ -136,13 +147,13 @@ public class JwtUtils {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
-        
+
         return claims.get("role", String.class);
     }
 
     /**
      * JWT 토큰에서 회사 ID 추출
-     * 
+     *
      * @param token JWT 토큰
      * @return 회사 ID
      */
@@ -152,13 +163,13 @@ public class JwtUtils {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
-        
+
         return claims.get("companyId", Long.class);
     }
 
     /**
      * JWT 토큰에서 부서 ID 추출
-     * 
+     *
      * @param token JWT 토큰
      * @return 부서 ID
      */
@@ -168,13 +179,13 @@ public class JwtUtils {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
-        
+
         return claims.get("departmentId", Long.class);
     }
 
     /**
      * JWT 토큰의 만료 시간 추출
-     * 
+     *
      * @param token JWT 토큰
      * @return 만료 시간
      */
@@ -189,7 +200,7 @@ public class JwtUtils {
 
     /**
      * JWT 토큰 유효성 검증
-     * 
+     *
      * @param authToken JWT 토큰
      * @return 유효성 여부
      */
@@ -216,7 +227,7 @@ public class JwtUtils {
 
     /**
      * JWT 토큰 만료 여부 확인
-     * 
+     *
      * @param token JWT 토큰
      * @return 만료 여부
      */
@@ -232,7 +243,7 @@ public class JwtUtils {
 
     /**
      * JWT 토큰의 남은 유효 시간 계산 (초 단위)
-     * 
+     *
      * @param token JWT 토큰
      * @return 남은 유효 시간 (초)
      */
@@ -249,7 +260,7 @@ public class JwtUtils {
 
     /**
      * Authorization 헤더에서 JWT 토큰 추출
-     * 
+     *
      * @param authHeader Authorization 헤더 값
      * @return JWT 토큰 (Bearer 제거)
      */
@@ -263,7 +274,7 @@ public class JwtUtils {
     /**
      * JWT 토큰 갱신 가능 여부 확인
      * 토큰이 만료되기 1시간 전부터 갱신 가능
-     * 
+     *
      * @param token JWT 토큰
      * @return 갱신 가능 여부
      */
@@ -272,7 +283,7 @@ public class JwtUtils {
             Date expiration = getExpirationDateFromJwtToken(token);
             long timeUntilExpiration = expiration.getTime() - System.currentTimeMillis();
             long oneHourInMs = 60 * 60 * 1000; // 1시간
-            
+
             return timeUntilExpiration <= oneHourInMs && timeUntilExpiration > 0;
         } catch (Exception e) {
             log.error("토큰 갱신 가능 여부 확인 중 오류 발생: {}", e.getMessage());
@@ -282,7 +293,7 @@ public class JwtUtils {
 
     /**
      * JWT 서명키 생성
-     * 
+     *
      * @return 서명키
      */
     private SecretKey getSigningKey() {
@@ -292,7 +303,7 @@ public class JwtUtils {
 
     /**
      * JWT 토큰에서 모든 클레임 추출
-     * 
+     *
      * @param token JWT 토큰
      * @return 클레임 맵
      */
@@ -306,7 +317,7 @@ public class JwtUtils {
 
     /**
      * 토큰 생성 시간 추출
-     * 
+     *
      * @param token JWT 토큰
      * @return 생성 시간
      */
@@ -316,7 +327,7 @@ public class JwtUtils {
 
     /**
      * 사용자 정보가 변경된 후 토큰이 생성되었는지 확인
-     * 
+     *
      * @param token JWT 토큰
      * @param lastPasswordReset 마지막 비밀번호 변경 시간
      * @return 토큰 유효성 여부
@@ -325,7 +336,7 @@ public class JwtUtils {
         if (lastPasswordReset == null) {
             return true;
         }
-        
+
         try {
             Date tokenIssuedAt = getIssuedAtDateFromToken(token);
             return tokenIssuedAt.after(lastPasswordReset);

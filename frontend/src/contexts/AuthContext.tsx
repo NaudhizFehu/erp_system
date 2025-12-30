@@ -13,14 +13,15 @@ import React, {
 import toast from 'react-hot-toast'
 
 import { authApi, tokenUtils } from '@/services/authApi'
-import type { AuthState, LoginRequest, UserInfo } from '@/types/auth'
+import type { AuthState, LoginRequest, EmployeeInfo } from '@/types/auth'
 
 // AuthContext 타입 정의
 interface AuthContextType extends AuthState {
   login: (credentials: LoginRequest) => Promise<void>
   logout: () => Promise<void>
-  updateUser: (user: UserInfo) => void
+  updateCurrentUser: (employee: EmployeeInfo) => void
   refreshAuth: () => Promise<void>
+  currentUser: EmployeeInfo | null
 }
 
 // 액션 타입 정의
@@ -28,18 +29,22 @@ type AuthAction =
   | { type: 'LOGIN_START' }
   | {
       type: 'LOGIN_SUCCESS'
-      payload: { user: UserInfo; accessToken: string; refreshToken: string }
+      payload: {
+        employee: EmployeeInfo
+        accessToken: string
+        refreshToken: string
+      }
     }
   | { type: 'LOGIN_FAILURE' }
   | { type: 'LOGOUT' }
-  | { type: 'UPDATE_USER'; payload: { user: UserInfo } }
+  | { type: 'UPDATE_EMPLOYEE'; payload: { employee: EmployeeInfo } }
   | { type: 'SET_LOADING'; payload: boolean }
-  | { type: 'SET_USER'; payload: UserInfo | null }
+  | { type: 'SET_EMPLOYEE'; payload: EmployeeInfo | null }
 
 // 초기 상태
 const initialState: AuthState = {
   isAuthenticated: false,
-  user: null,
+  employee: null,
   accessToken: null,
   refreshToken: null,
   isLoading: true,
@@ -55,7 +60,7 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
       return {
         ...state,
         isAuthenticated: true,
-        user: action.payload.user,
+        employee: action.payload.employee,
         accessToken: action.payload.accessToken,
         refreshToken: action.payload.refreshToken,
         isLoading: false,
@@ -65,7 +70,7 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
       return {
         ...state,
         isAuthenticated: false,
-        user: null,
+        employee: null,
         accessToken: null,
         refreshToken: null,
         isLoading: false,
@@ -75,34 +80,27 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
       return {
         ...state,
         isAuthenticated: false,
-        user: null,
+        employee: null,
         accessToken: null,
         refreshToken: null,
         isLoading: false,
       }
 
-    case 'UPDATE_USER':
+    case 'UPDATE_EMPLOYEE':
       return {
         ...state,
-        user: action.payload.user,
+        employee: action.payload.employee,
       }
 
     case 'SET_LOADING':
       return { ...state, isLoading: action.payload }
 
-    case 'SET_USER':
-      return { ...state, user: action.payload }
+    case 'SET_EMPLOYEE':
+      return { ...state, employee: action.payload }
 
     default:
       return state
   }
-}
-
-// 컨텍스트 타입
-interface AuthContextType extends AuthState {
-  login: (credentials: LoginRequest) => Promise<void>
-  logout: () => Promise<void>
-  refreshAuth: () => Promise<void>
 }
 
 // 컨텍스트 생성
@@ -142,12 +140,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       if (accessToken && tokenUtils.isTokenValid(accessToken)) {
         try {
-          // 토큰이 유효하면 사용자 정보 조회
-          console.log('액세스 토큰이 유효함, 사용자 정보 조회 시도')
-          const user = await authApi.getCurrentUser()
+          // 토큰이 유효하면 직원 정보 조회
+          console.log('액세스 토큰이 유효함, 직원 정보 조회 시도')
+          const employee = await authApi.getCurrentUser()
           dispatch({
             type: 'LOGIN_SUCCESS',
-            payload: { user, accessToken, refreshToken: refreshToken || '' },
+            payload: {
+              employee,
+              accessToken,
+              refreshToken: refreshToken || '',
+            },
           })
         } catch (error) {
           console.warn('토큰이 유효하지 않음, 로그아웃 처리:', error)
@@ -163,11 +165,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
           tokenUtils.setAccessToken(response.accessToken)
           tokenUtils.setRefreshToken(response.refreshToken)
 
-          const user = await authApi.getCurrentUser()
+          const employee = await authApi.getCurrentUser()
           dispatch({
             type: 'LOGIN_SUCCESS',
             payload: {
-              user,
+              employee,
               accessToken: response.accessToken,
               refreshToken: response.refreshToken,
             },
@@ -202,7 +204,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       dispatch({
         type: 'LOGIN_SUCCESS',
         payload: {
-          user: response.user,
+          employee: response.employee,
           accessToken: response.accessToken,
           refreshToken: response.refreshToken,
         },
@@ -233,9 +235,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }
 
-  // 사용자 정보 업데이트 함수
-  const updateUser = (user: UserInfo): void => {
-    dispatch({ type: 'UPDATE_USER', payload: { user } })
+  // 직원 정보 업데이트 함수
+  const updateCurrentUser = (employee: EmployeeInfo): void => {
+    dispatch({ type: 'UPDATE_EMPLOYEE', payload: { employee } })
   }
 
   // 인증 갱신 함수
@@ -252,11 +254,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       tokenUtils.setAccessToken(response.accessToken)
       tokenUtils.setRefreshToken(response.refreshToken)
 
-      const user = await authApi.getCurrentUser()
+      const employee = await authApi.getCurrentUser()
       dispatch({
         type: 'LOGIN_SUCCESS',
         payload: {
-          user,
+          employee,
           accessToken: response.accessToken,
           refreshToken: response.refreshToken,
         },
@@ -269,9 +271,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const value: AuthContextType = {
     ...state,
+    currentUser: state.employee,
     login,
     logout,
-    updateUser,
+    updateCurrentUser,
     refreshAuth,
   }
 

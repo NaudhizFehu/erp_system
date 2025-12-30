@@ -2,9 +2,9 @@ package com.erp.common.service.impl;
 
 import com.erp.common.dto.NotificationDto;
 import com.erp.common.entity.Notification;
-import com.erp.common.entity.User;
+import com.erp.hr.entity.Employee;
 import com.erp.common.repository.NotificationRepository;
-import com.erp.common.repository.UserRepository;
+import com.erp.hr.repository.EmployeeRepository;
 import com.erp.common.service.NotificationService;
 import com.erp.common.utils.ExceptionUtils;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +26,7 @@ import java.util.List;
 public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationRepository notificationRepository;
-    private final UserRepository userRepository;
+    private final EmployeeRepository employeeRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -99,7 +99,7 @@ public class NotificationServiceImpl implements NotificationService {
                 .orElseThrow(() -> ExceptionUtils.entityNotFound("알림을 찾을 수 없습니다"));
         
         // 본인의 알림인지 확인
-        if (!notification.getUser().getId().equals(userId)) {
+        if (!notification.getEmployee().getId().equals(userId)) {
             throw new IllegalArgumentException("본인의 알림만 읽음 처리할 수 있습니다");
         }
         
@@ -134,7 +134,7 @@ public class NotificationServiceImpl implements NotificationService {
                 .orElseThrow(() -> ExceptionUtils.entityNotFound("알림을 찾을 수 없습니다"));
         
         // 본인의 알림인지 확인
-        if (!notification.getUser().getId().equals(userId)) {
+        if (!notification.getEmployee().getId().equals(userId)) {
             throw new IllegalArgumentException("본인의 알림만 삭제할 수 있습니다");
         }
         
@@ -157,54 +157,54 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     @Transactional
-    public NotificationDto createNotification(User user, String title, String message, 
+    public NotificationDto createNotification(Employee employee, String title, String message,
                                             Notification.NotificationType type, String actionUrl) {
-        log.info("새 알림 생성: userId={}, title={}, type={}", user.getId(), title, type);
-        
+        log.info("새 알림 생성: employeeId={}, title={}, type={}", employee.getId(), title, type);
+
         Notification notification = new Notification();
-        notification.setUser(user);
+        notification.setEmployee(employee);
         notification.setTitle(title);
         notification.setMessage(message);
         notification.setType(type);
         notification.setActionUrl(actionUrl);
         notification.setIsRead(false);
-        
+
         Notification savedNotification = notificationRepository.save(notification);
-        
+
         log.info("새 알림 생성 완료: notificationId={}", savedNotification.getId());
-        
+
         return NotificationDto.from(savedNotification);
     }
 
     @Override
     @Transactional
-    public void createSystemNotification(String title, String message, 
+    public void createSystemNotification(String title, String message,
                                        Notification.NotificationType type, String actionUrl) {
         log.info("시스템 알림 생성: title={}, type={}", title, type);
-        
-        // 모든 활성 사용자에게 알림 생성
-        List<User> activeUsers = userRepository.findByIsActive(true);
-        
-        for (User user : activeUsers) {
-            createNotification(user, title, message, type, actionUrl);
+
+        // 모든 직원에게 알림 생성
+        List<Employee> activeEmployees = employeeRepository.findAll();
+
+        for (Employee employee : activeEmployees) {
+            createNotification(employee, title, message, type, actionUrl);
         }
-        
-        log.info("시스템 알림 생성 완료: userCount={}", activeUsers.size());
+
+        log.info("시스템 알림 생성 완료: employeeCount={}", activeEmployees.size());
     }
 
     @Override
     @Transactional
-    public void createOrderNotification(User user, String title, String message, String actionUrl) {
-        log.info("주문 알림 생성: userId={}, title={}", user.getId(), title);
-        
-        createNotification(user, title, message, Notification.NotificationType.INFO, actionUrl);
+    public void createOrderNotification(Employee employee, String title, String message, String actionUrl) {
+        log.info("주문 알림 생성: employeeId={}, title={}", employee.getId(), title);
+
+        createNotification(employee, title, message, Notification.NotificationType.INFO, actionUrl);
     }
 
     @Override
     @Transactional
-    public void createInventoryNotification(User user, String title, String message, String actionUrl) {
-        log.info("재고 알림 생성: userId={}, title={}", user.getId(), title);
-        
-        createNotification(user, title, message, Notification.NotificationType.WARNING, actionUrl);
+    public void createInventoryNotification(Employee employee, String title, String message, String actionUrl) {
+        log.info("재고 알림 생성: employeeId={}, title={}", employee.getId(), title);
+
+        createNotification(employee, title, message, Notification.NotificationType.WARNING, actionUrl);
     }
 }

@@ -266,10 +266,22 @@ transfer_docker_compose() {
 
     log_info "docker-compose.prod.yml 전송 중..."
     cat "$PROJECT_ROOT/docker-compose.prod.yml" | \
-        ssh -i "$SSH_KEY" -p "$SYNOLOGY_PORT" "$SYNOLOGY_USER@$SYNOLOGY_HOST" \
+        ssh -p "$SYNOLOGY_PORT" "$SYNOLOGY_USER@$SYNOLOGY_HOST" \
         "cat > $DEPLOY_DIR/docker-compose.prod.yml"
 
     log_success "docker-compose 파일 전송 완료"
+}
+
+# nginx 설정 파일 전송 및 적용
+transfer_nginx_config() {
+    log_step "nginx 설정 파일 전송 중..."
+
+    log_info "nginx-bluegreen.conf 전송 중..."
+    cat "$PROJECT_ROOT/scripts/nginx-bluegreen.conf" | \
+        ssh -p "$SYNOLOGY_PORT" "$SYNOLOGY_USER@$SYNOLOGY_HOST" \
+        "cat > /tmp/nginx-bluegreen.conf"
+
+    log_success "nginx 설정 파일 전송 완료 (배포 스크립트에서 적용됨)"
 }
 
 # Synology에서 Blue-Green 배포 실행
@@ -354,6 +366,9 @@ main() {
     echo ""
 
     transfer_docker_compose
+    echo ""
+
+    transfer_nginx_config
     echo ""
 
     execute_blue_green_deployment

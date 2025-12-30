@@ -20,7 +20,7 @@ NC='\033[0m' # No Color
 PROJECT_DIR="${PROJECT_DIR:-/var/services/homes/naudhizfehu/erp-system}"
 DOCKER_COMPOSE_FILE="docker-compose.prod.yml"
 NGINX_CONF="/usr/local/etc/nginx/conf.d/erp.conf"
-HEALTH_CHECK_TIMEOUT=60
+HEALTH_CHECK_TIMEOUT=120
 HEALTH_CHECK_INTERVAL=5
 
 # 로그 함수
@@ -270,11 +270,24 @@ main() {
     log_info "배포 대상 환경: [$TARGET_ENV]"
     echo ""
 
-    # 3. Docker 이미지 확인
+    # 3. nginx 설정 확인 및 초기화
+    if [ -f "/tmp/nginx-bluegreen.conf" ]; then
+        log_step "nginx Blue-Green 설정 적용 중..."
+        sudo cp /tmp/nginx-bluegreen.conf "$NGINX_CONF"
+        if sudo nginx -t > /dev/null 2>&1; then
+            sudo nginx -s reload
+            log_success "nginx 설정 적용 완료"
+        else
+            log_warning "nginx 설정 검증 실패 - 기존 설정 유지"
+        fi
+        echo ""
+    fi
+
+    # 4. Docker 이미지 확인
     check_docker_images
     echo ""
 
-    # 4. 배포 확인
+    # 5. 배포 확인
     log_warning "⚠️  [$TARGET_ENV] 환경에 새 버전을 배포하시겠습니까?"
     log_info "현재 [$ACTIVE_ENV] 환경은 계속 서비스 중입니다."
     echo ""

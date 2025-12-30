@@ -48,7 +48,7 @@ export function TransactionActions({
   onActionComplete,
 }: TransactionActionsProps) {
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { currentUser } = useAuth()
 
   const [approveDialogOpen, setApproveDialogOpen] = useState(false)
   const [postDialogOpen, setPostDialogOpen] = useState(false)
@@ -67,12 +67,12 @@ export function TransactionActions({
 
   // 승인 처리
   const handleApprove = async () => {
-    if (!user) return
+    if (!currentUser) return
 
     try {
       await approveMutation.mutateAsync({
         id: transactionId,
-        approverId: user.id,
+        approverId: currentUser.id,
       })
 
       toast.success('전표가 승인되었습니다.')
@@ -108,7 +108,7 @@ export function TransactionActions({
 
   // 취소 처리
   const handleCancel = async () => {
-    if (!user || !cancelReason.trim()) {
+    if (!currentUser || !cancelReason.trim()) {
       toast.error('취소 사유를 입력해주세요.')
       return
     }
@@ -117,7 +117,7 @@ export function TransactionActions({
       await cancelMutation.mutateAsync({
         id: transactionId,
         reason: cancelReason,
-        cancelById: user.id,
+        cancelById: currentUser.id,
       })
 
       toast.success('전표가 취소되었습니다.')

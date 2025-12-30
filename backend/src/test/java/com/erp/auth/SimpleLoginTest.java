@@ -1,8 +1,8 @@
 package com.erp.auth;
 
 import com.erp.common.dto.auth.LoginRequest;
-import com.erp.common.entity.User;
-import com.erp.common.repository.UserRepository;
+import com.erp.hr.entity.Employee;
+import com.erp.hr.repository.EmployeeRepository;
 import com.erp.common.security.CustomUserDetailsService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -25,7 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class SimpleLoginTest {
 
     @Autowired
-    private UserRepository userRepository;
+    private EmployeeRepository employeeRepository;
 
     @Autowired
     private CustomUserDetailsService userDetailsService;
@@ -37,45 +37,43 @@ class SimpleLoginTest {
     @DisplayName("admin 계정 존재 확인")
     void testAdminUserExists() {
         // Given & When
-        var adminUser = userRepository.findByUsernameWithCompanyAndDepartment("admin");
+        var adminEmployee = employeeRepository.findByUsername("admin");
 
         // Then
-        assertThat(adminUser).isPresent();
-        User user = adminUser.get();
-        assertThat(user.getUsername()).isEqualTo("admin");
-        assertThat(user.getRole()).isEqualTo(User.UserRole.ADMIN);
-        assertThat(user.getIsActive()).isTrue();
-        assertThat(user.getIsLocked()).isFalse();
-        assertThat(user.getIsDeleted()).isFalse();
+        assertThat(adminEmployee).isPresent();
+        Employee employee = adminEmployee.get();
+        assertThat(employee.getUsername()).isEqualTo("admin");
+        assertThat(employee.getRole()).isEqualTo(Employee.UserRole.ADMIN);
+        assertThat(employee.getIsActive()).isTrue();
+        assertThat(employee.getIsLocked()).isFalse();
     }
 
     @Test
     @DisplayName("user 계정 존재 확인")
     void testUserExists() {
         // Given & When
-        var normalUser = userRepository.findByUsernameWithCompanyAndDepartment("user");
+        var normalEmployee = employeeRepository.findByUsername("user");
 
         // Then
-        assertThat(normalUser).isPresent();
-        User user = normalUser.get();
-        assertThat(user.getUsername()).isEqualTo("user");
-        assertThat(user.getRole()).isEqualTo(User.UserRole.USER);
-        assertThat(user.getIsActive()).isTrue();
-        assertThat(user.getIsLocked()).isFalse();
-        assertThat(user.getIsDeleted()).isFalse();
+        assertThat(normalEmployee).isPresent();
+        Employee employee = normalEmployee.get();
+        assertThat(employee.getUsername()).isEqualTo("user");
+        assertThat(employee.getRole()).isEqualTo(Employee.UserRole.USER);
+        assertThat(employee.getIsActive()).isTrue();
+        assertThat(employee.getIsLocked()).isFalse();
     }
 
     @Test
     @DisplayName("admin 계정 비밀번호 검증")
     void testAdminPassword() {
         // Given
-        var adminUser = userRepository.findByUsernameWithCompanyAndDepartment("admin");
-        assertThat(adminUser).isPresent();
+        var adminEmployee = employeeRepository.findByUsername("admin");
+        assertThat(adminEmployee).isPresent();
 
         // When
-        User user = adminUser.get();
-        boolean adminPasswordMatches = passwordEncoder.matches("admin123", user.getPassword());
-        boolean userPasswordMatches = passwordEncoder.matches("user123", user.getPassword());
+        Employee employee = adminEmployee.get();
+        boolean adminPasswordMatches = passwordEncoder.matches("admin123", employee.getPassword());
+        boolean userPasswordMatches = passwordEncoder.matches("user123", employee.getPassword());
 
         // Then
         assertThat(adminPasswordMatches).isTrue();
@@ -86,13 +84,13 @@ class SimpleLoginTest {
     @DisplayName("user 계정 비밀번호 검증")
     void testUserPassword() {
         // Given
-        var normalUser = userRepository.findByUsernameWithCompanyAndDepartment("user");
-        assertThat(normalUser).isPresent();
+        var normalEmployee = employeeRepository.findByUsername("user");
+        assertThat(normalEmployee).isPresent();
 
         // When
-        User user = normalUser.get();
-        boolean adminPasswordMatches = passwordEncoder.matches("admin123", user.getPassword());
-        boolean userPasswordMatches = passwordEncoder.matches("user123", user.getPassword());
+        Employee employee = normalEmployee.get();
+        boolean adminPasswordMatches = passwordEncoder.matches("admin123", employee.getPassword());
+        boolean userPasswordMatches = passwordEncoder.matches("user123", employee.getPassword());
 
         // Then
         assertThat(adminPasswordMatches).isFalse();

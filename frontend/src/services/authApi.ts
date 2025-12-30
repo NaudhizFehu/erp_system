@@ -8,7 +8,7 @@ import type {
   LoginResponse,
   RefreshTokenRequest,
   RefreshTokenResponse,
-  UserInfo,
+  EmployeeInfo,
 } from '@/types/auth'
 
 import api from './api'
@@ -50,18 +50,15 @@ export const authApi = {
   },
 
   /**
-   * 현재 사용자 정보 조회
+   * 현재 직원 정보 조회
    */
-  getCurrentUser: async (): Promise<UserInfo> => {
-    console.log('현재 사용자 정보 조회 API 호출:', `${AUTH_BASE_URL}/me`)
+  getCurrentUser: async (): Promise<EmployeeInfo> => {
+    console.log('현재 직원 정보 조회 API 호출:', `${AUTH_BASE_URL}/me`)
     const response = await api.get(`${AUTH_BASE_URL}/me`)
-    console.log('현재 사용자 정보 조회 API 응답:', response)
-    console.log('현재 사용자 정보:', response.data)
-    console.log(
-      '현재 사용자 정보 상세:',
-      JSON.stringify(response.data, null, 2)
-    )
-    // 백엔드는 ApiResponse<UserInfo> 형식으로 응답하므로 response.data.data를 반환
+    console.log('현재 직원 정보 조회 API 응답:', response)
+    console.log('현재 직원 정보:', response.data)
+    console.log('현재 직원 정보 상세:', JSON.stringify(response.data, null, 2))
+    // 백엔드는 ApiResponse<EmployeeInfo> 형식으로 응답하므로 response.data.data를 반환
     return response.data.data
   },
 

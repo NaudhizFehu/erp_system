@@ -1,10 +1,10 @@
 package com.erp.config;
 
 import com.erp.common.entity.Company;
-import com.erp.common.entity.User;
+import com.erp.hr.entity.Employee;
 import com.erp.hr.entity.Department;
 import com.erp.common.repository.CompanyRepository;
-import com.erp.common.repository.UserRepository;
+import com.erp.hr.repository.EmployeeRepository;
 import com.erp.hr.repository.DepartmentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,16 +30,16 @@ public class TestDataInitializer implements CommandLineRunner {
 
     private final CompanyRepository companyRepository;
     private final DepartmentRepository departmentRepository;
-    private final UserRepository userRepository;
+    private final EmployeeRepository employeeRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
     public void run(String... args) throws Exception {
         log.info("=== 테스트 데이터 초기화 시작 ===");
-        
+
         // 기존 데이터 삭제
-        userRepository.deleteAll();
+        employeeRepository.deleteAll();
         departmentRepository.deleteAll();
         companyRepository.deleteAll();
         
@@ -56,17 +56,17 @@ public class TestDataInitializer implements CommandLineRunner {
         userDept = departmentRepository.save(userDept);
         log.info("✅ 테스트 부서 생성 완료: {}, {}", adminDept.getName(), userDept.getName());
         
-        // 사용자 생성
-        User adminUser = createTestUser(company, adminDept, "admin", "admin123", "ADMIN");
-        User normalUser = createTestUser(company, userDept, "user", "user123", "USER");
-        
-        adminUser = userRepository.save(adminUser);
-        normalUser = userRepository.save(normalUser);
-        log.info("✅ 테스트 사용자 생성 완료: {}, {}", adminUser.getUsername(), normalUser.getUsername());
-        
+        // 직원 생성
+        Employee adminEmployee = createTestEmployee(company, adminDept, "admin", "admin123", "ADMIN");
+        Employee normalEmployee = createTestEmployee(company, userDept, "user", "user123", "USER");
+
+        adminEmployee = employeeRepository.save(adminEmployee);
+        normalEmployee = employeeRepository.save(normalEmployee);
+        log.info("✅ 테스트 직원 생성 완료: {}, {}", adminEmployee.getUsername(), normalEmployee.getUsername());
+
         // 비밀번호 검증 테스트
-        boolean adminPasswordMatches = passwordEncoder.matches("admin123", adminUser.getPassword());
-        boolean userPasswordMatches = passwordEncoder.matches("user123", normalUser.getPassword());
+        boolean adminPasswordMatches = passwordEncoder.matches("admin123", adminEmployee.getPassword());
+        boolean userPasswordMatches = passwordEncoder.matches("user123", normalEmployee.getPassword());
         log.info("🔐 비밀번호 검증 결과 - admin: {}, user: {}", adminPasswordMatches, userPasswordMatches);
         
         log.info("=== 테스트 데이터 초기화 완료 ===");
@@ -120,25 +120,25 @@ public class TestDataInitializer implements CommandLineRunner {
         return department;
     }
 
-    private User createTestUser(Company company, Department department, String username, String password, String role) {
-        User user = new User();
-        user.setUsername(username);
-        user.setPassword(passwordEncoder.encode(password));
-        user.setEmail(username + "@test.com");
-        user.setFullName(username.equals("admin") ? "관리자" : "일반사용자");
-        user.setPhone("02-1234-5678");
-        user.setRole(User.UserRole.valueOf(role));
-        user.setIsActive(true);
-        user.setIsLocked(false);
-        user.setIsPasswordExpired(false);
-        user.setCompany(company);
-        user.setDepartment(department);
-        user.setPasswordChangedAt(LocalDateTime.now());
-        user.setCreatedAt(LocalDateTime.now());
-        user.setUpdatedAt(LocalDateTime.now());
-        user.setCreatedBy(1L);
-        user.setUpdatedBy(1L);
-        user.setIsDeleted(false);
-        return user;
+    private Employee createTestEmployee(Company company, Department department, String username, String password, String role) {
+        Employee employee = new Employee();
+        employee.setUsername(username);
+        employee.setPassword(passwordEncoder.encode(password));
+        employee.setEmail(username + "@test.com");
+        employee.setName(username.equals("admin") ? "관리자" : "일반사용자");
+        employee.setMobile("010-1234-5678");
+        employee.setRole(Employee.UserRole.valueOf(role));
+        employee.setIsActive(true);
+        employee.setIsLocked(false);
+        employee.setIsPasswordExpired(false);
+        employee.setCompany(company);
+        employee.setDepartment(department);
+        employee.setPasswordChangedAt(LocalDateTime.now());
+        employee.setCreatedAt(LocalDateTime.now());
+        employee.setUpdatedAt(LocalDateTime.now());
+        employee.setCreatedBy(1L);
+        employee.setUpdatedBy(1L);
+        employee.setIsDeleted(false);
+        return employee;
     }
 }

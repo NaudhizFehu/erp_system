@@ -163,37 +163,7 @@ public class DdlForcer {
                 "deleted_by BIGINT, " +
                 "FOREIGN KEY (company_id) REFERENCES companies(id)" +
                 ")",
-                
-                "CREATE TABLE IF NOT EXISTS users (" +
-                "id BIGSERIAL PRIMARY KEY, " +
-                "username VARCHAR(50) UNIQUE NOT NULL, " +
-                "password VARCHAR(200) NOT NULL, " +
-                "email VARCHAR(100) UNIQUE NOT NULL, " +
-                "full_name VARCHAR(100) NOT NULL, " +
-                "phone VARCHAR(20), " +
-                "phone_number VARCHAR(20), " +
-                "position VARCHAR(100), " +
-                "role VARCHAR(20) NOT NULL DEFAULT 'USER', " +
-                "is_active BOOLEAN NOT NULL DEFAULT TRUE, " +
-                "is_locked BOOLEAN NOT NULL DEFAULT FALSE, " +
-                "is_password_expired BOOLEAN NOT NULL DEFAULT FALSE, " +
-                "last_login_at TIMESTAMP, " +
-                "password_changed_at TIMESTAMP, " +
-                "company_id BIGINT, " +
-                "department_id BIGINT, " +
-                "employee_id BIGINT, " +
-                "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, " +
-                "updated_at TIMESTAMP, " +
-                "created_by BIGINT, " +
-                "updated_by BIGINT, " +
-                "is_deleted BOOLEAN NOT NULL DEFAULT FALSE, " +
-                "deleted_at TIMESTAMP, " +
-                "deleted_by BIGINT, " +
-                "FOREIGN KEY (company_id) REFERENCES companies(id), " +
-                "FOREIGN KEY (department_id) REFERENCES departments(id), " +
-                "FOREIGN KEY (employee_id) REFERENCES employees(id)" +
-                ")",
-                
+
                 "CREATE TABLE IF NOT EXISTS positions (" +
                 "id BIGSERIAL PRIMARY KEY, " +
                 "company_id BIGINT NOT NULL, " +
@@ -211,13 +181,21 @@ public class DdlForcer {
                 "deleted_by BIGINT, " +
                 "FOREIGN KEY (company_id) REFERENCES companies(id)" +
                 ")",
-                
+
                 "CREATE TABLE IF NOT EXISTS employees (" +
                 "id BIGSERIAL PRIMARY KEY, " +
                 "company_id BIGINT NOT NULL, " +
                 "department_id BIGINT NOT NULL, " +
                 "position_id BIGINT, " +
                 "employee_number VARCHAR(20) UNIQUE NOT NULL, " +
+                "username VARCHAR(50) UNIQUE, " +
+                "password VARCHAR(200), " +
+                "role VARCHAR(20), " +
+                "is_active BOOLEAN DEFAULT TRUE, " +
+                "is_locked BOOLEAN DEFAULT FALSE, " +
+                "is_password_expired BOOLEAN DEFAULT FALSE, " +
+                "last_login_at TIMESTAMP, " +
+                "password_changed_at TIMESTAMP, " +
                 "name VARCHAR(50) NOT NULL, " +
                 "name_en VARCHAR(100), " +
                 "email VARCHAR(100) UNIQUE NOT NULL, " +
@@ -549,7 +527,7 @@ public class DdlForcer {
 
                 "CREATE TABLE IF NOT EXISTS notifications (" +
                 "id BIGSERIAL PRIMARY KEY, " +
-                "user_id BIGINT NOT NULL, " +
+                "employee_id BIGINT NOT NULL, " +
                 "title VARCHAR(200) NOT NULL, " +
                 "message VARCHAR(1000) NOT NULL, " +
                 "type VARCHAR(20) NOT NULL, " +
@@ -568,7 +546,7 @@ public class DdlForcer {
                 "is_deleted BOOLEAN NOT NULL DEFAULT FALSE, " +
                 "deleted_at TIMESTAMP, " +
                 "deleted_by BIGINT, " +
-                "FOREIGN KEY (user_id) REFERENCES users(id), " +
+                "FOREIGN KEY (employee_id) REFERENCES employees(id), " +
                 "FOREIGN KEY (company_id) REFERENCES companies(id), " +
                 "FOREIGN KEY (department_id) REFERENCES departments(id)" +
                 ")"
@@ -702,10 +680,9 @@ public class DdlForcer {
         
         // 각 데이터 삽입을 개별적으로 안전하게 처리 (외래키 의존성 순서 고려)
         insertCompanyData();
-        insertDepartmentData(); // 부서 데이터 먼저 생성 (users의 외래키 제약조건)
-        insertUserData();
-        // insertPositionData(); // DataInitializer에서 관리
-        // insertEmployeeData(); // DataInitializer에서 관리
+        insertDepartmentData();
+        insertPositionDataBeforeEmployees(); // 직급은 직원보다 먼저 생성
+        insertEmployeeData(); // 로그인 정보 포함된 직원 데이터 생성
         insertProductCategoryData();
         insertWarehouseData();  // 상품보다 먼저 삽입
         insertProductData();
@@ -759,87 +736,73 @@ public class DdlForcer {
     }
     
     /**
-     * 사용자 데이터 삽입
+     * 직급 데이터 삽입 (직원 데이터보다 먼저 실행)
      */
-    private void insertUserData() {
-            try {
-                String superadminPassword = passwordEncoder.encode("super123");
-                String adminPassword = passwordEncoder.encode("admin123");
-                String managerPassword = passwordEncoder.encode("manager123");
-                String hrManagerPassword = passwordEncoder.encode("hr123");
-                String userPassword = passwordEncoder.encode("user123");
-                String xyzPassword = passwordEncoder.encode("xyz123");
-                String defPassword = passwordEncoder.encode("def123");
-                
-                // 비밀번호 검증
-                boolean superadminMatches = passwordEncoder.matches("super123", superadminPassword);
-                boolean adminMatches = passwordEncoder.matches("admin123", adminPassword);
-                boolean userMatches = passwordEncoder.matches("user123", userPassword);
-                log.info("🔐 superadmin 비밀번호 검증 결과: {}", superadminMatches);
-                log.info("🔐 admin 비밀번호 검증 결과: {}", adminMatches);
-                log.info("🔐 user 비밀번호 검증 결과: {}", userMatches);
-            
-            String[] userInserts = {
-                // 시스템 관리자 (SUPER_ADMIN) - 회사 소속 없음
-                String.format("INSERT INTO users (id, username, password, email, full_name, phone, role, is_active, is_locked, is_password_expired, password_changed_at) VALUES (1, 'superadmin', '%s', 'super@erp-system.com', '시스템관리자', '02-0000-0000', 'SUPER_ADMIN', true, false, false, NOW()) ON CONFLICT (id) DO NOTHING", superadminPassword),
-                
-                // ABC기업 사용자들
-                String.format("INSERT INTO users (id, username, password, email, full_name, phone, role, is_active, is_locked, is_password_expired, company_id, department_id, position, password_changed_at) VALUES (2, 'admin', '%s', 'admin@abc.com', '관리자', '02-1234-5678', 'ADMIN', true, false, false, 1, 1, '대표이사', NOW()) ON CONFLICT (id) DO NOTHING", adminPassword),
-                String.format("INSERT INTO users (id, username, password, email, full_name, phone, role, is_active, is_locked, is_password_expired, company_id, department_id, position, password_changed_at) VALUES (3, 'manager', '%s', 'manager@abc.com', '개발팀매니저', '02-3456-7890', 'MANAGER', true, false, false, 1, 3, '부장', NOW()) ON CONFLICT (id) DO NOTHING", managerPassword),
-                String.format("INSERT INTO users (id, username, password, email, full_name, phone, role, is_active, is_locked, is_password_expired, company_id, department_id, position, password_changed_at) VALUES (4, 'hr_manager', '%s', 'hr_manager@abc.com', '인사팀매니저', '02-3456-7891', 'MANAGER', true, false, false, 1, 1, '부장', NOW()) ON CONFLICT (id) DO NOTHING", hrManagerPassword),
-                String.format("INSERT INTO users (id, username, password, email, full_name, phone, role, is_active, is_locked, is_password_expired, company_id, department_id, position, password_changed_at) VALUES (5, 'user', '%s', 'user@abc.com', '일반사용자', '02-2345-6789', 'USER', true, false, false, 1, 3, '대리', NOW()) ON CONFLICT (id) DO NOTHING", userPassword),
-                
-                // XYZ그룹 사용자들
-                String.format("INSERT INTO users (id, username, password, email, full_name, phone, role, is_active, is_locked, is_password_expired, company_id, department_id, position, password_changed_at) VALUES (6, 'xyz_admin', '%s', 'admin@xyz.com', 'XYZ관리자', '031-234-5678', 'ADMIN', true, false, false, 2, 4, '대표이사', NOW()) ON CONFLICT (id) DO NOTHING", xyzPassword),
-                String.format("INSERT INTO users (id, username, password, email, full_name, phone, role, is_active, is_locked, is_password_expired, company_id, department_id, position, password_changed_at) VALUES (7, 'xyz_manager', '%s', 'manager@xyz.com', 'XYZ인사팀매니저', '031-234-5679', 'MANAGER', true, false, false, 2, 4, '부장', NOW()) ON CONFLICT (id) DO NOTHING", xyzPassword),
-                
-                // DEF코퍼레이션 사용자들
-                String.format("INSERT INTO users (id, username, password, email, full_name, phone, role, is_active, is_locked, is_password_expired, company_id, department_id, position, password_changed_at) VALUES (8, 'def_admin', '%s', 'admin@def.com', 'DEF관리자', '02-345-6789', 'ADMIN', true, false, false, 3, 7, '대표이사', NOW()) ON CONFLICT (id) DO NOTHING", defPassword),
-                String.format("INSERT INTO users (id, username, password, email, full_name, phone, role, is_active, is_locked, is_password_expired, company_id, department_id, position, password_changed_at) VALUES (9, 'def_user', '%s', 'user@def.com', 'DEF사용자', '02-345-6790', 'USER', true, false, false, 3, 7, '사원', NOW()) ON CONFLICT (id) DO NOTHING", defPassword)
-            };
-            
-            for (String sql : userInserts) {
-                executeSafeInsert(sql, "사용자 데이터");
-            }
-            
-            log.info("✅ 로그인 계정 정보 (총 9개):");
-            log.info("   🔑 시스템: superadmin/super123 (SUPER_ADMIN)");
-            log.info("   👤 ABC기업: admin/admin123 (ADMIN), manager/manager123 (MANAGER), hr_manager/hr123 (HR MANAGER), user/user123 (USER)");
-            log.info("   👤 XYZ그룹: xyz_admin/xyz123 (ADMIN), xyz_manager/xyz123 (HR MANAGER)");
-            log.info("   👤 DEF코퍼레이션: def_admin/def123 (ADMIN), def_user/def123 (USER)");
-            
-            } catch (Exception e) {
-            log.warn("⚠️ 사용자 데이터 삽입 중 오류: {}", e.getMessage());
-        }
-    }
-    
-    /**
-     * 직급 데이터 삽입
-     */
-    private void insertPositionData() {
+    private void insertPositionDataBeforeEmployees() {
         String[] positionInserts = {
             "INSERT INTO positions (id, company_id, position_code, name, description, level, is_active, is_deleted) VALUES (1, 1, 'CEO', '대표이사', '최고경영자', 1, true, false) ON CONFLICT (id) DO NOTHING",
             "INSERT INTO positions (id, company_id, position_code, name, description, level, is_active, is_deleted) VALUES (2, 1, 'MANAGER', '부장', '부서장', 4, true, false) ON CONFLICT (id) DO NOTHING",
             "INSERT INTO positions (id, company_id, position_code, name, description, level, is_active, is_deleted) VALUES (3, 1, 'STAFF', '대리', '대리급', 7, true, false) ON CONFLICT (id) DO NOTHING"
         };
-        
+
         for (String sql : positionInserts) {
             executeSafeInsert(sql, "직급 데이터");
         }
     }
-    
+
     /**
-     * 직원 데이터 삽입
+     * 직원 데이터 삽입 (로그인 정보 포함)
      */
     private void insertEmployeeData() {
-        String[] employeeInserts = {
-            "INSERT INTO employees (id, company_id, department_id, position_id, employee_number, name, email, phone, hire_date, employment_status, address, birth_date, is_deleted) VALUES (1, 1, 1, 1, 'EMP001', '김관리', 'admin@abc.com', '010-1234-5678', '2020-01-01', 'ACTIVE', '서울특별시 강남구', '1980-01-01', false) ON CONFLICT (id) DO NOTHING",
-            "INSERT INTO employees (id, company_id, department_id, position_id, employee_number, name, email, phone, hire_date, employment_status, address, birth_date, is_deleted) VALUES (2, 1, 2, 2, 'EMP002', '이영업', 'sales@abc.com', '010-2345-6789', '2020-02-01', 'ACTIVE', '서울특별시 서초구', '1985-05-15', false) ON CONFLICT (id) DO NOTHING",
-            "INSERT INTO employees (id, company_id, department_id, position_id, employee_number, name, email, phone, hire_date, employment_status, address, birth_date, is_deleted) VALUES (3, 1, 3, 3, 'EMP003', '박개발', 'dev@abc.com', '010-3456-7890', '2020-03-01', 'ACTIVE', '서울특별시 마포구', '1990-08-20', false) ON CONFLICT (id) DO NOTHING"
-        };
-        
-        for (String sql : employeeInserts) {
-            executeSafeInsert(sql, "직원 데이터");
+        try {
+            String superadminPassword = passwordEncoder.encode("super123");
+            String adminPassword = passwordEncoder.encode("admin123");
+            String managerPassword = passwordEncoder.encode("manager123");
+            String hrManagerPassword = passwordEncoder.encode("hr123");
+            String userPassword = passwordEncoder.encode("user123");
+            String xyzPassword = passwordEncoder.encode("xyz123");
+            String defPassword = passwordEncoder.encode("def123");
+
+            // 비밀번호 검증
+            log.info("🔐 superadmin 비밀번호 검증: {}", passwordEncoder.matches("super123", superadminPassword));
+            log.info("🔐 admin 비밀번호 검증: {}", passwordEncoder.matches("admin123", adminPassword));
+
+            String[] employeeInserts = {
+                // 최고 관리자 (SUPER_ADMIN)
+                String.format("INSERT INTO employees (id, company_id, department_id, position_id, employee_number, username, password, role, is_active, is_locked, is_password_expired, password_changed_at, name, email, phone, hire_date, employment_status, birth_date, is_deleted) VALUES (0, 1, 1, 1, 'SUPER001', 'superadmin', '%s', 'SUPER_ADMIN', true, false, false, NOW(), '최고관리자', 'superadmin@erp.com', '010-0000-0000', '2019-01-01', 'ACTIVE', '1975-01-01', false) ON CONFLICT (id) DO NOTHING", superadminPassword),
+
+                // ABC기업 직원들 (로그인 계정 포함)
+                String.format("INSERT INTO employees (id, company_id, department_id, position_id, employee_number, username, password, role, is_active, is_locked, is_password_expired, password_changed_at, name, email, phone, hire_date, employment_status, birth_date, is_deleted) VALUES (1, 1, 1, 1, 'EMP001', 'admin', '%s', 'ADMIN', true, false, false, NOW(), '관리자', 'admin@abc.com', '010-1234-5678', '2020-01-01', 'ACTIVE', '1980-01-01', false) ON CONFLICT (id) DO NOTHING", adminPassword),
+
+                String.format("INSERT INTO employees (id, company_id, department_id, position_id, employee_number, username, password, role, is_active, is_locked, is_password_expired, password_changed_at, name, email, phone, hire_date, employment_status, birth_date, is_deleted) VALUES (2, 1, 1, 2, 'EMP002', 'hr_manager', '%s', 'MANAGER', true, false, false, NOW(), '인사팀매니저', 'hr_manager@abc.com', '010-2345-6789', '2020-02-01', 'ACTIVE', '1985-05-15', false) ON CONFLICT (id) DO NOTHING", hrManagerPassword),
+
+                String.format("INSERT INTO employees (id, company_id, department_id, position_id, employee_number, username, password, role, is_active, is_locked, is_password_expired, password_changed_at, name, email, phone, hire_date, employment_status, birth_date, is_deleted) VALUES (3, 1, 3, 2, 'EMP003', 'manager', '%s', 'MANAGER', true, false, false, NOW(), '개발팀매니저', 'manager@abc.com', '010-3456-7890', '2020-03-01', 'ACTIVE', '1990-08-20', false) ON CONFLICT (id) DO NOTHING", managerPassword),
+
+                String.format("INSERT INTO employees (id, company_id, department_id, position_id, employee_number, username, password, role, is_active, is_locked, is_password_expired, password_changed_at, name, email, phone, hire_date, employment_status, birth_date, is_deleted) VALUES (4, 1, 3, 3, 'EMP004', 'user', '%s', 'USER', true, false, false, NOW(), '일반사용자', 'user@abc.com', '010-4567-8901', '2021-01-01', 'ACTIVE', '1992-03-15', false) ON CONFLICT (id) DO NOTHING", userPassword),
+
+                // XYZ그룹 직원들 (로그인 계정 포함)
+                String.format("INSERT INTO employees (id, company_id, department_id, position_id, employee_number, username, password, role, is_active, is_locked, is_password_expired, password_changed_at, name, email, phone, hire_date, employment_status, birth_date, is_deleted) VALUES (5, 2, 4, 1, 'XYZ001', 'xyz_admin', '%s', 'ADMIN', true, false, false, NOW(), 'XYZ관리자', 'admin@xyz.com', '010-5678-9012', '2019-01-01', 'ACTIVE', '1978-06-10', false) ON CONFLICT (id) DO NOTHING", xyzPassword),
+
+                String.format("INSERT INTO employees (id, company_id, department_id, position_id, employee_number, username, password, role, is_active, is_locked, is_password_expired, password_changed_at, name, email, phone, hire_date, employment_status, birth_date, is_deleted) VALUES (6, 2, 4, 2, 'XYZ002', 'xyz_manager', '%s', 'MANAGER', true, false, false, NOW(), 'XYZ인사팀매니저', 'manager@xyz.com', '010-6789-0123', '2019-06-01', 'ACTIVE', '1983-09-25', false) ON CONFLICT (id) DO NOTHING", xyzPassword),
+
+                // DEF코퍼레이션 직원들 (로그인 계정 포함)
+                String.format("INSERT INTO employees (id, company_id, department_id, position_id, employee_number, username, password, role, is_active, is_locked, is_password_expired, password_changed_at, name, email, phone, hire_date, employment_status, birth_date, is_deleted) VALUES (7, 3, 7, 1, 'DEF001', 'def_admin', '%s', 'ADMIN', true, false, false, NOW(), 'DEF관리자', 'admin@def.com', '010-7890-1234', '2018-01-01', 'ACTIVE', '1975-12-20', false) ON CONFLICT (id) DO NOTHING", defPassword),
+
+                String.format("INSERT INTO employees (id, company_id, department_id, position_id, employee_number, username, password, role, is_active, is_locked, is_password_expired, password_changed_at, name, email, phone, hire_date, employment_status, birth_date, is_deleted) VALUES (8, 3, 7, 3, 'DEF002', 'def_user', '%s', 'USER', true, false, false, NOW(), 'DEF사용자', 'user@def.com', '010-8901-2345', '2021-06-01', 'ACTIVE', '1994-07-30', false) ON CONFLICT (id) DO NOTHING", defPassword)
+            };
+
+            for (String sql : employeeInserts) {
+                executeSafeInsert(sql, "직원 데이터");
+            }
+
+            log.info("✅ 로그인 계정 정보 (총 9개):");
+            log.info("   👑 시스템: superadmin/super123 (SUPERADMIN)");
+            log.info("   👤 ABC기업: admin/admin123 (ADMIN), manager/manager123 (MANAGER), hr_manager/hr123 (MANAGER), user/user123 (USER)");
+            log.info("   👤 XYZ그룹: xyz_admin/xyz123 (ADMIN), xyz_manager/xyz123 (MANAGER)");
+            log.info("   👤 DEF코퍼레이션: def_admin/def123 (ADMIN), def_user/def123 (USER)");
+
+        } catch (Exception e) {
+            log.warn("⚠️ 직원 데이터 삽입 중 오류: {}", e.getMessage());
         }
     }
     
@@ -996,7 +959,6 @@ public class DdlForcer {
             "COMMENT ON TABLE departments IS '부서 정보 테이블'",
             "COMMENT ON TABLE positions IS '직급 정보 테이블'",
             "COMMENT ON TABLE employees IS '직원 정보 테이블'",
-            "COMMENT ON TABLE users IS '사용자 계정 테이블'",
             "COMMENT ON TABLE accounts IS '계정 정보 테이블'",
             "COMMENT ON TABLE customers IS '고객 정보 테이블'",
             "COMMENT ON TABLE products IS '상품 정보 테이블'",
@@ -1117,38 +1079,13 @@ public class DdlForcer {
             "COMMENT ON COLUMN employees.deleted_at IS '삭제일시'",
             "COMMENT ON COLUMN employees.deleted_by IS '삭제자 ID'",
 
-            // users 테이블 (기본 컬럼만)
-            "COMMENT ON COLUMN users.id IS '사용자 고유 ID'",
-            "COMMENT ON COLUMN users.username IS '사용자명'",
-            "COMMENT ON COLUMN users.password IS '암호화된 비밀번호'",
-            "COMMENT ON COLUMN users.email IS '이메일'",
-            "COMMENT ON COLUMN users.role IS '사용자 역할'",
-            "COMMENT ON COLUMN users.is_active IS '활성화 여부'",
-            "COMMENT ON COLUMN users.full_name IS '전체 이름'",
-            "COMMENT ON COLUMN users.phone IS '전화번호'",
-            "COMMENT ON COLUMN users.phone_number IS '전화번호(중복)'",
-            "COMMENT ON COLUMN users.position IS '직책'",
-            "COMMENT ON COLUMN users.is_locked IS '계정 잠김 여부'",
-            "COMMENT ON COLUMN users.is_password_expired IS '비밀번호 만료 여부'",
-            "COMMENT ON COLUMN users.last_login_at IS '마지막 로그인 일시'",
-            "COMMENT ON COLUMN users.password_changed_at IS '비밀번호 변경 일시'",
-            "COMMENT ON COLUMN users.company_id IS '소속 회사 ID'",
-            "COMMENT ON COLUMN users.department_id IS '소속 부서 ID'",
-            "COMMENT ON COLUMN users.created_at IS '생성일시'",
-            "COMMENT ON COLUMN users.updated_at IS '수정일시'",
-            "COMMENT ON COLUMN users.created_by IS '생성자 ID'",
-            "COMMENT ON COLUMN users.updated_by IS '수정자 ID'",
-            "COMMENT ON COLUMN users.is_deleted IS '삭제 여부'",
-            "COMMENT ON COLUMN users.deleted_at IS '삭제일시'",
-            "COMMENT ON COLUMN users.deleted_by IS '삭제자 ID'",
-
             // accounts 테이블
             "COMMENT ON COLUMN accounts.id IS '계정 고유 ID'",
             "COMMENT ON COLUMN accounts.company_id IS '소속 회사 ID'",
             "COMMENT ON COLUMN accounts.parent_account_id IS '상위 계정 ID'",
             "COMMENT ON COLUMN accounts.account_code IS '계정 코드'",
-            "COMMENT ON COLUMN accounts.account_name IS '계정명'",
-            "COMMENT ON COLUMN accounts.account_name_en IS '계정명(영문)'",
+            "COMMENT ON COLUMN accounts.name IS '계정명'",
+            "COMMENT ON COLUMN accounts.name_en IS '계정명(영문)'",
             "COMMENT ON COLUMN accounts.description IS '계정 설명'",
             "COMMENT ON COLUMN accounts.account_type IS '계정 유형'",
             "COMMENT ON COLUMN accounts.account_category IS '계정 분류'",
@@ -1347,7 +1284,7 @@ public class DdlForcer {
             "COMMENT ON COLUMN notification_settings.deleted_by IS '삭제자 ID'",
 
             // notifications 테이블
-            "COMMENT ON COLUMN notifications.user_id IS '사용자 ID'",
+            "COMMENT ON COLUMN notifications.employee_id IS '직원 ID'",
             "COMMENT ON COLUMN notifications.title IS '알림 제목'",
             "COMMENT ON COLUMN notifications.message IS '알림 메시지'",
             "COMMENT ON COLUMN notifications.type IS '알림 타입'",

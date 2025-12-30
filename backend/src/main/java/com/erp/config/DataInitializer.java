@@ -1,7 +1,6 @@
 package com.erp.config;
 
 import com.erp.common.entity.Company;
-import com.erp.common.entity.User;
 import com.erp.hr.entity.Department;
 import com.erp.hr.entity.Position;
 import com.erp.hr.entity.Employee;
@@ -11,7 +10,6 @@ import com.erp.common.repository.CompanyRepository;
 import com.erp.hr.repository.DepartmentRepository;
 import com.erp.hr.repository.PositionRepository;
 import com.erp.hr.repository.EmployeeRepository;
-import com.erp.common.repository.UserRepository;
 import com.erp.inventory.repository.ProductRepository;
 import com.erp.inventory.repository.ProductCategoryRepository;
 import com.erp.sales.entity.Customer;
@@ -31,7 +29,6 @@ import java.util.Random;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -48,7 +45,6 @@ public class DataInitializer {
     private final DepartmentRepository departmentRepository;
     private final PositionRepository positionRepository;
     private final EmployeeRepository employeeRepository;
-    private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final ProductCategoryRepository productCategoryRepository;
     private final CustomerRepository customerRepository;
@@ -73,11 +69,8 @@ public class DataInitializer {
             // 직급 데이터 생성
             createPositions();
 
-            // 직원 데이터 먼저 생성 (User보다 먼저 생성되어야 employee_id 매핑 가능)
+            // 직원 데이터 생성
             createEmployees();
-
-            // 사용자 데이터 생성 (직원 생성 후 employee_id 매핑)
-            createUsers();
             
             // 상품 카테고리 및 상품 데이터 생성
             createProductCategories();
@@ -88,7 +81,7 @@ public class DataInitializer {
             
             // 주문 데이터 생성
             createOrders();
-            
+
             // 테스트 알림 생성
             createTestNotifications();
 
@@ -415,183 +408,6 @@ public class DataInitializer {
         return position;
     }
 
-    @Transactional
-    private void createUsers() {
-        // 기존 사용자 비밀번호 업데이트 (개발용)
-        updateExistingUserPasswords();
-        
-        // 기존 사용자 데이터 확인
-        long existingUserCount = userRepository.count();
-        log.info("기존 사용자 개수: {}", existingUserCount);
-        
-        if (existingUserCount > 0) {
-            // 기존 사용자 데이터 조회하여 확인
-            List<User> existingUsers = userRepository.findAll();
-            log.info("기존 사용자 목록:");
-            for (User user : existingUsers) {
-                log.info("  - ID: {}, 사용자명: {}, 역할: {}", user.getId(), user.getUsername(), user.getRole());
-            }
-            
-            // DdlForcer에서 SUPER_ADMIN만 생성되었으면 나머지 계정 추가
-            boolean hasSuperAdmin = existingUsers.stream()
-                .anyMatch(user -> user.getRole() == User.UserRole.SUPER_ADMIN);
-            boolean hasRegularUsers = existingUsers.stream()
-                .anyMatch(user -> "admin".equals(user.getUsername()) || "hr_manager".equals(user.getUsername()));
-            
-            if (hasSuperAdmin && !hasRegularUsers) {
-                log.info("SUPER_ADMIN 계정만 존재합니다. 나머지 계정들을 추가합니다.");
-                // existingUserCount를 0으로 설정하여 아래 사용자 생성 로직 실행
-                existingUserCount = 0;
-            }
-        }
-        
-        if (existingUserCount == 0) {
-            try {
-                // 3개 회사 조회
-                Company abcCompany = companyRepository.findByCompanyCode("ABC_CORP")
-                    .orElseThrow(() -> new RuntimeException("ABC기업을 찾을 수 없습니다"));
-                Company xyzCompany = companyRepository.findByCompanyCode("XYZ_GROUP")
-                    .orElseThrow(() -> new RuntimeException("XYZ그룹을 찾을 수 없습니다"));
-                Company defCompany = companyRepository.findByCompanyCode("DEF_CORP")
-                    .orElseThrow(() -> new RuntimeException("DEF코퍼레이션을 찾을 수 없습니다"));
-
-                log.info("사용자 생성 시작 - 3개 회사별 사용자 생성 (직원과 매핑)");
-
-                // 부서 조회
-                Department abcHrDept = departmentRepository.findByDepartmentCode("ABC_HR")
-                    .orElseThrow(() -> new RuntimeException("ABC 인사팀을 찾을 수 없습니다"));
-                Department abcDevDept = departmentRepository.findByDepartmentCode("ABC_DEV")
-                    .orElseThrow(() -> new RuntimeException("ABC 개발팀을 찾을 수 없습니다"));
-                Department xyzHrDept = departmentRepository.findByDepartmentCode("XYZ_HR")
-                    .orElseThrow(() -> new RuntimeException("XYZ 인사팀을 찾을 수 없습니다"));
-                Department defHrDept = departmentRepository.findByDepartmentCode("DEF_HR")
-                    .orElseThrow(() -> new RuntimeException("DEF 인사팀을 찾을 수 없습니다"));
-
-                // 직급 조회
-                Position abcCeoPosition = positionRepository.findByPositionCode("ABC_CEO")
-                    .orElseThrow(() -> new RuntimeException("ABC 대표이사 직급을 찾을 수 없습니다"));
-                Position abcManagerPosition = positionRepository.findByPositionCode("ABC_MANAGER")
-                    .orElseThrow(() -> new RuntimeException("ABC 부장 직급을 찾을 수 없습니다"));
-                Position abcDeputyPosition = positionRepository.findByPositionCode("ABC_DEPUTY")
-                    .orElseThrow(() -> new RuntimeException("ABC 대리 직급을 찾을 수 없습니다"));
-
-                // 각 회사의 직원 조회 (첫 3명)
-                List<Employee> abcEmployees = employeeRepository.findByCompanyId(abcCompany.getId());
-                List<Employee> xyzEmployees = employeeRepository.findByCompanyId(xyzCompany.getId());
-                List<Employee> defEmployees = employeeRepository.findByCompanyId(defCompany.getId());
-
-                // 사용자 생성
-                List<User> users = new ArrayList<>();
-
-                // 시스템 관리자 (SUPER_ADMIN) - 회사 소속 없음, employee_id = null
-                users.add(createUserWithEmployee("superadmin", "super123", "super@erp-system.com", "시스템관리자", "02-0000-0000",
-                    User.UserRole.SUPER_ADMIN, null, null, "시스템관리자", null));
-
-                // ABC기업 사용자들 (각 회사의 첫 3명 직원과 매핑)
-                users.add(createUserWithEmployee("admin", "admin123", "admin@abc.com", "관리자", "02-1234-5678",
-                    User.UserRole.ADMIN, abcCompany, abcHrDept, abcCeoPosition.getName(),
-                    abcEmployees.size() > 0 ? abcEmployees.get(0).getId() : null));
-                users.add(createUserWithEmployee("manager", "manager123", "manager@abc.com", "개발팀매니저", "02-3456-7890",
-                    User.UserRole.MANAGER, abcCompany, abcDevDept, abcManagerPosition.getName(),
-                    abcEmployees.size() > 1 ? abcEmployees.get(1).getId() : null));
-                users.add(createUserWithEmployee("hr_manager", "hr123", "hr_manager@abc.com", "인사팀매니저", "02-3456-7891",
-                    User.UserRole.MANAGER, abcCompany, abcHrDept, abcManagerPosition.getName(),
-                    abcEmployees.size() > 2 ? abcEmployees.get(2).getId() : null));
-                users.add(createUserWithEmployee("user", "user123", "user@abc.com", "일반사용자", "02-2345-6789",
-                    User.UserRole.USER, abcCompany, abcDevDept, abcDeputyPosition.getName(),
-                    abcEmployees.size() > 3 ? abcEmployees.get(3).getId() : null));
-
-                // XYZ그룹 사용자들 (각 회사의 첫 2명 직원과 매핑)
-                users.add(createUserWithEmployee("xyz_admin", "xyz123", "admin@xyz.com", "XYZ관리자", "031-234-5678",
-                    User.UserRole.ADMIN, xyzCompany, xyzHrDept, "대표이사",
-                    xyzEmployees.size() > 0 ? xyzEmployees.get(0).getId() : null));
-                users.add(createUserWithEmployee("xyz_manager", "xyz123", "manager@xyz.com", "XYZ인사팀매니저", "031-234-5679",
-                    User.UserRole.MANAGER, xyzCompany, xyzHrDept, "부장",
-                    xyzEmployees.size() > 1 ? xyzEmployees.get(1).getId() : null));
-
-                // DEF코퍼레이션 사용자들 (각 회사의 첫 2명 직원과 매핑)
-                users.add(createUserWithEmployee("def_admin", "def123", "admin@def.com", "DEF관리자", "02-345-6789",
-                    User.UserRole.ADMIN, defCompany, defHrDept, "대표이사",
-                    defEmployees.size() > 0 ? defEmployees.get(0).getId() : null));
-                users.add(createUserWithEmployee("def_user", "def123", "user@def.com", "DEF사용자", "02-345-6790",
-                    User.UserRole.USER, defCompany, defHrDept, "사원",
-                    defEmployees.size() > 1 ? defEmployees.get(1).getId() : null));
-
-                userRepository.saveAll(users);
-
-                log.info("✅ 로그인 계정 정보 (총 {}개, employee_id 매핑 포함):", users.size());
-                log.info("   시스템: superadmin/super123 (SUPER_ADMIN, employee_id=NULL)");
-                log.info("   ABC기업: admin/admin123 (employee_id={}), manager/manager123 (employee_id={}), hr_manager/hr123 (employee_id={}), user/user123 (employee_id={})",
-                    abcEmployees.size() > 0 ? abcEmployees.get(0).getId() : "NULL",
-                    abcEmployees.size() > 1 ? abcEmployees.get(1).getId() : "NULL",
-                    abcEmployees.size() > 2 ? abcEmployees.get(2).getId() : "NULL",
-                    abcEmployees.size() > 3 ? abcEmployees.get(3).getId() : "NULL");
-                log.info("   XYZ그룹: xyz_admin/xyz123 (employee_id={}), xyz_manager/xyz123 (employee_id={})",
-                    xyzEmployees.size() > 0 ? xyzEmployees.get(0).getId() : "NULL",
-                    xyzEmployees.size() > 1 ? xyzEmployees.get(1).getId() : "NULL");
-                log.info("   DEF코퍼레이션: def_admin/def123 (employee_id={}), def_user/def123 (employee_id={})",
-                    defEmployees.size() > 0 ? defEmployees.get(0).getId() : "NULL",
-                    defEmployees.size() > 1 ? defEmployees.get(1).getId() : "NULL");
-                
-            } catch (Exception e) {
-                log.error("사용자 생성 중 오류 발생: {}", e.getMessage(), e);
-                throw new RuntimeException("사용자 생성 실패: " + e.getMessage(), e);
-            }
-        } else {
-            log.info("사용자 데이터가 이미 존재합니다. 건너뜀.");
-        }
-    }
-
-    /**
-     * 사용자 생성 헬퍼 메서드
-     */
-    private User createUser(String username, String password, String email, String fullName, String phone,
-                           User.UserRole role, Company company, Department department, String position) {
-        User user = new User();
-        user.setUsername(username);
-        user.setPassword(passwordEncoder.encode(password));
-        user.setEmail(email);
-        user.setFullName(fullName);
-        user.setPhone(phone);
-        user.setRole(role);
-        user.setIsActive(true);
-        user.setIsLocked(false);
-        user.setIsPasswordExpired(false);
-        user.setCompany(company);
-        user.setDepartment(department);
-        user.setPosition(position);
-        user.setPasswordChangedAt(LocalDateTime.now());
-        user.setCreatedBy(1L);
-        user.setUpdatedBy(1L);
-        user.setIsDeleted(false);
-        return user;
-    }
-
-    /**
-     * 사용자 생성 헬퍼 메서드 (employee_id 포함)
-     */
-    private User createUserWithEmployee(String username, String password, String email, String fullName, String phone,
-                                       User.UserRole role, Company company, Department department, String position, Long employeeId) {
-        User user = new User();
-        user.setUsername(username);
-        user.setPassword(passwordEncoder.encode(password));
-        user.setEmail(email);
-        user.setFullName(fullName);
-        user.setPhone(phone);
-        user.setRole(role);
-        user.setIsActive(true);
-        user.setIsLocked(false);
-        user.setIsPasswordExpired(false);
-        user.setCompany(company);
-        user.setDepartment(department);
-        user.setPosition(position);
-        user.setEmployeeId(employeeId);  // employee_id 설정
-        user.setPasswordChangedAt(LocalDateTime.now());
-        user.setCreatedBy(1L);
-        user.setUpdatedBy(1L);
-        user.setIsDeleted(false);
-        return user;
-    }
 
     /**
      * 직원 데이터 생성 - 각 회사별 10명씩, 5개 상태 모두 포함
@@ -834,50 +650,6 @@ public class DataInitializer {
         return employee;
     }
 
-    /**
-     * 기존 사용자 비밀번호를 개발용 비밀번호로 업데이트
-     */
-    @Transactional
-    private void updateExistingUserPasswords() {
-        try {
-            // superadmin 사용자 비밀번호 업데이트
-            userRepository.findByUsername("superadmin").ifPresent(superadmin -> {
-                superadmin.setPassword(passwordEncoder.encode("super123"));
-                userRepository.save(superadmin);
-                log.info("✅ superadmin 사용자 비밀번호 업데이트 완료");
-            });
-
-            // admin 사용자 비밀번호 업데이트
-            userRepository.findByUsername("admin").ifPresent(admin -> {
-                admin.setPassword(passwordEncoder.encode("admin123"));
-                userRepository.save(admin);
-                log.info("✅ admin 사용자 비밀번호 업데이트 완료");
-            });
-
-            // manager 사용자 비밀번호 업데이트
-            userRepository.findByUsername("manager").ifPresent(manager -> {
-                manager.setPassword(passwordEncoder.encode("manager123"));
-                userRepository.save(manager);
-                log.info("✅ manager 사용자 비밀번호 업데이트 완료");
-            });
-
-            // hr_manager 사용자 비밀번호 업데이트
-            userRepository.findByUsername("hr_manager").ifPresent(hrManager -> {
-                hrManager.setPassword(passwordEncoder.encode("hr123"));
-                userRepository.save(hrManager);
-                log.info("✅ hr_manager 사용자 비밀번호 업데이트 완료");
-            });
-
-            // user 사용자 비밀번호 업데이트
-            userRepository.findByUsername("user").ifPresent(user -> {
-                user.setPassword(passwordEncoder.encode("user123"));
-                userRepository.save(user);
-                log.info("✅ user 사용자 비밀번호 업데이트 완료");
-            });
-        } catch (Exception e) {
-            log.warn("사용자 비밀번호 업데이트 중 오류 발생: {}", e.getMessage());
-        }
-    }
 
     /**
      * 상품 카테고리 데이터 생성
@@ -1291,31 +1063,38 @@ public class DataInitializer {
         try {
             log.info("테스트 알림 생성 시작");
 
-            // superadmin 사용자 조회
-            User superadminUser = userRepository.findByUsername("superadmin")
-                    .orElseThrow(() -> new RuntimeException("superadmin 사용자를 찾을 수 없습니다"));
+            // superadmin 직원 조회
+            Employee superadminEmployee = employeeRepository.findByUsername("superadmin")
+                    .orElse(null);
 
-            // admin 사용자 조회
-            User adminUser = userRepository.findByUsername("admin")
-                    .orElseThrow(() -> new RuntimeException("admin 사용자를 찾을 수 없습니다"));
+            // admin 직원 조회
+            Employee adminEmployee = employeeRepository.findByUsername("admin")
+                    .orElse(null);
 
-            // user 사용자 조회
-            User normalUser = userRepository.findByUsername("user")
-                    .orElseThrow(() -> new RuntimeException("user 사용자를 찾을 수 없습니다"));
+            // user 직원 조회
+            Employee normalEmployee = employeeRepository.findByUsername("user")
+                    .orElse(null);
 
-            // 기존 알림 데이터 삭제 (테스트 환경에서만)
-            deleteExistingNotifications(superadminUser.getId());
-            deleteExistingNotifications(adminUser.getId());
-            deleteExistingNotifications(normalUser.getId());
+            if (superadminEmployee != null) {
+                // 기존 알림 데이터 삭제 (테스트 환경에서만)
+                deleteExistingNotifications(superadminEmployee.getId());
+                // superadmin 공용 알림 생성 (관리자와 공통으로 받아야 하는 항목)
+                createSuperadminCommonNotifications(superadminEmployee);
+            }
 
-            // superadmin 공용 알림 생성 (관리자와 공통으로 받아야 하는 항목)
-            createSuperadminCommonNotifications(superadminUser);
+            if (adminEmployee != null) {
+                // 기존 알림 데이터 삭제 (테스트 환경에서만)
+                deleteExistingNotifications(adminEmployee.getId());
+                // admin 전용 알림 생성
+                createAdminNotifications(adminEmployee);
+            }
 
-            // admin 전용 알림 생성
-            createAdminNotifications(adminUser);
-            
-            // user 전용 알림 생성
-            createUserNotifications(normalUser);
+            if (normalEmployee != null) {
+                // 기존 알림 데이터 삭제 (테스트 환경에서만)
+                deleteExistingNotifications(normalEmployee.getId());
+                // user 전용 알림 생성
+                createUserNotifications(normalEmployee);
+            }
 
             log.info("테스트 알림 생성 완료: superadmin 공용 2개, admin용 4개, user용 4개");
         } catch (Exception e) {
@@ -1326,20 +1105,20 @@ public class DataInitializer {
     /**
      * 기존 알림 데이터 삭제
      */
-    private void deleteExistingNotifications(Long userId) {
+    private void deleteExistingNotifications(Long employeeId) {
         try {
-            // NotificationService를 통해 사용자의 모든 알림 삭제
-            notificationService.deleteAllNotificationsByUser(userId);
-            log.info("사용자 {}의 기존 알림 데이터 삭제 완료", userId);
+            // NotificationService를 통해 직원의 모든 알림 삭제
+            notificationService.deleteAllNotificationsByUser(employeeId);
+            log.info("직원 {}의 기존 알림 데이터 삭제 완료", employeeId);
         } catch (Exception e) {
-            log.warn("사용자 {}의 기존 알림 데이터 삭제 실패: {}", userId, e.getMessage());
+            log.warn("직원 {}의 기존 알림 데이터 삭제 실패: {}", employeeId, e.getMessage());
         }
     }
 
     /**
      * admin 전용 알림 생성
      */
-    private void createAdminNotifications(User adminUser) {
+    private void createAdminNotifications(Employee adminEmployee) {
         String[] adminTitles = {
             "관리자 승인 요청",
             "시스템 보안 경고",
@@ -1370,7 +1149,7 @@ public class DataInitializer {
 
         for (int i = 0; i < adminTitles.length; i++) {
             notificationService.createNotification(
-                adminUser,
+                adminEmployee,
                 adminTitles[i],
                 adminMessages[i],
                 adminTypes[i],
@@ -1384,7 +1163,7 @@ public class DataInitializer {
     /**
      * user 전용 알림 생성
      */
-    private void createUserNotifications(User normalUser) {
+    private void createUserNotifications(Employee normalEmployee) {
         String[] userTitles = {
             "새로운 할당 업무",
             "근무 시간 확인",
@@ -1415,7 +1194,7 @@ public class DataInitializer {
 
         for (int i = 0; i < userTitles.length; i++) {
             notificationService.createNotification(
-                normalUser,
+                normalEmployee,
                 userTitles[i],
                 userMessages[i],
                 userTypes[i],
@@ -1429,7 +1208,7 @@ public class DataInitializer {
     /**
      * superadmin 공용 알림 생성 (admin과 공통으로 수신해야 하는 중요 알림만 포함)
      */
-    private void createSuperadminCommonNotifications(User superadminUser) {
+    private void createSuperadminCommonNotifications(Employee superadminEmployee) {
         String[] titles = {
             "시스템 보안 경고",
             "데이터베이스 백업 완료"
@@ -1452,7 +1231,7 @@ public class DataInitializer {
 
         for (int i = 0; i < titles.length; i++) {
             notificationService.createNotification(
-                superadminUser,
+                superadminEmployee,
                 titles[i],
                 messages[i],
                 types[i],

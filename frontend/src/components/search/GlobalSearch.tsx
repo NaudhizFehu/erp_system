@@ -55,7 +55,7 @@ interface SearchSuggestion {
  */
 function GlobalSearch() {
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { currentUser } = useAuth()
   const [open, setOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
@@ -65,8 +65,8 @@ function GlobalSearch() {
 
   // 최근 검색어 (계정별로 localStorage에서 가져옴)
   useEffect(() => {
-    if (user?.id) {
-      const saved = localStorage.getItem(`recentSearches_${user.id}`)
+    if (currentUser?.id) {
+      const saved = localStorage.getItem(`recentSearches_${currentUser.id}`)
       if (saved) {
         try {
           setRecentSearches(JSON.parse(saved))
@@ -76,7 +76,7 @@ function GlobalSearch() {
         }
       }
     }
-  }, [user])
+  }, [currentUser])
 
   // 인기 검색어 (실제 데이터 기반)
   const popularSearches = [
@@ -118,7 +118,7 @@ function GlobalSearch() {
       icon: 'FolderOpen',
     },
     // SUPER_ADMIN만 회사 검색 버튼 표시
-    ...(user?.role === 'SUPER_ADMIN'
+    ...(currentUser?.role === 'SUPER_ADMIN'
       ? [
           {
             id: 'cat-5',
@@ -148,13 +148,16 @@ function GlobalSearch() {
    * 최근 검색어 저장
    */
   const saveRecentSearch = (term: string) => {
-    if (user?.id && term.trim()) {
+    if (currentUser?.id && term.trim()) {
       const updated = [term, ...recentSearches.filter(t => t !== term)].slice(
         0,
         5
       )
       setRecentSearches(updated)
-      localStorage.setItem(`recentSearches_${user.id}`, JSON.stringify(updated))
+      localStorage.setItem(
+        `recentSearches_${currentUser.id}`,
+        JSON.stringify(updated)
+      )
     }
   }
 
@@ -178,16 +181,16 @@ function GlobalSearch() {
       // 권한에 따라 companyId 파라미터 설정
       let searchUrl = `/search?q=${encodeURIComponent(term)}`
 
-      if (user?.role === 'SUPER_ADMIN') {
+      if (currentUser?.role === 'SUPER_ADMIN') {
         // SUPER_ADMIN: 전체 검색 (companyId 없음)
         console.log('🔑 SUPER_ADMIN 권한: 전체 데이터 검색')
         searchUrl = `/search?q=${encodeURIComponent(term)}`
-      } else if (user?.company?.id) {
+      } else if (currentUser?.company?.id) {
         // 일반 사용자: 자기 회사만 검색
         console.log(
-          `🏢 일반 사용자 권한: 회사 ${user.company.id}(${user.company.name}) 데이터만 검색`
+          `🏢 일반 사용자 권한: 회사 ${currentUser.company.id}(${currentUser.company.name}) 데이터만 검색`
         )
-        searchUrl = `/search?q=${encodeURIComponent(term)}&companyId=${user.company.id}`
+        searchUrl = `/search?q=${encodeURIComponent(term)}&companyId=${currentUser.company.id}`
       } else {
         // 회사 정보가 없는 경우
         console.warn('⚠️ 회사 정보가 없어 검색할 수 없습니다')
@@ -250,15 +253,15 @@ function GlobalSearch() {
 
       // 1. 직원 검색
       if (category === 'employee') {
-        if (user?.role === 'SUPER_ADMIN') {
+        if (currentUser?.role === 'SUPER_ADMIN') {
           console.log('🔑 SUPER_ADMIN: 전체 직원 조회')
           response = await api.get('/hr/employees?page=0&size=100')
-        } else if (user?.company?.id) {
+        } else if (currentUser?.company?.id) {
           console.log(
-            `🏢 일반 사용자: 회사 ${user.company.id}(${user.company.name}) 직원만 조회`
+            `🏢 일반 사용자: 회사 ${currentUser.company.id}(${currentUser.company.name}) 직원만 조회`
           )
           response = await api.get(
-            `/hr/employees/company/${user.company.id}?page=0&size=100`
+            `/hr/employees/company/${currentUser.company.id}?page=0&size=100`
           )
         } else {
           console.warn('⚠️ 회사 정보가 없어 직원을 조회할 수 없습니다')
@@ -270,15 +273,15 @@ function GlobalSearch() {
 
       // 2. 상품 검색
       else if (category === 'product') {
-        if (user?.role === 'SUPER_ADMIN') {
+        if (currentUser?.role === 'SUPER_ADMIN') {
           console.log('🔑 SUPER_ADMIN: 전체 상품 조회')
           response = await api.get('/products?page=0&size=100')
-        } else if (user?.company?.id) {
+        } else if (currentUser?.company?.id) {
           console.log(
-            `🏢 일반 사용자: 회사 ${user.company.id}(${user.company.name}) 상품만 조회`
+            `🏢 일반 사용자: 회사 ${currentUser.company.id}(${currentUser.company.name}) 상품만 조회`
           )
           response = await api.get(
-            `/products/companies/${user.company.id}?page=0&size=100`
+            `/products/companies/${currentUser.company.id}?page=0&size=100`
           )
         } else {
           console.warn('⚠️ 회사 정보가 없어 상품을 조회할 수 없습니다')
@@ -290,15 +293,15 @@ function GlobalSearch() {
 
       // 3. 고객 검색
       else if (category === 'customer') {
-        if (user?.role === 'SUPER_ADMIN') {
+        if (currentUser?.role === 'SUPER_ADMIN') {
           console.log('🔑 SUPER_ADMIN: 전체 고객 조회')
           response = await api.get('/sales/customers?page=0&size=100')
-        } else if (user?.company?.id) {
+        } else if (currentUser?.company?.id) {
           console.log(
-            `🏢 일반 사용자: 회사 ${user.company.id}(${user.company.name}) 고객만 조회`
+            `🏢 일반 사용자: 회사 ${currentUser.company.id}(${currentUser.company.name}) 고객만 조회`
           )
           response = await api.get(
-            `/sales/customers/company/${user.company.id}?page=0&size=100`
+            `/sales/customers/company/${currentUser.company.id}?page=0&size=100`
           )
         } else {
           console.warn('⚠️ 회사 정보가 없어 고객을 조회할 수 없습니다')
@@ -310,15 +313,15 @@ function GlobalSearch() {
 
       // 4. 부서 검색
       else if (category === 'department') {
-        if (user?.role === 'SUPER_ADMIN') {
+        if (currentUser?.role === 'SUPER_ADMIN') {
           console.log('🔑 SUPER_ADMIN: 전체 부서 조회')
           response = await api.get('/departments?page=0&size=100')
-        } else if (user?.company?.id) {
+        } else if (currentUser?.company?.id) {
           console.log(
-            `🏢 일반 사용자: 회사 ${user.company.id}(${user.company.name}) 부서만 조회`
+            `🏢 일반 사용자: 회사 ${currentUser.company.id}(${currentUser.company.name}) 부서만 조회`
           )
           response = await api.get(
-            `/departments/company/${user.company.id}?page=0&size=100`
+            `/departments/company/${currentUser.company.id}?page=0&size=100`
           )
         } else {
           console.warn('⚠️ 회사 정보가 없어 부서를 조회할 수 없습니다')
@@ -330,7 +333,7 @@ function GlobalSearch() {
 
       // 5. 회사 검색 (SUPER_ADMIN만 가능)
       else if (category === 'company') {
-        if (user?.role === 'SUPER_ADMIN') {
+        if (currentUser?.role === 'SUPER_ADMIN') {
           console.log('🔑 SUPER_ADMIN: 전체 회사 조회')
           response = await api.get('/companies?page=0&size=100')
         } else {
@@ -343,15 +346,15 @@ function GlobalSearch() {
 
       // 6. 기본 전역 검색
       else {
-        if (user?.role === 'SUPER_ADMIN') {
+        if (currentUser?.role === 'SUPER_ADMIN') {
           console.log('🔑 SUPER_ADMIN: 전체 검색')
           response = await api.get(`/search?q=${encodeURIComponent(term)}`)
-        } else if (user?.company?.id) {
+        } else if (currentUser?.company?.id) {
           console.log(
-            `🏢 일반 사용자: 회사 ${user.company.id}(${user.company.name}) 데이터만 검색`
+            `🏢 일반 사용자: 회사 ${currentUser.company.id}(${currentUser.company.name}) 데이터만 검색`
           )
           response = await api.get(
-            `/search?q=${encodeURIComponent(term)}&companyId=${user.company.id}`
+            `/search?q=${encodeURIComponent(term)}&companyId=${currentUser.company.id}`
           )
         } else {
           console.warn('⚠️ 회사 정보가 없어 검색할 수 없습니다')

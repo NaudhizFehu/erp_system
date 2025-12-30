@@ -10,13 +10,18 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * 직원 엔티티
- * 인사관리 시스템의 핵심 직원 정보를 관리합니다
+ * 인사관리 시스템의 핵심 직원 정보와 로그인 정보를 통합 관리합니다
  */
 @Entity
-@Table(name = "employees")
+@Table(name = "employees", indexes = {
+    @Index(name = "idx_employees_username", columnList = "username"),
+    @Index(name = "idx_employees_email", columnList = "email"),
+    @Index(name = "idx_employees_company", columnList = "company_id")
+})
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
@@ -27,6 +32,58 @@ public class Employee extends BaseEntity {
     @Size(max = 20, message = "직원번호는 20자 이하여야 합니다")
     @Column(name = "employee_number", unique = true, nullable = false)
     private String employeeNumber;
+
+    /**
+     * 로그인 사용자명 (선택적, 시스템 접근 권한이 있는 직원만 보유)
+     */
+    @Size(min = 3, max = 50, message = "사용자명은 3자 이상 50자 이하여야 합니다")
+    @Pattern(regexp = "^[a-zA-Z0-9._-]+$", message = "사용자명은 영문, 숫자, ., _, -만 사용 가능합니다")
+    @Column(name = "username", unique = true, length = 50)
+    private String username;
+
+    /**
+     * 비밀번호 (암호화 저장, 시스템 접근 권한이 있는 직원만 보유)
+     */
+    @Size(min = 60, max = 200, message = "암호화된 비밀번호 길이가 올바르지 않습니다")
+    @Column(name = "password", length = 200)
+    private String password;
+
+    /**
+     * 사용자 역할 (시스템 권한)
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", length = 20)
+    private UserRole role;
+
+    /**
+     * 계정 활성화 여부
+     */
+    @Column(name = "is_active")
+    private Boolean isActive = true;
+
+    /**
+     * 계정 잠김 여부
+     */
+    @Column(name = "is_locked")
+    private Boolean isLocked = false;
+
+    /**
+     * 비밀번호 만료 여부
+     */
+    @Column(name = "is_password_expired")
+    private Boolean isPasswordExpired = false;
+
+    /**
+     * 마지막 로그인 시간
+     */
+    @Column(name = "last_login_at")
+    private LocalDateTime lastLoginAt;
+
+    /**
+     * 비밀번호 변경 시간
+     */
+    @Column(name = "password_changed_at")
+    private LocalDateTime passwordChangedAt;
 
     @NotBlank(message = "이름은 필수입니다")
     @Size(max = 50, message = "이름은 50자 이하여야 합니다")
@@ -155,6 +212,26 @@ public class Employee extends BaseEntity {
     // terminationReason 필드 제거됨
 
     /**
+     * 사용자 역할 열거형
+     */
+    public enum UserRole {
+        SUPER_ADMIN("시스템 관리자"),
+        ADMIN("회사 관리자"),
+        MANAGER("부서 관리자"),
+        USER("일반 사용자");
+
+        private final String description;
+
+        UserRole(String description) {
+            this.description = description;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+    }
+
+    /**
      * 성별 열거형
      */
     public enum Gender {
@@ -270,8 +347,15 @@ public class Employee extends BaseEntity {
         if (birthDate == null) {
             return null;
         }
-        
+
         return (int) java.time.temporal.ChronoUnit.YEARS.between(birthDate, LocalDate.now());
+    }
+
+    /**
+     * 전체 이름 반환 (한글 이름 우선, 없으면 영문 이름)
+     */
+    public String getFullName() {
+        return name != null ? name : nameEn;
     }
 }
 

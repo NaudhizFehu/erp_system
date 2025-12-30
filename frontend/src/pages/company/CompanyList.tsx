@@ -1,5 +1,5 @@
 import { Search, Building2, Plus, Eye } from 'lucide-react'
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { Badge } from '@/components/ui/badge'
@@ -55,7 +55,9 @@ function CompanyList() {
       const response = await api.get('/companies')
 
       if (response.data.success) {
-        setCompanies(response.data || [])
+        // API는 Page 객체를 반환하므로 content 속성에 접근
+        const pageData = response.data.data
+        setCompanies(pageData?.content || [])
       } else {
         setError(response.data.message || '회사 목록을 불러올 수 없습니다')
       }
