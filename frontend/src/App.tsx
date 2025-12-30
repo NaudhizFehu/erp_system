@@ -132,6 +132,14 @@ function App() {
                       element={<TransactionList />}
                     />
                     <Route
+                      path="/accounting/vouchers"
+                      element={<TransactionList />}
+                    />
+                    <Route
+                      path="/accounting/statements"
+                      element={<FinancialStatementPage />}
+                    />
+                    <Route
                       path="/accounting/transactions/:id"
                       element={
                         <RoleProtectedRoute

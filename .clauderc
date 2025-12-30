@@ -39,3 +39,49 @@
    - 사용자가 명령한 작업만 수행한다
    - 추가 작업이 필요하면 물어본다
    - 내 판단으로 임의로 진행하지 않는다
+
+## 현재 프로젝트 사양
+
+### 백엔드 (Spring Boot + Maven)
+- **빌드 도구**: Maven (pom.xml)
+- **실행 방법**: 사용자가 직접 IDE에서 실행 (mvn 명령 사용 금지)
+- **포트**: 9961
+- **데이터베이스**: PostgreSQL (localhost:5432/erp_db)
+- **DDL 관리**: DdlForcer.java가 테이블 생성 담당 (ddl-auto: none)
+- **엔티티 스캔**: com.erp 패키지 하위 모든 엔티티 자동 스캔
+- **주의사항**:
+  - mvn spring-boot:run 절대 사용 금지 (사용자가 IDE에서 직접 실행)
+  - 새 엔티티 추가 시 반드시 DdlForcer.java에 테이블 생성 SQL 추가 필수
+  - accounts 테이블은 DdlForcer.java에 이미 정의되어 있음
+
+### 프론트엔드 (React + TypeScript)
+- **실행 방법**: 사용자가 직접 npm run dev 실행
+- **포트**: 9960
+- **상태관리**: Context API
+- **라우팅**: React Router v6
+- **스타일**: Tailwind CSS + shadcn/ui
+- **API 통신**: Axios (baseURL: '/api')
+
+### 주요 모듈
+1. **공통 (common)**: User 제거됨, Employee로 통합
+2. **인사 (hr)**: Employee 중심 관리
+3. **회계 (accounting)**:
+   - Account, Transaction, Budget, BudgetRevision
+   - FinancialReport, FinancialReportItem
+4. **재고 (inventory)**: Product, Warehouse, Inventory, StockMovement
+5. **영업 (sales)**: Customer, Order
+
+### 데이터베이스 테이블 목록
+- companies, departments, positions, employees
+- accounts, transactions, budgets, budget_revisions
+- financial_reports, financial_report_items
+- product_categories, products, warehouses, inventories, stock_movements
+- customers, orders
+- notification_settings, notifications
+
+### API 엔드포인트 패턴
+- 공통: /api/companies, /api/departments
+- 인사: /api/hr/employees, /api/hr/positions
+- 회계: /api/accounting/transactions, /api/accounting/reports
+- 재고: /api/inventory/products, /api/inventory/warehouses
+- 영업: /api/sales/customers, /api/sales/orders

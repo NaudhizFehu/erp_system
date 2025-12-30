@@ -34,7 +34,7 @@ public class FinancialReportController {
      * 재무상태표 생성
      */
     @PostMapping("/balance-sheet")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    @PreAuthorize("hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<FinancialReportDto>> generateBalanceSheet(
             @RequestParam Long companyId,
             @RequestParam Integer fiscalYear,
@@ -62,7 +62,7 @@ public class FinancialReportController {
      * 손익계산서 생성
      */
     @PostMapping("/income-statement")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    @PreAuthorize("hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<FinancialReportDto>> generateIncomeStatement(
             @RequestParam Long companyId,
             @RequestParam Integer fiscalYear,
@@ -91,7 +91,7 @@ public class FinancialReportController {
      * 현금흐름표 생성
      */
     @PostMapping("/cash-flow-statement")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    @PreAuthorize("hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<FinancialReportDto>> generateCashFlowStatement(
             @RequestParam Long companyId,
             @RequestParam Integer fiscalYear,
@@ -120,7 +120,7 @@ public class FinancialReportController {
      * 자본변동표 생성
      */
     @PostMapping("/equity-statement")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    @PreAuthorize("hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<FinancialReportDto>> generateEquityStatement(
             @RequestParam Long companyId,
             @RequestParam Integer fiscalYear,
@@ -149,7 +149,7 @@ public class FinancialReportController {
      * 시산표 생성
      */
     @PostMapping("/trial-balance")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    @PreAuthorize("hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<FinancialReportDto>> generateTrialBalance(
             @RequestParam Long companyId,
             @RequestParam Integer fiscalYear,
@@ -178,7 +178,7 @@ public class FinancialReportController {
      * 예산보고서 생성
      */
     @PostMapping("/budget-report")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    @PreAuthorize("hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<FinancialReportDto>> generateBudgetReport(
             @RequestParam Long companyId,
             @RequestParam Integer fiscalYear,
@@ -205,7 +205,7 @@ public class FinancialReportController {
      * 차이분석표 생성
      */
     @PostMapping("/variance-analysis")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    @PreAuthorize("hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<FinancialReportDto>> generateVarianceAnalysis(
             @RequestParam Long companyId,
             @RequestParam Integer fiscalYear,
@@ -232,7 +232,7 @@ public class FinancialReportController {
      * 보고서 승인
      */
     @PostMapping("/{reportId}/approve")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    @PreAuthorize("hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<FinancialReportDto>> approveReport(
             @PathVariable Long reportId,
             @RequestParam Long approverId) {
@@ -257,7 +257,7 @@ public class FinancialReportController {
      * 보고서 재생성
      */
     @PostMapping("/{reportId}/regenerate")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    @PreAuthorize("hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<FinancialReportDto>> regenerateReport(@PathVariable Long reportId) {
         try {
             log.info("보고서 재생성 요청 - 보고서 ID: {}", reportId);
@@ -280,7 +280,7 @@ public class FinancialReportController {
      * 보고서 삭제
      */
     @DeleteMapping("/{reportId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteReport(@PathVariable Long reportId) {
         try {
             log.info("보고서 삭제 요청 - 보고서 ID: {}", reportId);
@@ -302,7 +302,7 @@ public class FinancialReportController {
      * 회사별 보고서 목록 조회
      */
     @GetMapping("/companies/{companyId}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<List<FinancialReportDto>>> getReportsByCompany(@PathVariable Long companyId) {
         try {
             log.info("회사별 보고서 목록 조회 요청 - 회사: {}", companyId);
@@ -325,7 +325,7 @@ public class FinancialReportController {
      * 보고서 유형별 조회
      */
     @GetMapping("/companies/{companyId}/type/{reportType}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<List<FinancialReportDto>>> getReportsByType(
             @PathVariable Long companyId,
             @PathVariable FinancialReport.ReportType reportType) {
@@ -350,7 +350,7 @@ public class FinancialReportController {
      * 최신 재무제표 조회
      */
     @GetMapping("/companies/{companyId}/latest")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Map<String, FinancialReportDto>>> getLatestFinancialStatements(@PathVariable Long companyId) {
         try {
             log.info("최신 재무제표 조회 요청 - 회사: {}", companyId);
@@ -373,7 +373,7 @@ public class FinancialReportController {
      * 재무 트렌드 데이터 조회
      */
     @GetMapping("/companies/{companyId}/trends")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    @PreAuthorize("hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getFinancialTrends(
             @PathVariable Long companyId,
             @RequestParam(defaultValue = "12") Integer periods) {
@@ -398,7 +398,7 @@ public class FinancialReportController {
      * 재무비율 분석
      */
     @GetMapping("/companies/{companyId}/ratios")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    @PreAuthorize("hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getFinancialRatioAnalysis(
             @PathVariable Long companyId,
             @RequestParam Integer fiscalYear) {
@@ -423,7 +423,7 @@ public class FinancialReportController {
      * 보고서 검색
      */
     @GetMapping("/search")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Page<FinancialReportDto>>> searchReports(
             @RequestParam String searchTerm,
             @PageableDefault(size = 20) Pageable pageable) {
@@ -448,7 +448,7 @@ public class FinancialReportController {
      * 회사별 보고서 검색
      */
     @GetMapping("/companies/{companyId}/search")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
+    @PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Page<FinancialReportDto>>> searchReportsByCompany(
             @PathVariable Long companyId,
             @RequestParam String searchTerm,
@@ -474,7 +474,7 @@ public class FinancialReportController {
      * 보고서 통계
      */
     @GetMapping("/companies/{companyId}/statistics")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    @PreAuthorize("hasRole('MANAGER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getReportStatistics(
             @PathVariable Long companyId,
             @RequestParam Integer fiscalYear) {

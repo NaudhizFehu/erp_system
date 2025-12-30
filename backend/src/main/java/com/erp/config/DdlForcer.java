@@ -549,6 +549,135 @@ public class DdlForcer {
                 "FOREIGN KEY (employee_id) REFERENCES employees(id), " +
                 "FOREIGN KEY (company_id) REFERENCES companies(id), " +
                 "FOREIGN KEY (department_id) REFERENCES departments(id)" +
+                ")",
+
+                "CREATE TABLE IF NOT EXISTS budgets (" +
+                "id BIGSERIAL PRIMARY KEY, " +
+                "company_id BIGINT NOT NULL, " +
+                "account_id BIGINT NOT NULL, " +
+                "fiscal_year INTEGER NOT NULL, " +
+                "budget_period VARCHAR(20) NOT NULL, " +
+                "period_number INTEGER, " +
+                "budget_type VARCHAR(20) NOT NULL, " +
+                "budget_status VARCHAR(20) NOT NULL DEFAULT 'DRAFT', " +
+                "budget_amount DECIMAL(15,2) NOT NULL, " +
+                "previous_actual DECIMAL(15,2) DEFAULT 0, " +
+                "current_actual DECIMAL(15,2) DEFAULT 0, " +
+                "achievement_rate DECIMAL(5,2) DEFAULT 0, " +
+                "variance_amount DECIMAL(15,2) DEFAULT 0, " +
+                "variance_rate DECIMAL(5,2) DEFAULT 0, " +
+                "description VARCHAR(500), " +
+                "budget_basis VARCHAR(1000), " +
+                "responsible_person BIGINT, " +
+                "department_code VARCHAR(50), " +
+                "project_code VARCHAR(50), " +
+                "approved_by BIGINT, " +
+                "approved_at TIMESTAMP, " +
+                "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, " +
+                "updated_at TIMESTAMP, " +
+                "created_by BIGINT, " +
+                "updated_by BIGINT, " +
+                "is_deleted BOOLEAN NOT NULL DEFAULT FALSE, " +
+                "deleted_at TIMESTAMP, " +
+                "deleted_by BIGINT, " +
+                "FOREIGN KEY (company_id) REFERENCES companies(id), " +
+                "FOREIGN KEY (account_id) REFERENCES accounts(id), " +
+                "FOREIGN KEY (responsible_person) REFERENCES employees(id), " +
+                "FOREIGN KEY (approved_by) REFERENCES employees(id)" +
+                ")",
+
+                "CREATE TABLE IF NOT EXISTS budget_revisions (" +
+                "id BIGSERIAL PRIMARY KEY, " +
+                "budget_id BIGINT NOT NULL, " +
+                "old_amount DECIMAL(15,2) NOT NULL, " +
+                "new_amount DECIMAL(15,2) NOT NULL, " +
+                "revision_reason VARCHAR(500) NOT NULL, " +
+                "revised_by BIGINT NOT NULL, " +
+                "revised_at TIMESTAMP NOT NULL, " +
+                "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, " +
+                "updated_at TIMESTAMP, " +
+                "created_by BIGINT, " +
+                "updated_by BIGINT, " +
+                "is_deleted BOOLEAN NOT NULL DEFAULT FALSE, " +
+                "deleted_at TIMESTAMP, " +
+                "deleted_by BIGINT, " +
+                "FOREIGN KEY (budget_id) REFERENCES budgets(id), " +
+                "FOREIGN KEY (revised_by) REFERENCES employees(id)" +
+                ")",
+
+                "CREATE TABLE IF NOT EXISTS financial_reports (" +
+                "id BIGSERIAL PRIMARY KEY, " +
+                "company_id BIGINT NOT NULL, " +
+                "report_type VARCHAR(30) NOT NULL, " +
+                "report_title VARCHAR(200) NOT NULL, " +
+                "fiscal_year INTEGER NOT NULL, " +
+                "fiscal_period VARCHAR(20) NOT NULL, " +
+                "base_date DATE NOT NULL, " +
+                "report_status VARCHAR(20) NOT NULL DEFAULT 'DRAFT', " +
+                "report_data TEXT, " +
+                "summary_data TEXT, " +
+                "total_assets DECIMAL(15,2) DEFAULT 0, " +
+                "total_liabilities DECIMAL(15,2) DEFAULT 0, " +
+                "total_equity DECIMAL(15,2) DEFAULT 0, " +
+                "total_revenue DECIMAL(15,2) DEFAULT 0, " +
+                "total_expenses DECIMAL(15,2) DEFAULT 0, " +
+                "net_income DECIMAL(15,2) DEFAULT 0, " +
+                "operating_income DECIMAL(15,2) DEFAULT 0, " +
+                "income_before_tax DECIMAL(15,2) DEFAULT 0, " +
+                "cash_and_equivalents DECIMAL(15,2) DEFAULT 0, " +
+                "current_assets DECIMAL(15,2) DEFAULT 0, " +
+                "non_current_assets DECIMAL(15,2) DEFAULT 0, " +
+                "current_liabilities DECIMAL(15,2) DEFAULT 0, " +
+                "non_current_liabilities DECIMAL(15,2) DEFAULT 0, " +
+                "generated_by BIGINT, " +
+                "generated_at TIMESTAMP, " +
+                "approved_by BIGINT, " +
+                "approved_at TIMESTAMP, " +
+                "file_path VARCHAR(500), " +
+                "remarks VARCHAR(1000), " +
+                "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, " +
+                "updated_at TIMESTAMP, " +
+                "created_by BIGINT, " +
+                "updated_by BIGINT, " +
+                "is_deleted BOOLEAN NOT NULL DEFAULT FALSE, " +
+                "deleted_at TIMESTAMP, " +
+                "deleted_by BIGINT, " +
+                "FOREIGN KEY (company_id) REFERENCES companies(id), " +
+                "FOREIGN KEY (generated_by) REFERENCES employees(id), " +
+                "FOREIGN KEY (approved_by) REFERENCES employees(id)" +
+                ")",
+
+                "CREATE TABLE IF NOT EXISTS financial_report_items (" +
+                "id BIGSERIAL PRIMARY KEY, " +
+                "report_id BIGINT NOT NULL, " +
+                "account_id BIGINT, " +
+                "item_name VARCHAR(200) NOT NULL, " +
+                "item_name_en VARCHAR(300), " +
+                "item_code VARCHAR(50), " +
+                "line_number INTEGER NOT NULL, " +
+                "item_level INTEGER NOT NULL, " +
+                "parent_item_id BIGINT, " +
+                "current_amount DECIMAL(15,2) DEFAULT 0, " +
+                "previous_amount DECIMAL(15,2) DEFAULT 0, " +
+                "change_amount DECIMAL(15,2) DEFAULT 0, " +
+                "change_rate DECIMAL(5,2) DEFAULT 0, " +
+                "composition_ratio DECIMAL(5,2) DEFAULT 0, " +
+                "item_type VARCHAR(20) DEFAULT 'ACCOUNT', " +
+                "calculation_formula VARCHAR(500), " +
+                "is_visible BOOLEAN NOT NULL DEFAULT TRUE, " +
+                "is_bold BOOLEAN NOT NULL DEFAULT FALSE, " +
+                "indent_level INTEGER DEFAULT 0, " +
+                "note VARCHAR(500), " +
+                "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, " +
+                "updated_at TIMESTAMP, " +
+                "created_by BIGINT, " +
+                "updated_by BIGINT, " +
+                "is_deleted BOOLEAN NOT NULL DEFAULT FALSE, " +
+                "deleted_at TIMESTAMP, " +
+                "deleted_by BIGINT, " +
+                "FOREIGN KEY (report_id) REFERENCES financial_reports(id), " +
+                "FOREIGN KEY (account_id) REFERENCES accounts(id), " +
+                "FOREIGN KEY (parent_item_id) REFERENCES financial_report_items(id)" +
                 ")"
             };
             

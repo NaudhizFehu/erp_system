@@ -26,8 +26,8 @@ import type { ApiResponse, PageResponse } from '@/types/common'
 import api from './api'
 
 // API 기본 설정
-const ACCOUNTING_API_BASE = '/api/accounting'
-const REPORTS_API_BASE = '/api/accounting/reports'
+const ACCOUNTING_API_BASE = '/accounting'
+const REPORTS_API_BASE = '/accounting/reports'
 
 /**
  * 거래 관리 API 서비스
